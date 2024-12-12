@@ -1,0 +1,67 @@
+<mvc:View
+	controllerName="sap.ui.bni.toolpageapp.controller.Project"
+	xmlns="sap.m"
+	xmlns:l="sap.ui.layout"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc">
+	<Page showHeader="false">
+		<landmarkInfo>
+			<PageAccessibleLandmarkInfo
+				rootRole="Region"
+				rootLabel="{i18n>Project_rootLabel}"
+				contentRole="Main"
+				contentLabel="{i18n>Project_contentLabel}"/>
+		</landmarkInfo>
+		
+		<Panel
+			id="ProjectContainer"
+			accessibleRole="Region"
+			class="sapUiNoContentPadding">
+			<!-- Judul Panel -->
+			<headerToolbar>
+				<Toolbar>
+					<Title
+						text="{i18n>projectTitle}"
+						level="H3"
+						textAlign="Left"/>
+				</Toolbar>
+			</headerToolbar>
+			
+			<HBox justifyContent="SpaceBetween" width="100%">
+				<!-- Input Filter di Kiri Mentok -->
+				<Input
+					id="filterInput"
+					placeholder="{i18n>filterPlaceholder}" 
+					width="300px"
+					liveChange=".onFilter"
+					tooltip="{i18n>filterTooltip}"
+					class="sapUiTinyMarginEnd"
+					/>
+			
+				<HBox justifyContent="End" width="auto">
+					<Button
+						id="New"
+						icon="sap-icon://write-new-document"
+						press=".onNew"
+						tooltip="{i18n>newButtonTooltip}"
+						class="sapUiTinyMarginEnd"
+						/>
+					<Button
+						id="Refresh"
+						icon="sap-icon://synchronize"
+						press=".onRefresh"
+						tooltip="{i18n>refreshButtonTooltip}"
+						class="sapUiTinyMarginEnd"/>
+					<Button
+						id="Delete"
+						icon="sap-icon://delete"
+						press=".onDelete"
+						tooltip="{i18n>deleteButtonTooltip}"
+						class="sapUiTinyMarginEnd"/>
+				</HBox>						
+			</HBox>
+
+		</Panel>
+		
+	</Page>
+</mvc:View>

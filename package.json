@@ -1,0 +1,16 @@
+{
+  "name": "bni-pypsak-app",
+  "private": true,
+  "version": "1.0.0",
+  "author": "SAP SE",
+  "description": "UI5 Demo App - Toolpage App",
+  "devDependencies": {
+    "@ui5/cli": "^4"
+  },
+  "scripts": {
+    "start": "ui5 serve -o index.html",
+    "build": "ui5 build"
+  },
+  "license": "ISC",
+  "keywords": []
+}
