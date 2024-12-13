@@ -24,7 +24,7 @@ sap.ui.define([
 			oContext.getModel().setProperty(sPath, true);
 			var sKey = oContext.getProperty("key");
 			switch (sKey) {
-				case "systemSettings": {
+				case "processDefinitions": {
 					this.getRouter().navTo(sKey);
 					break;
 				}

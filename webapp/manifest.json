@@ -110,8 +110,8 @@
 					]
 				},
 				{
-					"pattern": "MasterSettings/SystemSettings",
-					"name": "systemSettings",
+					"pattern": "MasterSettings/ProcessDefinitions",
+					"name": "processDefinitions",
 					"target": [
 						"detailSettings",
 						"masterSettings"
@@ -165,26 +165,6 @@
 					"controlId": "appSettings",
 					"controlAggregation": "detailPages",
 					"parent": "appSettings"
-				},
-				"statistics": {
-					"viewId": "statistics",
-					"viewName": "Statistics"
-				},
-				"usageStatistics": {
-					"viewId": "usageStatistics",
-					"viewName": "UsageStatistics"
-				},
-				"orderStatistics": {
-					"viewId": "orderStatistics",
-					"viewName": "OrderStatistics"
-				},
-				"importantLinks": {
-					"viewId": "importantLinks",
-					"viewName": "ImportantLinks"
-				},
-				"legal": {
-					"viewId": "legal",
-					"viewName": "Legal"
 				}
 			}
 		},

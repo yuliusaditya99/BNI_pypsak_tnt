@@ -11,7 +11,15 @@
 				contentRole="Navigation"
 				contentLabel="{i18n>Master_contentLabel}"/>
 		</landmarkInfo>
+				<!-- Judul Panel -->
+		<Toolbar>
+			<Title
+				text="{i18n>systemSettingsTitle}"
+				level="H3"
+				textAlign="Left"/>
+		</Toolbar>
 		<List
+		
 			id="masterSettingsList"
 			items="{side>/masterSettings}"
 			mode="SingleSelectMaster"

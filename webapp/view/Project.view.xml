@@ -11,8 +11,7 @@
 				rootLabel="{i18n>Project_rootLabel}"
 				contentRole="Main"
 				contentLabel="{i18n>Project_contentLabel}"/>
-		</landmarkInfo>
-		
+		</landmarkInfo>		
 		<Panel
 			id="ProjectContainer"
 			accessibleRole="Region"
@@ -41,9 +40,16 @@
 				<HBox justifyContent="End" width="auto">
 					<Button
 						id="New"
-						icon="sap-icon://write-new-document"
+						icon="sap-icon://add-document"
 						press=".onNew"
 						tooltip="{i18n>newButtonTooltip}"
+						class="sapUiTinyMarginEnd"
+						/>
+					<Button
+						id="Edit"
+						icon="sap-icon://write-new-document"
+						press=".onEdit"
+						tooltip="{i18n>editButtonTooltip}"
 						class="sapUiTinyMarginEnd"
 						/>
 					<Button
