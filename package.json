@@ -5,12 +5,14 @@
   "author": "SAP SE",
   "description": "UI5 Demo App - Toolpage App",
   "devDependencies": {
-    "@ui5/cli": "^4"
+    "@ui5/cli": "^4.0.12"
   },
   "scripts": {
     "start": "ui5 serve -o index.html",
     "build": "ui5 build"
   },
   "license": "ISC",
-  "keywords": []
+  "keywords": [],
+  "dependencies": {
+  }
 }
