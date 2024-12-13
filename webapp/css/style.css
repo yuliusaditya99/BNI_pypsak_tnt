@@ -2,3 +2,63 @@
 [id*="filterInput"] {
     padding-left: 20px;
 }
+
+/* Process Flow */
+.sapSuiteUiCommonsPFHeaderRow {
+    display: none !important;
+}
+
+.paddingTopBottom {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+
+
+[id*="zoomButtons"]{
+    margin: 1rem 2rem 1rem 1rem;
+}
+
+
+
+/* Entire Table Border */
+[id*="nodesTable"] .sapUiTable {
+    border: 2px solid #000000d4 !important; /* Border around the entire table */
+    border-collapse: collapse; /* Ensures the borders are seamless */
+}
+
+/* Row Borders */
+[id*="nodesTable"] .sapUiTableRow {
+    border-bottom: 1px solid #000000d4 !important; /* Bottom border for each row */
+    border-top: 1px solid #000000d4 !important;   /* Top border for each row */
+}
+
+/* Cell Borders */
+[id*="nodesTable"] .sapUiTableCell {
+    border-left: 1x solid #000000d4 !important;  /* Left border for each cell */
+    border-right: 1px solid #000000d4 !important; /* Right border for each cell */
+    border-top: 1px solid #000000d4 !important;   /* Top border for each cell */
+    border-bottom: 1px solid #000000d4 !important; /* Bottom border for each cell */
+}
+
+
+/* Nodes Title */
+.sapSuiteUiCommonsProcessFlowNodeTitle {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* Process Flow Container */
+#container-toolpageapp---project--processflow1-table {
+    padding-top: 5rem;                /* Sets padding for the whole table */
+    padding-left: 3rem;
+    padding-right: 3rem;
+}
+
+#container-toolpageapp---project--processflow1-table .sapMText {
+    padding: 8px;                 /* Sets padding for text cells */
+    text-align: center;             /* Aligns text in cells */
+}
