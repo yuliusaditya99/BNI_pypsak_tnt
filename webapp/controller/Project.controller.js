@@ -180,45 +180,63 @@ sap.ui.define([
             MessageToast.show("Zoom level changed to: " + this.oProcessFlow1.getZoomLevel());
         },
 		
+        emptyIfNull: function (value) {
+            return value || "";
+        },
+        
 		onNodePress: function(event) {
-			const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
-			const oModel = this.getView().getModel();  // Get the model
-		
-			// Get the current nodes data from the model
-			const nodes = oModel.getProperty("/nodes");
-            console.log("node:", nodes);
-		
-			// Find the node by its ID in the model data
-			const nodeIndex = nodes.findIndex(node => node.code === nodeId);
-		
-			if (nodeIndex !== -1) {
-				console.log("index:", nodeIndex);
-                const oDialog = new sap.m.Dialog({
-                    title: "Choose Action",
-                    content: new sap.m.Text({ text: "Do you want to run " + nodes[nodeIndex].label +"?" }),
-                    buttons: [
-                        new sap.m.Button({
-                            text: "Run",
-                            icon: "sap-icon://play",
-                            press: () => {
-                                this.runNode(nodes[nodeIndex].id, nodes[nodeIndex].label)    ;
-                                oDialog.close(); // Close the dialog
-                            }
-                        }),
-                        new sap.m.Button({
-                            type: sap.m.ButtonType.Emphasized,
-                            text: "Cancel",
-                            icon: "sap-icon://cancel",
-                            press: () => {
-                                oDialog.close(); // Close the dialog
-                            }
-                        })
-                    ]});
-                    oDialog.open(); // Open the dialog
-        } else {
-				MessageToast.show("Node not found.");
-			}
-		},
+            const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
+            const oModel = this.getView().getModel();  // Get the model
+        
+            // Get the current nodes data from the model
+            const nodes = oModel.getProperty("/nodes");
+        
+            // Find the node by its ID in the model data
+            const nodeIndex = nodes.findIndex(node => node.code === nodeId);
+        
+            if (nodeIndex !== -1) {
+                const node = nodes[nodeIndex];
+        
+                // Prepare the parameters object from the node's data
+                const parameters = {
+                    currentVersion: node.parameters?.current_version || "",
+                    adjust: node.parameters?.adjust || "",
+                    startDate: node.parameters?.start_date || "",
+                    countdown: node.parameters?.countdown || "",
+                    isShowCountdown: node.parameters?.is_show_countdown === "true" ? true : false
+                };
+        
+                // Load the fragment asynchronously
+                if (!this._oDialog) {
+                    this._oDialog = sap.ui.xmlfragment(this.getView().getId(), "sap.ui.bni.toolpageapp.fragments.NodeDialog", this);
+                    this.getView().addDependent(this._oDialog);
+                }
+        
+                // Create a new JSON model with the parameters for this specific node
+                const oModelForDialog = new sap.ui.model.json.JSONModel(parameters);
+                this._oDialog.setModel(oModelForDialog);
+        
+                // Open the dialog
+                this._oDialog.open();
+            } else {
+                MessageToast.show("Node not found.");
+            }
+        },    
+        // Handle the "Run" button press
+        onRunPress: function() {
+            const oModel = this._oDialog.getModel();
+            const parameters = oModel.getData();
+
+            // Call the runNode method with the parameters
+            this.runNode(parameters.currentVersion, parameters.adjust, parameters.startDate, parameters.countdown, parameters.isShowCountdown);
+
+            this._oDialog.close(); // Close the dialog
+        },
+
+        // Handle the "Cancel" button press
+        onCancelPress: function() {
+            this._oDialog.close(); // Close the dialog
+        },
         
         getAccessToken: async function() {
             try {
