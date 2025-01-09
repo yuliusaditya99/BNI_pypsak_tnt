@@ -83,7 +83,7 @@
 					</tnt:NavigationListItem>
 				</tnt:NavigationList>
 			</tnt:SideNavigation>
-		</tnt:sideContent>
+		</tnt:sideContent>	
 		<tnt:mainContents>
 			<App id="mainContents"/>
 		</tnt:mainContents>

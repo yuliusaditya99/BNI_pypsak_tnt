@@ -11,7 +11,8 @@ sap.ui.define([
 	'sap/m/MessageToast',
 	'sap/ui/Device',
 	'sap/ui/core/syncStyleClass',
-	'sap/m/library'
+	'sap/m/library',
+	"./Config.API"
 ], function(
 	BaseController,
 	ResponsivePopover,
@@ -25,7 +26,8 @@ sap.ui.define([
 	MessageToast,
 	Device,
 	syncStyleClass,
-	mobileLibrary
+	mobileLibrary,
+	Config
 ) {
 	"use strict";
 
@@ -38,12 +40,15 @@ sap.ui.define([
 	// shortcut for sap.m.ButtonType
 	var ButtonType = mobileLibrary.ButtonType;
 
-	return BaseController.extend("sap.ui.bni.toolpageapp.controller.App", {
+	return BaseController.extend("sap.ui.demo.toolpageapp.controller.App", {
 
 		_bExpanded: true,
 
 		onInit: function() {
-			this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
+			console.log("masuk app controller");
+			this.appConfig = new Config();
+			this.onLoginPress();
+			this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());			
 
 			// if the app starts on desktop devices with small or medium screen size, collaps the side navigation
 			if (Device.resize.width <= 1024) {
@@ -52,6 +57,7 @@ sap.ui.define([
 
 			Device.media.attachHandler(this._handleWindowResize, this);
 			this.getRouter().attachRouteMatched(this.onRouteChange.bind(this));
+			
 		},
 
 		onExit: function() {
@@ -269,6 +275,38 @@ sap.ui.define([
 		getBundleText: function(sI18nKey, aPlaceholderValues){
 			return this.getBundleTextByModel(sI18nKey, this.getOwnerComponent().getModel("i18n"), aPlaceholderValues);
 		},
+
+		onLoginPress: async function () {
+            const sUsername = "admin";
+            const sPassword = "admin";
+
+            if (!sUsername || !sPassword) {
+                sap.m.MessageToast.show("Username and password are required.");
+                return;
+            }
+
+            try {
+                console.log("masuk login");
+                const oauthResponse = await this.appConfig.login({ user_name: sUsername, password: sPassword });
+                console.log("oauthResponse : ",oauthResponse);
+                
+                const oView = this.getView(); 
+                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                console.log("Owner Component:", oComponent);
+                if (!oComponent) {
+                    throw new Error("Owner component tidak ditemukan.");
+                }
+                const oRouter = oComponent.getRouter();
+                console.log("Router:", oRouter);
+                if (!oRouter || typeof oRouter.navTo !== "function") {
+                    throw new Error("Router tidak valid.");
+                }
+                oRouter.navTo("app");
+            } catch (error) {
+                console.error("Routing error:", error);
+                sap.m.MessageToast.show("Terjadi kesalahan saat navigasi.");
+            }
+        },
 
 		_handleWindowResize: function (oDevice) {
 			if ((oDevice.name === "Tablet" && this._bExpanded) || oDevice.name === "Desktop") {

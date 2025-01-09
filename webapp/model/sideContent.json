@@ -20,28 +20,13 @@
 	],
 	"masterSettings": [
 		{
-			"titleI18nKey": "sideContentSystemSettings",
-			"key": "systemSettings",
+			"titleI18nKey": "sideProcessDefinitions",
+			"key": "processDefinitions",
 			"selected": true
 		},
 		{
 			"titleI18nKey": "sideContentOrderSettings",
 			"key": "orderSettings",
-			"selected": false
-		},
-		{
-			"titleI18nKey": "sideContentSupplierSettings",
-			"key": "supplierSettings",
-			"selected": false
-		},
-		{
-			"titleI18nKey": "sideContentCampaignSettings",
-			"key": "campaignSettings",
-			"selected": false
-		},
-		{
-			"titleI18nKey": "sideContentShippingSettings",
-			"key": "shippingSettings",
 			"selected": false
 		}
 	]

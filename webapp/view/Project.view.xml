@@ -3,28 +3,35 @@
     xmlns="sap.m"
     xmlns:commons="sap.suite.ui.commons"
     xmlns:table="sap.ui.table"
-    xmlns:l="sap.ui.layout"
-    xmlns:core="sap.ui.core"
-    xmlns:mvc="sap.ui.core.mvc">
-    
-    <Page showHeader="false">
-        <landmarkInfo>
-            <PageAccessibleLandmarkInfo
-                rootRole="Region"
-                rootLabel="{i18n>Project_rootLabel}"
-                contentRole="Main"
-                contentLabel="{i18n>Project_contentLabel}" />
-        </landmarkInfo>
-        
-        <Panel id="ProjectContainer" accessibleRole="Region" class="sapUiNoContentPadding">
-            <!-- Judul Panel -->
-            <headerToolbar>
-                <Toolbar>
-                    <Title text="{i18n>projectTitle}" level="H3" textAlign="Left" />
-                </Toolbar>
-            </headerToolbar>
-            
-            <HBox justifyContent="SpaceBetween" width="100%" id="hButtons">
+	xmlns:l="sap.ui.layout"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc">
+	<Page 
+        id="ProjectPage"
+        showHeader="false">
+		<landmarkInfo>
+			<PageAccessibleLandmarkInfo
+				rootRole="Region"
+				rootLabel="{i18n>Project_rootLabel}"
+				contentRole="Main"
+				contentLabel="{i18n>Project_contentLabel}"/>
+		</landmarkInfo>
+		
+		<Panel
+			id="ProjectContainer"
+			accessibleRole="Region"
+			class="sapUiNoContentPadding">
+			<!-- Judul Panel -->
+			<headerToolbar>
+				<Toolbar>
+					<Title
+						text="{i18n>projectTitle}"
+						level="H3"
+						textAlign="Left"/>
+				</Toolbar>
+			</headerToolbar>
+			
+			<HBox justifyContent="SpaceBetween" width="100%" id="hButtons>
 				<!-- Input Filter di Kiri Mentok -->
 				<Input
 					id="filterInput"
@@ -38,9 +45,16 @@
 				<HBox justifyContent="End" width="auto">
 					<Button
 						id="New"
-						icon="sap-icon://write-new-document"
+						icon="sap-icon://add-document"
 						press=".onNew"
 						tooltip="{i18n>newButtonTooltip}"
+						class="sapUiTinyMarginEnd"
+						/>
+					<Button
+						id="Edit"
+						icon="sap-icon://write-new-document"
+						press=".onEdit"
+						tooltip="{i18n>editButtonTooltip}"
 						class="sapUiTinyMarginEnd"
 						/>
 					<Button

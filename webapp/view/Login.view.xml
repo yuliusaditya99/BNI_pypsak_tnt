@@ -1,0 +1,43 @@
+<!-- <mvc:View controllerName="com.bni.pypsak.controller.Login" xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core" xmlns="sap.m">
+    <App>
+        <Page title="Login X">
+            <content>
+                <VBox class="sapUiSmallMargin">
+                    <Input id="username" placeholder="Username" />
+                    <Input id="password" placeholder="Password" type="Password" />
+                    <Button text="Login" press=".onLoginPress" />
+                </VBox>
+            </content>
+        </Page>
+    </App>
+</mvc:View> -->
+
+
+
+<mvc:View controllerName="sap.ui.bni.toolpageapp.controller.Login"  
+xmlns:mvc="sap.ui.core.mvc"  
+xmlns="sap.m"
+>
+    <App >
+        <tnt:ToolPage title="Login">
+
+            <VBox class="loginContainer" alignItems="Center" justifyContent="Center" height="100%">
+                
+                <!-- Logo or Text (Optional) -->
+                <!-- <Image src="path_to_logo.png" width="100px" class="loginLogo" /> -->
+                
+                <Text text="Welcome! Please Login" class="loginText" />
+                
+                <!-- Username Input -->
+                <Input id="username" placeholder="Username" width="100%" class="inputField" />
+                
+                <!-- Password Input -->
+                <Input id="password" placeholder="Password" type="Password" width="100%" class="inputField" />
+                
+                <!-- Login Button -->
+                <Button text="Login" press=".onLoginPress" width="100%" type="Emphasized" class="loginButton" />
+            </VBox>
+
+        </tnt:ToolPage>
+    </App>
+</mvc:View>
