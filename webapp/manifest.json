@@ -28,7 +28,7 @@
 	},
 	"sap.ui5": {
 		"rootView": {
-			"viewName": "sap.ui.bni.toolpageapp.view.App",
+			"viewName": "sap.ui.bni.toolpageapp.view.app",
 			"type": "XML",
 			"id": "app",
 			"async": true
@@ -96,7 +96,7 @@
 				"viewPath": "sap.ui.bni.toolpageapp.view",
 				"async": true
 			},
-			"routes": [
+			"routes": [		
 				{
 					"pattern": "",
 					"name": "project",
@@ -117,38 +117,14 @@
 						"detailSettings",
 						"masterSettings"
 					]
-				},
-				{
-					"pattern": "Statistics",
-					"name": "statistics",
-					"target": "statistics"
-				},
-				{
-					"pattern": "UsageStatistics",
-					"name": "usageStatistics",
-					"target": "usageStatistics"
-				},
-				{
-					"pattern": "OrderStatistics",
-					"name": "orderStatistics",
-					"target": "orderStatistics"
-				},
-				{
-					"pattern": "ImportantLinks",
-					"name": "importantLinks",
-					"target": "importantLinks"
-				},
-				{
-					"pattern": "Legal",
-					"name": "legal",
-					"target": "legal"
 				}
 			],
 			"targets": {
+			
 				"project": {
 					"viewId": "project",
 					"viewName": "Project"
-				},
+				},			
 				"appSettings": {
 					"viewId": "appSettings",
 					"viewName": "settings.AppSettings"

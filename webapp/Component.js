@@ -21,7 +21,12 @@ sap.ui.define([
 			this.setModel(models.createDeviceModel(), "device");
 
 			// create the views based on the url/hash
+
+			var oRouter = this.getRouter();
+			console.log("Routes:", oRouter._oRoutes);
+			console.log("Targets:", oRouter._oTargets);
 			this.getRouter().initialize();
+			console.log("after initial");
 		},
 
 		myNavBack: function () {

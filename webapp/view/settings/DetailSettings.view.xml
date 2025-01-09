@@ -1,67 +1,132 @@
 <mvc:View
-	controllerName="sap.ui.bni.toolpageapp.controller.settings.MasterSettings"
-	xmlns="sap.uxap"
-	xmlns:f="sap.ui.layout.form"
-	xmlns:m="sap.m"
-	xmlns:core="sap.ui.core"
-	xmlns:mvc="sap.ui.core.mvc">
-	<m:Page
-		showHeader="{device>/system/phone}"
-		showNavButton="{device>/system/phone}"
-		navButtonPress=".onNavButtonPress">
-		<m:landmarkInfo>
-			<m:PageAccessibleLandmarkInfo
-				rootRole="Region"
-				rootLabel="{i18n>SystemSettings_rootLabel}"
-				contentRole="Main"
-				contentLabel="{i18n>SystemSettings_contentLabel}"/>
-		</m:landmarkInfo>
-		<m:Panel
-			id="ProjectContainerDetail"
-			accessibleRole="Region"
-			class="sapUiNoContentPadding">
-
-			<m:HBox justifyContent="SpaceBetween" width="100%">
-				<m:Input
-					id="filterInputDetail"
-					placeholder="{i18n>filterPlaceholder}" 
-					width="300px"
-					liveChange=".onFilter"
-					tooltip="{i18n>filterTooltip}"
-					class="sapUiTinyMarginEnd"
-					/>
-			
-				<m:HBox justifyContent="End" width="auto">
-					<m:Button
-						id="NewDetail"
-						icon="sap-icon://add-document"
-						press=".onNew"
-						tooltip="{i18n>newButtonTooltip}"
-						class="sapUiTinyMarginEnd"
-						/>
-					<m:Button
-						id="EditDetail"
-						icon="sap-icon://write-new-document"
-						press=".onEdit"
-						tooltip="{i18n>editButtonTooltip}"
-						class="sapUiTinyMarginEnd"
-						/>
-					<m:Button
-						id="RefreshDetail"
-						icon="sap-icon://synchronize"
-						press=".onRefresh"
-						tooltip="{i18n>refreshButtonTooltip}"
-						class="sapUiTinyMarginEnd"/>
-					<m:Button
-						id="DeleteDetail"
-						icon="sap-icon://delete"
-						press=".onDelete"
-						tooltip="{i18n>deleteButtonTooltip}"
-						class="sapUiTinyMarginEnd"/>
-				</m:HBox>						
-			</m:HBox>
-							
-		</m:Panel>
-		
-	</m:Page>
+    controllerName="sap.ui.bni.toolpageapp.controller.settings.MasterSettings"
+    xmlns="sap.uxap"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout"
+    xmlns:m="sap.m"
+    xmlns:u="sap.ui.unified"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table"
+    xmlns:mvc="sap.ui.core.mvc">
+    <m:Page
+        showHeader="{device>/system/phone}"
+        showNavButton="{device>/system/phone}"
+        navButtonPress=".onNavButtonPress">
+        <m:landmarkInfo>
+            <m:PageAccessibleLandmarkInfo
+                rootRole="Region"
+                rootLabel="{i18n>SystemSettings_rootLabel}"
+                contentRole="Main"
+                contentLabel="{i18n>SystemSettings_contentLabel}" />
+        </m:landmarkInfo>
+        <m:Panel
+            id="ProjectContainerDetail"
+            accessibleRole="Region"
+            class="sapUiNoContentPadding">
+            <m:HBox justifyContent="SpaceBetween" width="100%">
+                <m:Input
+                    id="filterInputDetail"
+                    placeholder="{i18n>filterPlaceholder}"
+                    width="300px"
+                    liveChange=".onFilter"
+                    tooltip="{i18n>filterTooltip}"
+                    class="sapUiTinyMarginEnd" />
+                <m:Dialog
+                    id="excelUploadDialog"
+                    title="Upload Excel File"
+                    draggable="true"
+                    resizable="true"
+                    stretch="{device>/system/phone}">
+                    <m:VBox class="sapUiSmallMargin">
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Choose Excel File |" labelFor="fileUploader" />
+                            <u:FileUploader
+                                id="fileUploader"
+                                width="100%"
+                                placeholder="Choose a file..."
+                                fileType="xlsx,xls"
+                                change=".onFileChange"
+                                tooltip="Only Excel files are allowed" />
+                        </m:HBox>
+                        <m:MessageStrip
+                            id="messageStrip"
+                            text="Please upload an Excel file in .xls or .xlsx format."
+                            type="Information"
+                            showIcon="true"
+                            visible="true"
+                            class="sapUiSmallMarginBottom" />
+                    </m:VBox>
+                    <m:Toolbar>
+                        <m:ToolbarSpacer />
+                        <m:Button
+                            id="btnUpload"
+                            text="Upload"
+                            type="Emphasized"
+                            press=".onUpload" />
+                        <m:Button
+                            id="btnClose"
+                            text="Cancel"
+                            press=".onCloseDialog" />
+                    </m:Toolbar>
+                </m:Dialog>
+                <m:HBox justifyContent="End" width="auto">
+                    <m:Button id="NewDetail" icon="sap-icon://add-document" press=".onNew" tooltip="{i18n>newButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="EditDetail" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="RefreshDetail" icon="sap-icon://synchronize" press=".onRefresh" tooltip="{i18n>refreshButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="DeleteDetail" icon="sap-icon://delete" press=".onDelete" tooltip="{i18n>deleteButtonTooltip}" class="sapUiTinyMarginEnd" />
+                </m:HBox>                
+            </m:HBox>
+            <l:BlockLayoutCell backgroundColorSet="ColorSet11" backgroundColorShade="ShadeA" width="3">
+                <table:Table
+                    id="TableUpload"
+                    rows="{view>/files}"
+                    visibleRowCount="4"
+                    selectionMode="None">
+                    <table:columns>
+                        <!-- Kolom Checkbox dengan Select All -->
+                        <table:Column width="50px">
+                            <table:label>
+                                <m:CheckBox
+                                    select=".onSelectAll" />
+                            </table:label>
+                            <table:template>
+                                <m:CheckBox selected="{view>selected}" />
+                            </table:template>
+                        </table:Column>
+                        <!-- Kolom lainnya -->
+                        <table:Column width="400px">
+                            <m:Label text="Name" />
+                            <table:template>
+                                <m:Text text="{view>fileName}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Path" />
+                            <table:template>
+                                <m:Text text="{view>path}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Extension" />
+                            <table:template>
+                                <m:Text text="{view>extension}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Created By" />
+                            <table:template>
+                                <m:Text text="{view>createdBy}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Date Created" />
+                            <table:template>
+                                <m:Text text="{view>createdAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                    </table:columns>
+                </table:Table>
+            </l:BlockLayoutCell>
+        </m:Panel>
+    </m:Page>
 </mvc:View>
