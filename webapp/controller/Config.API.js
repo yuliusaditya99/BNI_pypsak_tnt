@@ -79,11 +79,14 @@ sap.ui.define([
                 //console.log("response X :",response);
                 const token = response.data.payloads.token;
                 const user = response.data.payloads.user;
+                const websocet = response.data.payloads.ws;
                 console.log("token : ",token);
+                console.log("websocet : ",websocet);
         
                 if (typeof Storage !== "undefined") {
                     localStorage.setItem("authToken", token);
                     localStorage.setItem("user", JSON.stringify(user));
+                    localStorage.setItem("websocet", JSON.stringify(websocet));
                 }
                 console.log("after set global var");
         
