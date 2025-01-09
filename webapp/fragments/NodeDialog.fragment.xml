@@ -1,29 +1,45 @@
-<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:sf="sap.ui.layout.form" xmlns:l="sap.ui.layout">
-    <Dialog title="Choose Action" id="nodeDialog">
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:sf="sap.ui.layout.form">
+    <Dialog title="{dialogModel>/label}" id="nodeDialog">
         <VBox class="sapUiSmallMargin">
-            <sf:SimpleForm editable="true" width="100%" layout="ResponsiveGridLayout">
+            <!-- SimpleForm for structured layout -->
+            <sf:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanL="3"
+                labelSpanM="3"
+                emptySpanL="0"
+                emptySpanM="0"
+                columnsL="1"
+                columnsM="1">
+                
                 <sf:content>
-                    <Label text="Current Version" />
-                    <Input id="currentVersionInput" type="Text" value="{path: '/currentVersion', formatter: '.emptyIfNull'}" />
+                    <!-- Current Version -->
+                    <Label text="current_version" design="Bold"/>
+                    <Input id="currentVersionInput" type="Text" value="{dialogModel>/parameters/currentVersion}" />
 
-                    <Label text="Adjust Value" />
-                    <Input id="adjustInput" type="Text" value="{path: '/adjust', formatter: '.emptyIfNull'}" />
+                    <!-- Adjust -->
+                    <Label text="adjust" design="Bold"/>
+                    <Input id="adjustInput" type="Text" value="{dialogModel>/parameters/adjust}" />
 
-                    <Label text="Start Date" />
-                    <Input id="startDateInput" type="Text" value="{path: '/startDate', formatter: '.emptyIfNull'}" />
+                    <!-- Start Date -->
+                    <Label text="start_date" design="Bold"/>
+                    <Input id="startDateInput" type="Text" value="{dialogModel>/parameters/startDate}" />
 
-                    <Label text="Countdown" />
-                    <Input id="countdownInput" type="Text" value="{path: '/countdown', formatter: '.emptyIfNull'}" />
+                    <!-- Countdown -->
+                    <Label text="countdown" design="Bold"/>
+                    <Input id="countdownInput" type="Text" value="{dialogModel>/parameters/countdown}" />
 
-                    <Label text="Show Countdown" />
-                    <Input id="isShowCountdownInput" type="Text" value="{path: '/isShowCountdown', formatter: '.emptyIfNull'}"/>
-                    
+                    <!-- Show Countdown -->
+                    <Label text="is_show_countdown" design="Bold"/>
+                    <Input id="isShowCountdownInput" type="Text" value="{dialogModel>/parameters/isShowCountdown}" />
                 </sf:content>
             </sf:SimpleForm>
         </VBox>
+
+        <!-- Buttons -->
         <buttons>
-            <Button text="Run" icon="sap-icon://play" press="onRunPress"/>
-            <Button type="Emphasized" text="Cancel" icon="sap-icon://cancel" press="onCancelPress"/>
+            <Button text="Execute" type="Emphasized" press="onRunPress"/>
+            <Button text="Cancel" press="onCancelPress"/>
         </buttons>
     </Dialog>
 </core:FragmentDefinition>

@@ -8,167 +8,209 @@ sap.ui.define([
 	return BaseController.extend("sap.ui.bni.toolpageapp.controller.Project", {
 		formatter: formatter,
 
-		//#region processflow
-		onInit: async function () {
-			var oViewModel = new JSONModel({
-				isPhone : Device.system.phone
-			});
-			this.setModel(oViewModel, "view");
-			Device.media.attachHandler(function (oDevice) {
-				this.getModel("view").setProperty("/isPhone", oDevice.name === "Phone");
-			}.bind(this));
+		//#region PROCCESS FLOW
+        
+        onInit: async function () {
+            var oViewModel = new JSONModel({
+                isPhone: Device.system.phone
+            });
+            this.setModel(oViewModel, "view");
+            Device.media.attachHandler(function (oDevice) {
+                this.getModel("view").setProperty("/isPhone", oDevice.name === "Phone");
+            }.bind(this));
+        
+            var oView = this.getView();
+            this.oProcessFlow1 = oView.byId("processflow1");
+        
+            // Define a single lane with the ID "lane"
+            const lanesData = [
+                { laneId: "lane", label: "Single Lane", position: 0 }
+            ];
+        
+            // Fetch OAuth token and data
+            const accessToken = await this.getAccessToken();
+            const nodesData = await this.fetchNodes(accessToken);
+            const childrenData = await this.fetchChildren(accessToken);
+        
+            // Map children relationships to nodes
+            const childrenMap = {};
+            childrenData.forEach(child => {
+                const parentId = child.task_code_from;
+                const childId = child.task_code_to;
+                if (!childrenMap[parentId]) {
+                    childrenMap[parentId] = [];
+                }
+                childrenMap[parentId].push(childId);
+            });
+        
+            // Process nodes
+            const nodes = nodesData.map(node => ({
+                id: node.id,
+                code: node.task_code,
+                laneId: "lane",
+                label: node.task_name,
+                owner: node.owner,
+                customColumns: {
+                    command: {
+                        shellScript: node.custom_columns?.command?.shell_script || "",
+                        sasScript: node.custom_columns?.command?.sas_script || "",
+                        sasScriptParams: node.custom_columns?.command?.sas_script_params || "",
+                        sasLog: node.custom_columns?.command?.sas_log || "",
+                        sasPathPrint: node.custom_columns?.command?.sas_path_print || "",
+                    },
+                },
+                parameters: {
+                    currentVersion: node.parameters?.current_version || "",
+                    adjust: node.parameters?.adjust || "",
+                    startDate: node.parameters?.start_date || "",
+                    countdown: node.parameters?.countdown || "",
+                    isShowCountdown: node.parameters?.is_show_countdown || "",
+                },
+                results: {
+                    "script.log": node.results?.["script.log"] || "",
+                },
+                state: node.state,
+                begin_at: node.process_begin_at,
+                end_at: node.process_end_at,
+                calculate: {
+                    begin_at: node?.process_begin_at || "",
+                    end_at: node?.process_end_at || "",
+                },
+                iteration: node.iteration,
+                children: childrenMap[node.task_code] || [],
+                description: node.description || "",
+                highlighted: node.highlighted || false,
+                focused: node.focused || false,
+                isRunning: node.is_running || false,
+                createdAt: node.created_at,
+                updatedAt: node.updated_at,
+                deletedAt: node.deleted_at,
+                createdBy: {
+                    userName: node.createdBy?.user_name || "",
+                    fullName: node.createdBy?.full_name || "",
+                    email: node.createdBy?.email || "",
+                    clientCode: node.createdBy?.client_code || "",
+                    id: node.createdBy?.id || null,
+                },
+                updatedBy: {
+                    userName: node.createdBy?.user_name || "",
+                    fullName: node.createdBy?.full_name || "",
+                    email: node.createdBy?.email || "",
+                    clientCode: node.createdBy?.client_code || "",
+                    id: node.createdBy?.id || null,
+                },
+                task: {
+                    title: node.task?.title || "",
+                    asOfDate: node.task?.as_of_date || "",
+                    processDefinition: node.task?.process_definition || null,
+                    description: node.task?.description || "",
+                    id: node.task?.id || null,
+                },
+            }));
+        
+            // Set up the combined model for the view
+            const combinedModel = new sap.ui.model.json.JSONModel({
+                lanes: lanesData,
+                nodes: nodes
+            });
+            oView.setModel(combinedModel);
+        
+            const oTable = this.byId("nodesTable");
+            const oBinding = oTable.getBinding("rows");
+            if (oBinding) {
+                const oSorter = new sap.ui.model.Sorter("code", false); // false for ascending
+                oBinding.sort(oSorter);
+            }
+        
+            console.log("Initialization completed with model data:", combinedModel.getData());
+        
+            this.oProcessFlow1.setZoomLevel("Two");
+        
+            // // Show post-reload message if available
+            // const postReloadMessage = localStorage.getItem('postReloadMessage');
+            // if (postReloadMessage) {
+            //     sap.m.MessageToast.show(postReloadMessage);
+            //     localStorage.removeItem('postReloadMessage');
+            // }
+        
+            // // Establish WebSocket connection
+            this._initializeWebSocket();
+        },
+        
+        _initializeWebSocket: function () {
+            const wsUrl = "ws://nexia-websocket.pypsak.cloud:80/ws/10"; 
 
-			var oView = this.getView();
-			this.oProcessFlow1 = oView.byId("processflow1");
-
-			// Define a single lane with the ID "lane"
-			const lanesData = [
-				{ laneId: "lane", label: "Single Lane", position: 0 }
-			];
-
-			// Step 1: Base64 encode client_id and client_secret
-			const clientId = 'clientid';
-			const clientSecret = 'secret';
-			const encodedCredentials = btoa(`${clientId}:${clientSecret}`);  // Base64 encode
-
-			// Step 2: Fetch OAuth token with client credentials in the Authorization header
-			const oauthResponse = await fetch('http://nexia-main.pypsak.cloud/token', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-					'Authorization': `Basic ${encodedCredentials}`  // Add the Authorization header
-				},
-				body: new URLSearchParams({
-					'grant_type': 'password',
-					'username': 'raymond',
-					'password': 'zbZX16}+'
-				})
-			});
-
-			if (!oauthResponse.ok) {
-				throw new Error('Failed to fetch OAuth token');
-			}
-
-			const oauthData = await oauthResponse.json();
-			const accessToken = oauthData.access_token; // Store the access token
-			console.log("OauthData: ",oauthData);
-			console.log("OAuth Access Token:", accessToken);
-
-			// Step 3: Fetch nodes data from the API with OAuth token
-			const nodesResponse = await fetch('http://nexia-main.pypsak.cloud/api/task_detail', {
-				headers: {
-					'Authorization': `Bearer ${accessToken}`  // Use Bearer token for authentication
-				}
-			});
-
-			const taskData = await nodesResponse.json();
-			const nodesData = taskData.payloads.data; // This is the array of tasks
-
-			console.log("Raw Nodes Data:", nodesData);
-
-			// Step 4: Fetch children relationships from the API with OAuth token
-			const childrenResponse = await fetch('http://nexia-main.pypsak.cloud/api/task_transition', {
-				headers: {
-					'Authorization': `Bearer ${accessToken}`  // Use Bearer token for authentication
-				}
-			});
-			const transitionData = await childrenResponse.json();
-			const childrenData = transitionData.payloads.data;
-			console.log("Children Data:", childrenData);
-
-			// Map children relationships to nodes
-			const childrenMap = {};
-			childrenData.forEach(child => {
-				const parentId = child.task_code_from;
-				const childId = child.task_code_to;
-				if (!childrenMap[parentId]) {
-					childrenMap[parentId] = [];
-				}
-				childrenMap[parentId].push(childId);
-			});
-			// Process nodes, assign all to the same lane, and map their children
-
-			const nodes = nodesData.map(node => ({
-				id: node.id, // Node ID
-				code: node.task_code, // Task code
-				laneId: "lane", // Assign all nodes to the same lane
-				label: node.task_name, // Task name, matches XML binding for `title`
-				owner: node.owner, // Owner of the task
-				customColumns: {
-					command: {
-						shellScript: node.custom_columns?.command?.shell_script || "", // Shell script
-						sasScript: node.custom_columns?.command?.sas_script || "", // SAS script
-						sasScriptParams: node.custom_columns?.command?.sas_script_params || "", // SAS script parameters
-						sasLog: node.custom_columns?.command?.sas_log || "", // SAS log path
-						sasPathPrint: node.custom_columns?.command?.sas_path_print || "", // SAS path print
-					},
-				},
-				parameters: {
-					currentVersion: node.parameters?.current_version || "", // Current version
-					adjust: node.parameters?.adjust || "", // Adjust value
-					startDate: node.parameters?.start_date || "", // Start date
-					countdown: node.parameters?.countdown || "", // Countdown
-					isShowCountdown: node.parameters?.is_show_countdown === "true", // Boolean for show countdown
-				},
-				results: {
-					"script.log": node.results?.["script.log"] || "",
-				},
-				state: node.state,
-				begin_at: node.process_begin_at,
-				end_at: node.process_end_at,
-				calculate:{
-					begin_at: node?.process_begin_at ||"",
-					end_at: node?.process_end_at || "",
-				},
-				iteration: node.iteration,
-				children: childrenMap[node.task_code] || [], // Assign children if available
-				description: node.description || "", // Task description, matches XML binding for `texts`
-				highlighted: node.highlighted || false, // Highlighted state (default false if not present)
-				focused: node.focused || false, // Focused state (default false if not present)
-				isRunning: node.is_running || false, // Is task running (default false if null)
-				createdAt: node.created_at, // Creation timestamp
-				updatedAt: node.updated_at, // Update timestamp
-				deletedAt: node.deleted_at, // Deletion timestamp
-				createdBy: {
-					userName: node.createdBy?.user_name || "", // Creator's username
-					fullName: node.createdBy?.full_name || "", // Creator's full name
-					email: node.createdBy?.email || "", // Creator's email
-					clientCode: node.createdBy?.client_code || "", // Client code
-					id: node.createdBy?.id || null, // Creator's ID
-				},
-				updatedBy: {
-					userName: node.createdBy?.user_name || "", // Creator's username
-					fullName: node.createdBy?.full_name || "", // Creator's full name
-					email: node.createdBy?.email || "", // Creator's email
-					clientCode: node.createdBy?.client_code || "", // Client code
-					id: node.createdBy?.id || null, // Creator's ID
-				}, // Updated by information
-				task: {
-					title: node.task?.title || "", // Task title
-					asOfDate: node.task?.as_of_date || "", // Task as of date
-					processDefinition: node.task?.process_definition || null, // Process definition
-					description: node.task?.description || "", // Task description
-					id: node.task?.id || null, // Task ID
-				},
-			}));
-
-			// Set up the combined model for the view
-			const combinedModel = new sap.ui.model.json.JSONModel({
-				lanes: lanesData,
-				nodes: nodes
-			});
-			oView.setModel(combinedModel);
-
-			console.log("Initialization completed with model data:", combinedModel.getData());
-
-
-			this.oProcessFlow1.setZoomLevel("Two");
-
-		},
-
-		onAfterRendering: function() {
-			this.oProcessFlow1.bindElement("/");
-		},
+            this._webSocket = new WebSocket(wsUrl);
+        
+            this._webSocket.onopen = () => {
+                console.log("WebSocket connection established.");
+                this._webSocket.send(JSON.stringify({ action: "subscribe", type: "nodes_updates" }));
+            };
+        
+            this._webSocket.onmessage = (event) => {
+                
+                console.log(event.data);
+            };
+        
+            this._webSocket.onclose = () => {
+                console.log("WebSocket connection closed. Reconnecting...");
+                setTimeout(() => this._initializeWebSocket(), 5000); // Reconnect after 5 seconds
+            };
+        
+            this._webSocket.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+        },
+        
+        fetchNodes: async function (accessToken) {
+            const response = await fetch('http://nexia-main.pypsak.cloud/api/task_detail', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            const data = await response.json();
+            return data.payloads.data;
+        },
+        
+        fetchChildren: async function (accessToken) {
+            const response = await fetch('http://nexia-main.pypsak.cloud/api/task_transition', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            const data = await response.json();
+            return data.payloads.data;
+        },
+        
+        getAccessToken: async function () {
+            const clientId = 'clientid';
+            const clientSecret = 'secret';
+            const encodedCredentials = btoa(`${clientId}:${clientSecret}`);
+        
+            const response = await fetch('http://nexia-main.pypsak.cloud/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Basic ${encodedCredentials}`
+                },
+                body: new URLSearchParams({
+                    'grant_type': 'password',
+                    'username': 'raymond',
+                    'password': 'zbZX16}+'
+                })
+            });
+        
+            if (!response.ok) {
+                throw new Error('Failed to fetch OAuth token');
+            }
+        
+            const data = await response.json();
+            return data.access_token;
+        },
+        
+        onAfterRendering: function () {
+            this.oProcessFlow1.bindElement("/");
+        },
 
         onZoomIn: function() {
             this.oProcessFlow1.zoomIn();
@@ -180,56 +222,72 @@ sap.ui.define([
             MessageToast.show("Zoom level changed to: " + this.oProcessFlow1.getZoomLevel());
         },
 		
-        emptyIfNull: function (value) {
-            return value || "";
-        },
-        
-		onNodePress: function(event) {
-            const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
-            const oModel = this.getView().getModel();  // Get the model
-        
-            // Get the current nodes data from the model
+       
+		onNodePress: function (event) {
+            const nodeId = event.getParameters().getNodeId();
+            const oModel = this.getView().getModel();
             const nodes = oModel.getProperty("/nodes");
         
-            // Find the node by its ID in the model data
             const nodeIndex = nodes.findIndex(node => node.code === nodeId);
         
             if (nodeIndex !== -1) {
                 const node = nodes[nodeIndex];
-        
-                // Prepare the parameters object from the node's data
-                const parameters = {
-                    currentVersion: node.parameters?.current_version || "",
-                    adjust: node.parameters?.adjust || "",
-                    startDate: node.parameters?.start_date || "",
-                    countdown: node.parameters?.countdown || "",
-                    isShowCountdown: node.parameters?.is_show_countdown === "true" ? true : false
+
+                const dialogData = {
+                    label: node.label, // For the dialog title
+                    parameters: {
+                        currentVersion: node.parameters?.currentVersion || null,
+                        adjust: node.parameters?.adjust || null,
+                        startDate: node.parameters?.startDate || null,
+                        countdown: node.parameters?.countdown || null,
+                        isShowCountdown: node.parameters?.isShowCountdown || null
+                    }
                 };
+
+                console.log("Dialog Parameters:", dialogData.parameters); // Check values
         
-                // Load the fragment asynchronously
                 if (!this._oDialog) {
                     this._oDialog = sap.ui.xmlfragment(this.getView().getId(), "sap.ui.bni.toolpageapp.fragments.NodeDialog", this);
                     this.getView().addDependent(this._oDialog);
                 }
+                
+                const oDialogModel = new sap.ui.model.json.JSONModel(dialogData);
+                this._oDialog.setModel(oDialogModel, "dialogModel");
         
-                // Create a new JSON model with the parameters for this specific node
-                const oModelForDialog = new sap.ui.model.json.JSONModel(parameters);
-                this._oDialog.setModel(oModelForDialog);
+                this._currentNodeId = node.id;
+                this._currentNodeTitle = node.label;
         
-                // Open the dialog
                 this._oDialog.open();
             } else {
-                MessageToast.show("Node not found.");
+                sap.m.MessageToast.show("Node not found.");
             }
-        },    
+        },
+        
+        
         // Handle the "Run" button press
         onRunPress: function() {
-            const oModel = this._oDialog.getModel();
-            const parameters = oModel.getData();
-
-            // Call the runNode method with the parameters
-            this.runNode(parameters.currentVersion, parameters.adjust, parameters.startDate, parameters.countdown, parameters.isShowCountdown);
-
+            //#region  !!!!!
+            const oDialogModel = this._oDialog.getModel("dialogModel");
+            const dialogData = oDialogModel.getData();
+            const parameters = dialogData.parameters;
+            
+            const allFieldsEmpty = 
+            (!parameters.currentVersion || parameters.currentVersion.trim() === "") &&
+            (!parameters.adjust || parameters.adjust.trim() === "") &&
+            (!parameters.startDate || parameters.startDate.trim() === "") &&
+            (!parameters.countdown || parameters.countdown === 0) &&
+            (!parameters.isShowCountdown || parameters.isShowCountdown.trim() === "");
+            //#endregion
+            
+            if (allFieldsEmpty) {
+                // Make parameters empty if all fields are blank and isShowCountdown is false
+                this.runNode(this._currentNodeId, this._currentNodeTitle, {});
+                
+            } else{
+                this.runNode(this._currentNodeId, this._currentNodeTitle, parameters);
+                
+            }
+        
             this._oDialog.close(); // Close the dialog
         },
 
@@ -275,44 +333,100 @@ sap.ui.define([
             }
         },
 
-		runNode: async function(nodeId, nodeTitle) {
+		runNode: async function(nodeId, nodeTitle, parameters) {
             try {
-                // Step 1: Get the access token using the helper function
+                // Step 1: Get the access token
                 const accessToken = await this.getAccessToken();
-        
-                // Step 2: Execute the node using the access token
+            
+                // Step 2: Prepare the API request
                 const apiUrl = `http://nexia-main.pypsak.cloud/api/task_detail/execute/${nodeId}`;
-                const executeResponse = await fetch(apiUrl, {
+                const payload = {};
+            
+                if (parameters.currentVersion && parameters.currentVersion.trim() !== "") {
+                    payload.current_version = parameters.currentVersion;
+                }
+                if (parameters.adjust !== null && parameters.adjust !== undefined) {
+                    payload.adjust = parameters.adjust;
+                }
+                if (parameters.startDate && parameters.startDate.trim() !== "") {
+                    payload.start_date = parameters.startDate;
+                }
+                if (parameters.countdown !== null && parameters.countdown !== undefined) {
+                    payload.countdown = parameters.countdown;
+                }
+                if (parameters.isShowCountdown !== null && parameters.isShowCountdown !== undefined) {
+                    payload.is_show_countdown = parameters.isShowCountdown;
+                }
+            
+                // Execute API call
+                const response = await fetch(apiUrl, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${accessToken}`,
                     },
+                    body: JSON.stringify(payload)
                 });
-        
-                if (!executeResponse.ok) {
-                    throw new Error(`Execution failed: ${executeResponse.statusText}`);
+            
+                if (!response.ok) {
+                    throw new Error(`Execution failed: ${response.statusText}`);
                 }
-        
-                const data = await executeResponse.json();
+            
+                const data = await response.json();
                 console.log("Node execution response:", data);
+            
+                // Show success message
+                localStorage.setItem('postReloadMessage', `Process ${nodeTitle} is running`);
+                
+                // Instead of reloading the page, update the affected parts
+                this.updateUIAfterNodeExecution(data);  // Update the relevant UI sections
         
-                sap.m.MessageToast.show(`Process ${nodeTitle} executed successfully!`);
-
             } catch (error) {
                 console.error("Error executing node:", error);
                 sap.m.MessageToast.show("Failed to execute node.");
             }
-
         },
+        
+        updateUIAfterNodeExecution: function(data) {
+            // Log the data being passed
+            console.log("Data received for update:", data);
+        
+            // Update the UI dynamically with the new data without reloading the page
+            const oTable = this.getView().byId("nodesTable"); // Replace with your table ID
+            if (!oTable) {
+                console.error("Table with ID 'nodesTable' not found.");
+                return;
+            }
+        
+            const oModel = oTable.getModel();
+            if (!oModel) {
+                console.error("Model not found for the table.");
+                return;
+            }
+        
+            // Log the current state of the model
+            console.log("Current model data:", oModel.getData());
+        
+            // Update model with new data
+            oModel.setData(oModel.getData());
+        
+            // Log the updated state of the model
+            console.log("Updated model data:", oModel.getData());
+        
+            // Refresh the bindings to ensure the UI is updated
+            oModel.refresh(true);
+        
+            // Optionally, update a specific control or property in the view
+            sap.m.MessageToast.show("Process updated successfully!");
+        },
+        
 		//#endregion
 
-		//#region formatter
+		//#region FORMATTER
 		formatParameters: function (parameters) {
             if (!parameters) {
                 return "No parameters available"; // Handle null or undefined parameters
             }
-        
             // Check if all fields are empty
             const isEmpty = 
                 !parameters.currentVersion && 
@@ -324,13 +438,14 @@ sap.ui.define([
             if (isEmpty) {
                 return "";
             }
+
         
             // Format parameters into a multi-line string
             return `Current Version: ${parameters.currentVersion || ""}
             Adjust: ${parameters.adjust || ""}
             Start Date: ${parameters.startDate || ""}
             Countdown: ${parameters.countdown || ""}
-            Show Countdown: ${parameters.isShowCountdown ? "Yes" : "No"}`;
+            Show Countdown: ${parameters.isShowCountdown||""}`;
         },
         
         timeFormater: function (dateString) {
@@ -380,31 +495,20 @@ sap.ui.define([
                 return "End time is earlier than start time";
             }
         
-            const seconds = Math.floor((timeDiff / 1000) % 60);
-            const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
-            const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
-            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            // Calculate hours, minutes, and seconds
+            const totalSeconds = Math.floor(timeDiff / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
         
-            let result = "";
-            if (days > 0) {
-                result += `${days} days `;
-            }
-            if (hours > 0) {
-                result += `${hours} hours `;
-            }
-            if (minutes > 0) {
-                result += `${minutes} minutes `;
-            }
-            result += `${seconds} seconds`;
-
-            return result;
+            // Format the result to always display hours, minutes, and seconds
+            return `${hours}h ${minutes}m ${seconds}s`;
         },
-
+        
         formatCustomColumns: function (customColumns) {
             if (!customColumns || !customColumns.command) {
                 return "No command details available"; // Handle null or undefined command object
             }
-            console.log(customColumns.command.shell_script)
             // Check if all fields are empty
             const isEmpty = 
                 !customColumns.command.shell_script &&
@@ -416,7 +520,7 @@ sap.ui.define([
             if (isEmpty) {
                 return ""; // Return empty if all fields are empty
             }
-            console.log("Sesuatu")
+            
             // Format command data into a multi-line string
             return `${command.shell_script ? `Shell Script: ${command.shell_script}` : ""}
                     ${command.sas_script ? `SAS Script: ${command.sas_script}` : ""}
@@ -427,7 +531,17 @@ sap.ui.define([
 
         formatUpperCase: function (sText) {
             return sText ? sText.toUpperCase() : ""; // Convert text to uppercase, handle null/undefined
+        },
+
+        falseIfNull: function(value) {
+            // If the value is null, undefined, or empty, return false; otherwise, return the value
+            return value === "true" || value === true ? true : false;
+        },
+        
+        emptyIfNull: function (value) {
+            return value || "";
         }
+        
 		//#endregion
 	});
 });

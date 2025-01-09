@@ -1,64 +1,73 @@
-/* Input Filter Project*/
-[id*="filterInput"] {
-    padding-left: 20px;
-}
-
-/* Process Flow */
-.sapSuiteUiCommonsPFHeaderRow {
-    display: none !important;
-}
-
+/* General Styles */
 .paddingTopBottom {
-    padding-top: 7px;
-    padding-bottom: 7px;
+    padding: 7px 0;
 }
 
-
-
-[id*="zoomButtons"]{
+[id*="zoomButtons"] {
     margin: 1rem 2rem 1rem 1rem;
 }
 
 
-
-/* Entire Table Border */
-[id*="nodesTable"] .sapUiTable {
-    border: 2px solid #000000d4 !important; /* Border around the entire table */
-    border-collapse: collapse; /* Ensures the borders are seamless */
+[id*="hButtons"] {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
 }
 
-/* Row Borders */
-[id*="nodesTable"] .sapUiTableRow {
-    border-bottom: 1px solid #000000d4 !important; /* Bottom border for each row */
-    border-top: 1px solid #000000d4 !important;   /* Top border for each row */
+/* Hide Header Row */
+.sapSuiteUiCommonsPFHeaderRow {
+    display: none !important;
 }
 
-/* Cell Borders */
-[id*="nodesTable"] .sapUiTableCell {
-    border-left: 1x solid #000000d4 !important;  /* Left border for each cell */
-    border-right: 1px solid #000000d4 !important; /* Right border for each cell */
-    border-top: 1px solid #000000d4 !important;   /* Top border for each cell */
-    border-bottom: 1px solid #000000d4 !important; /* Bottom border for each cell */
-}
-
-
-/* Nodes Title */
+/* Process Flow Node */
 .sapSuiteUiCommonsProcessFlowNodeTitle {
-    text-align: center;
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
 }
 
+/* Table Styling */
+.sapUiTable {
+    border: 2px solid #00000064;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.sapUiTableCell {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #00000064;
+}
+
+.sapUiTable .sapUiTableRow:nth-child(even) {
+    background-color: #f9f9f9;
+}
+.sapUiTable .sapUiTableCell:hover {
+    background-color: #f2f2f26b;
+}
+.sapUiTableHeader {
+    background-color: #007bff;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+}
+
+.sapUiTableRow:first-child {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.sapUiTableRow:last-child {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
 
 /* Process Flow Container */
 #container-toolpageapp---project--processflow1-table {
-    padding-top: 5rem;                /* Sets padding for the whole table */
-    padding-left: 3rem;
-    padding-right: 3rem;
+    margin: 1rem 3rem 0;
 }
 
 #container-toolpageapp---project--processflow1-table .sapMText {
-    padding: 8px;                 /* Sets padding for text cells */
-    text-align: center;             /* Aligns text in cells */
+    padding: 8px;
+    text-align: center;
 }
