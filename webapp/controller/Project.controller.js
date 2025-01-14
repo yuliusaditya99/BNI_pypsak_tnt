@@ -2,15 +2,17 @@ sap.ui.define([
 	'./BaseController',
 	'sap/ui/model/json/JSONModel',
 	'sap/ui/Device',
-	'sap/ui/bni/toolpageapp/model/formatter'
+	'sap/ui/bni/toolpageapp/model/formatter',
 ], function (BaseController, JSONModel, Device, formatter) {
 	"use strict";
 	return BaseController.extend("sap.ui.bni.toolpageapp.controller.Project", {
 		formatter: formatter,
-
+        
 		//#region PROCCESS FLOW
         
         onInit: async function () {
+            try{
+            console.log("Project controller initialized.");
             var oViewModel = new JSONModel({
                 isPhone: Device.system.phone
             });
@@ -18,20 +20,20 @@ sap.ui.define([
             Device.media.attachHandler(function (oDevice) {
                 this.getModel("view").setProperty("/isPhone", oDevice.name === "Phone");
             }.bind(this));
-        
+            
             var oView = this.getView();
             this.oProcessFlow1 = oView.byId("processflow1");
-        
+            
             // Define a single lane with the ID "lane"
             const lanesData = [
                 { laneId: "lane", label: "Single Lane", position: 0 }
             ];
-        
+            
             // Fetch OAuth token and data
-            const accessToken = await this.getAccessToken();
-            const nodesData = await this.fetchNodes(accessToken);
-            const childrenData = await this.fetchChildren(accessToken);
-        
+            const nodesData = await this.fetchNodes();
+            console.log("process initialitaion running");
+            const childrenData = await this.fetchChildren();
+            console.log("Nodes data:", nodesData);
             // Map children relationships to nodes
             const childrenMap = {};
             childrenData.forEach(child => {
@@ -125,31 +127,43 @@ sap.ui.define([
             console.log("Initialization completed with model data:", combinedModel.getData());
         
             this.oProcessFlow1.setZoomLevel("Two");
-        
-            // // Show post-reload message if available
-            // const postReloadMessage = localStorage.getItem('postReloadMessage');
-            // if (postReloadMessage) {
-            //     sap.m.MessageToast.show(postReloadMessage);
-            //     localStorage.removeItem('postReloadMessage');
-            // }
-        
-            // // Establish WebSocket connection
+            
+           
             this._initializeWebSocket();
+            // Continue with the rest of the initialization logic
+            console.log("Process initialization running");
+            
+        } catch (error) {
+            console.error("Error during onInit:", error);
+            sap.m.MessageToast.show("Initialization failed.");
+        }
         },
         
         _initializeWebSocket: function () {
-            const wsUrl = "ws://nexia-websocket.pypsak.cloud:80/ws/10"; 
 
-            this._webSocket = new WebSocket(wsUrl);
+            this._webSocket = new WebSocket(localStorage.getItem("ws"));
         
             this._webSocket.onopen = () => {
                 console.log("WebSocket connection established.");
                 this._webSocket.send(JSON.stringify({ action: "subscribe", type: "nodes_updates" }));
             };
-        
             this._webSocket.onmessage = (event) => {
-                
-                console.log(event.data);
+                try {
+                    // Parse the event data as JSON
+                    const data = event.data;
+                    // Check if it contains 'task_detail'
+                    if (typeof data === "string" && data.includes("task_detail")) {
+                        // console.log("task_detail found in data:", data);
+                        console.log("data : ", event.data);
+                        
+                        // refresh the data and view
+
+                        
+                    }
+                } catch (error) {
+                    console.error("Failed to process WebSocket message:", error);
+                }
+
             };
         
             this._webSocket.onclose = () => {
@@ -162,51 +176,48 @@ sap.ui.define([
             };
         },
         
-        fetchNodes: async function (accessToken) {
-            const response = await fetch('http://nexia-main.pypsak.cloud/api/task_detail', {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
+        fetchNodes: async function () {
+            try {
+                const token = localStorage.getItem("authToken");
+                if (!token) {
+                    throw new Error("No auth token found");
                 }
-            });
-            const data = await response.json();
-            return data.payloads.data;
-        },
         
-        fetchChildren: async function (accessToken) {
-            const response = await fetch('http://nexia-main.pypsak.cloud/api/task_transition', {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            const data = await response.json();
-            return data.payloads.data;
-        },
+                const response = await axios.get('http://nexia-main.pypsak.cloud/api/task_detail', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
         
-        getAccessToken: async function () {
-            const clientId = 'clientid';
-            const clientSecret = 'secret';
-            const encodedCredentials = btoa(`${clientId}:${clientSecret}`);
-        
-            const response = await fetch('http://nexia-main.pypsak.cloud/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': `Basic ${encodedCredentials}`
-                },
-                body: new URLSearchParams({
-                    'grant_type': 'password',
-                    'username': 'raymond',
-                    'password': 'zbZX16}+'
-                })
-            });
-        
-            if (!response.ok) {
-                throw new Error('Failed to fetch OAuth token');
+                const data = response.data;
+                return data.payloads.data;
+            } catch (error) {
+                console.error("Error fetching nodes:", error);
+                throw error;
             }
-        
-            const data = await response.json();
-            return data.access_token;
         },
+        
+        fetchChildren: async function () {
+            try {
+                const token = localStorage.getItem("authToken");
+                if (!token) {
+                    throw new Error("No auth token found");
+                }
+        
+                const response = await axios.get('http://nexia-main.pypsak.cloud/api/task_transition', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+        
+                const data = response.data;
+                return data.payloads.data;
+            } catch (error) {
+                console.error("Error fetching children:", error);
+                throw error;
+            }
+        },
+        
         
         onAfterRendering: function () {
             this.oProcessFlow1.bindElement("/");
@@ -335,8 +346,9 @@ sap.ui.define([
 
 		runNode: async function(nodeId, nodeTitle, parameters) {
             try {
-                // Step 1: Get the access token
-                const accessToken = await this.getAccessToken();
+                sap.ui.core.BusyIndicator.show(0);
+
+                const accessToken = getLocalStorageItem('authToken');
             
                 // Step 2: Prepare the API request
                 const apiUrl = `http://nexia-main.pypsak.cloud/api/task_detail/execute/${nodeId}`;
@@ -378,46 +390,13 @@ sap.ui.define([
                 // Show success message
                 localStorage.setItem('postReloadMessage', `Process ${nodeTitle} is running`);
                 
-                // Instead of reloading the page, update the affected parts
-                this.updateUIAfterNodeExecution(data);  // Update the relevant UI sections
         
             } catch (error) {
                 console.error("Error executing node:", error);
                 sap.m.MessageToast.show("Failed to execute node.");
+            } finally{
+                sap.ui.core.BusyIndicator.hide();
             }
-        },
-        
-        updateUIAfterNodeExecution: function(data) {
-            // Log the data being passed
-            console.log("Data received for update:", data);
-        
-            // Update the UI dynamically with the new data without reloading the page
-            const oTable = this.getView().byId("nodesTable"); // Replace with your table ID
-            if (!oTable) {
-                console.error("Table with ID 'nodesTable' not found.");
-                return;
-            }
-        
-            const oModel = oTable.getModel();
-            if (!oModel) {
-                console.error("Model not found for the table.");
-                return;
-            }
-        
-            // Log the current state of the model
-            console.log("Current model data:", oModel.getData());
-        
-            // Update model with new data
-            oModel.setData(oModel.getData());
-        
-            // Log the updated state of the model
-            console.log("Updated model data:", oModel.getData());
-        
-            // Refresh the bindings to ensure the UI is updated
-            oModel.refresh(true);
-        
-            // Optionally, update a specific control or property in the view
-            sap.m.MessageToast.show("Process updated successfully!");
         },
         
 		//#endregion

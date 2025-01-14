@@ -82,14 +82,17 @@ sap.ui.define([
                 const websocet = response.data.payloads.ws;
                 console.log("token : ",token);
                 console.log("websocet : ",websocet);
+                console.log("user id : ",user.id);
         
                 if (typeof Storage !== "undefined") {
                     localStorage.setItem("authToken", token);
-                    localStorage.setItem("user", JSON.stringify(user));
+                    localStorage.setItem("user", JSON.stringify(user.id));
                     localStorage.setItem("websocet", JSON.stringify(websocet));
+                    localStorage.setItem("ws",(`${websocet}/ws/${user.id}`) );
                 }
+                console.log(localStorage.getItem("ws"));
                 console.log("after set global var");
-        
+                
                 axios.defaults.headers.common["Authorization"] = "Bearer " + token;
                 console.log("after set authorization");
                 console.log("Set Header:", axios.defaults.headers.common["Authorization"]);

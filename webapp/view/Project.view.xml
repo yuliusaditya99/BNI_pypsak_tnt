@@ -31,8 +31,8 @@
 				</Toolbar>
 			</headerToolbar>
 			
-			<HBox justifyContent="SpaceBetween" width="100%" id="hButtons>
-				<!-- Input Filter di Kiri Mentok -->
+			<HBox justifyContent="SpaceBetween" width="100%" id="hButtons">
+				
 				<Input
 					id="filterInput"
 					placeholder="{i18n>filterPlaceholder}" 
