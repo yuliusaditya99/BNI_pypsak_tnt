@@ -408,6 +408,7 @@ sap.ui.define([
 
         
         onSaveDialogTask: async function () {
+            let idTask;
             console.log("onSaveDialogTask");
             const oDialog = this.byId("ProjectTaskDialog");
             const titleValue = this.byId("titleInput") ? this.byId("titleInput").getValue() : "";
@@ -435,31 +436,78 @@ sap.ui.define([
                 return;
             }
 
-            const requestData = {
-                title: titleValue,
-                as_of_date: asOfDateValue,
-                process_definition: parseInt(processDefComboValue, 10), 
-                description: descriptionInputValue
-            };
+            const oDialogModel = this.getView().getModel("dialogModel");
+            const oDialogData = oDialogModel.getData()
 
-            const oRequestBody =  JSON.stringify(requestData); 
-            sap.ui.core.BusyIndicator.show(0);
+           
+
+            if (oDialogData && oDialogData.id) {
+                idTask = oDialogData.id;
+            }
+        
 
             try {
-                const oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
-                    headers: {
-                        "Content-Type": "application/json" 
-                    }
-                });
+                // const oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
+                //     headers: {
+                //         "Content-Type": "application/json" 
+                //     }
+                // });
 
-                MessageToast.show("Data submitted successfully.");
+                let oResponse;
+                let requestData;
+                let oRequestBody;
+
+                if (idTask) {
+                    // Edit data
+                    requestData = {
+                        title: titleValue,
+                        as_of_date: asOfDateValue,
+                        process_definition: parseInt(processDefComboValue, 10), 
+                        description: descriptionInputValue,
+                        id: idTask
+                    };
+        
+                    oRequestBody =  JSON.stringify(requestData); 
+                    sap.ui.core.BusyIndicator.show(0);
+                    console.log("Editing data with ID:", idTask);
+                    oResponse = await axios.put(Config.paths.apiBaseUrl + `/api/task/${requestData.id}`, oRequestBody, {
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    });
+                    MessageToast.show("Add data successfully.");
+                } else {
+                    // Create data
+
+                    requestData = {
+                        title: titleValue,
+                        as_of_date: asOfDateValue,
+                        process_definition: parseInt(processDefComboValue, 10), 
+                        description: descriptionInputValue
+                    };
+        
+                    oRequestBody =  JSON.stringify(requestData); 
+                    sap.ui.core.BusyIndicator.show(0);
+                    console.log("Creating new data");
+                    oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    });
+                    MessageToast.show("Update data successfully.");
+                }
+                
+                
                 console.log("Response:", oResponse.data);
                 oDialog.close();
                 this.onRefresh();
 
+                
+                
+
             } catch (oError) {
                 console.error("Error:", oError);
-                MessageToast.show("Failed to submit data.");
+                MessageToast.show("Failed to save data.");
             } finally {
                 sap.ui.core.BusyIndicator.hide();
             }
