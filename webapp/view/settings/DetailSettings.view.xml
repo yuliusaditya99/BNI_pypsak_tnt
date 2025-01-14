@@ -23,14 +23,30 @@
             id="ProjectContainerDetail"
             accessibleRole="Region"
             class="sapUiNoContentPadding">
-            <m:HBox justifyContent="SpaceBetween" width="100%">
-                <m:Input
-                    id="filterInputDetail"
-                    placeholder="{i18n>filterPlaceholder}"
-                    width="300px"
-                    liveChange=".onFilter"
-                    tooltip="{i18n>filterTooltip}"
-                    class="sapUiTinyMarginEnd" />
+            <m:HBox justifyContent="SpaceBetween" width="100%" >
+                <m:HBox class="sapUiSmallMargin">
+                    <m:ComboBox
+                        id="columnComboBox"
+                        selectedKey="fileName"
+                        width="150px"
+                        change=".onColumnChange">
+                        <m:items>
+                            <core:ListItem text="Name" key="fileName" />
+                            <core:ListItem text="Path" key="path" />
+                            <core:ListItem text="Extension" key="extension" />
+                            <core:ListItem text="Created By" key="createdBy" />
+                            <core:ListItem text="Date Created" key="createdAt" />
+                        </m:items>
+                    </m:ComboBox>
+                    <m:SearchField
+                        id="searchField"
+                        placeholder="{i18n>searchPlaceholder}"
+                        liveChange=".onSearch"
+                        width="300px"
+                        tooltip="{i18n>searchTooltip}"
+                        class="sapUiTinyMarginEnd" />
+                </m:HBox>            
+
                 <m:Dialog
                     id="excelUploadDialog"
                     title="Upload Excel File"
@@ -39,7 +55,7 @@
                     stretch="{device>/system/phone}">
                     <m:VBox class="sapUiSmallMargin">
                         <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
-                            <m:Label text="Choose Excel File |" labelFor="fileUploader" />
+                            <m:Label text="Choose Excel File " labelFor="fileUploader" />
                             <u:FileUploader
                                 id="fileUploader"
                                 width="100%"
@@ -71,7 +87,7 @@
                 </m:Dialog>
                 <m:HBox justifyContent="End" width="auto">
                     <m:Button id="NewDetail" icon="sap-icon://add-document" press=".onNew" tooltip="{i18n>newButtonTooltip}" class="sapUiTinyMarginEnd" />
-                    <m:Button id="EditDetail" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <!--<m:Button id="EditDetail" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />-->
                     <m:Button id="RefreshDetail" icon="sap-icon://synchronize" press=".onRefresh" tooltip="{i18n>refreshButtonTooltip}" class="sapUiTinyMarginEnd" />
                     <m:Button id="DeleteDetail" icon="sap-icon://delete" press=".onDelete" tooltip="{i18n>deleteButtonTooltip}" class="sapUiTinyMarginEnd" />
                 </m:HBox>                
@@ -80,7 +96,7 @@
                 <table:Table
                     id="TableUpload"
                     rows="{view>/files}"
-                    visibleRowCount="4"
+                    visibleRowCount="10"
                     selectionMode="None">
                     <table:columns>
                         <!-- Kolom Checkbox dengan Select All -->
@@ -126,6 +142,23 @@
                         </table:Column>
                     </table:columns>
                 </table:Table>
+                <m:HBox justifyContent="Start" >
+                    <m:ComboBox
+                        id="rowCountComboBox"
+                        selectedKey="10"
+                        width="70px"
+                        change=".onRowCountChange">
+                        <m:items>
+                            <core:ListItem text="All" key="-1" />
+                            <core:ListItem text="10" key="10" />
+                            <core:ListItem text="20" key="20" />
+                            <core:ListItem text="25" key="25" />
+                            <core:ListItem text="50" key="50" />
+                            <core:ListItem text="75" key="75" />
+                            <core:ListItem text="100" key="100" />
+                        </m:items>
+                    </m:ComboBox>
+                </m:HBox>
             </l:BlockLayoutCell>
         </m:Panel>
     </m:Page>

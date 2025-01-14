@@ -3,7 +3,7 @@ sap.ui.define([
 	"./model/models",
 	"sap/ui/core/routing/History",
 	"sap/ui/Device",
-	"sap/ui/model/resource/ResourceModel"
+	"sap/ui/model/resource/ResourceModel"	
 ], function(UIComponent, models, History, Device) {
 	"use strict";
 
@@ -27,6 +27,7 @@ sap.ui.define([
 			console.log("Targets:", oRouter._oTargets);
 			this.getRouter().initialize();
 			console.log("after initial");
+			
 		},
 
 		myNavBack: function () {
@@ -38,7 +39,7 @@ sap.ui.define([
 				this.getRouter().navTo("masterSettings", {}, true);
 			}
 		},
-
+		
 		getContentDensityClass: function () {
 			if (!this._sContentDensityClass) {
 				if (!Device.support.touch){

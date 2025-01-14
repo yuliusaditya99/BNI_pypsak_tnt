@@ -1,261 +1,216 @@
 <mvc:View
 	controllerName="sap.ui.bni.toolpageapp.controller.Project"
-	xmlns="sap.m"
-	xmlns:commons="sap.suite.ui.commons"
+	xmlns="sap.uxap"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout"
+    xmlns:m="sap.m"
+    xmlns:u="sap.ui.unified"
+    xmlns:core="sap.ui.core"
     xmlns:table="sap.ui.table"
-	xmlns:l="sap.ui.layout"
-	xmlns:core="sap.ui.core"
-	xmlns:mvc="sap.ui.core.mvc">
-	<Page 
+    xmlns:mvc="sap.ui.core.mvc">
+	<m:Page 
         id="ProjectPage"
         showHeader="false">
-		<landmarkInfo>
-			<PageAccessibleLandmarkInfo
+		<m:landmarkInfo>
+			<m:PageAccessibleLandmarkInfo
 				rootRole="Region"
 				rootLabel="{i18n>Project_rootLabel}"
 				contentRole="Main"
 				contentLabel="{i18n>Project_contentLabel}"/>
-		</landmarkInfo>		
-		<Panel
-			id="ProjectContainer"
-			accessibleRole="Region"
-			class="sapUiNoContentPadding">
-			<!-- Judul Panel -->
-			<headerToolbar>
-				<Toolbar>
-					<Title
-						text="{i18n>projectTitle}"
-						level="H3"
-						textAlign="Left"/>
-				</Toolbar>
-			</headerToolbar>
-			
-			<HBox justifyContent="SpaceBetween" width="100%">
-				<!-- Input Filter di Kiri Mentok -->
-				<Input
-					id="filterInput"
-					placeholder="{i18n>filterPlaceholder}" 
-					width="300px"
-					liveChange=".onFilter"
-					tooltip="{i18n>filterTooltip}"
-					class="sapUiTinyMarginEnd"
-					/>
-			
-				<HBox justifyContent="End" width="auto">
-					<Button
-						id="New"
-						icon="sap-icon://add-document"
-						press=".onNew"
-						tooltip="{i18n>newButtonTooltip}"
-						class="sapUiTinyMarginEnd"
-						/>
-					<Button
-						id="Edit"
-						icon="sap-icon://write-new-document"
-						press=".onEdit"
-						tooltip="{i18n>editButtonTooltip}"
-						class="sapUiTinyMarginEnd"
-						/>
-					<Button
-						id="Refresh"
-						icon="sap-icon://synchronize"
-						press=".onRefresh"
-						tooltip="{i18n>refreshButtonTooltip}"
-						class="sapUiTinyMarginEnd"/>
-					<Button
-						id="Delete"
-						icon="sap-icon://delete"
-						press=".onDelete"
-						tooltip="{i18n>deleteButtonTooltip}"
-						class="sapUiTinyMarginEnd"/>
-				</HBox>						
-			</HBox>
-
-			<table:Table
-            id="nodesTable"
-            rows="{/nodes}"
-            visibleRowCount="4"
-            selectionMode="None">
-            <table:columns>
-                <table:Column width="150px">
-                    <Label text="As of Date" />
-                    <table:template>
-                        <Text text="{path: 'task/asOfDate'}" class="paddingTopBottom" />
-                    </table:template>
+		</m:landmarkInfo>		
+		<m:Panel
+            id="Project"
+            accessibleRole="Region"
+            class="sapUiNoContentPadding">
+            <m:HBox justifyContent="SpaceBetween" width="100%" >
+                <m:HBox class="sapUiSmallMargin">
+                    <m:ComboBox
+                        id="columnComboBoxProject"
+                        selectedKey="title"
+                        width="150px"
+                        change=".onColumnChange">
+                        <m:items>
+                            <core:ListItem text="Title" key="title" />
+                            <core:ListItem text="As of date" key="asOfDate" />
+                            <core:ListItem text="Process Definition" key="processDefinition" />
+                            <core:ListItem text="Description" key="description" />
+                            <core:ListItem text="Created by" key="createdBy" />
+                            <core:ListItem text="Created at" key="createdAt" />
+                            <core:ListItem text="Updated by" key="updatedBy" />
+                            <core:ListItem text="Updated at" key="updatedAt" />
+                        </m:items>
+                    </m:ComboBox>
+                    <m:SearchField
+                        id="searchFieldProject"
+                        placeholder="{i18n>searchPlaceholder}"
+                        liveChange=".onSearch"
+                        width="300px"
+                        tooltip="{i18n>searchTooltip}"
+                        class="sapUiTinyMarginEnd" />
+                </m:HBox>
+                <m:Dialog
+                    id="ProjectTaskDialog"
+                    title="Input Form"
+                    draggable="true"
+                    resizable="true"
+                    stretch="{device>/system/phone}">
+                    <m:VBox class="sapUiSmallMargin">
+                        <!-- Input Title -->
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Title" labelFor="titleInput" />
+                            <m:Input
+                                id="titleInput"
+                                width="100%"
+                                placeholder="Enter title here..."
+                                value="{dialogModel>/title}" />
+                        </m:HBox>
+                        
+                        <!-- Date Input -->
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="As of Date" labelFor="asOfDateInput" />
+                            <m:DatePicker
+                                id="asOfDateInput"
+                                width="100%"
+                                placeholder="mm/dd/yyyy"
+                                displayFormat="MM/dd/yyyy"
+                                valueFormat="yyyy-MM-dd"
+                                value="{dialogModel>/date}" />
+                        </m:HBox>
+                        
+                        <!-- Process Definition -->
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Process Definition" labelFor="processDefCombo" />
+                            <m:ComboBox
+                                id="processDefCombo"
+                                width="100%"
+                                placeholder="Select process..."
+                                selectedKey="{dialogModel>/processDefinition}"
+                                items="{
+                                    path: 'view>/files'
+                                }">
+                                <core:Item key="{view>id}" text="{view>fileName}" />
+                            </m:ComboBox>
+                        </m:HBox>
+                        
+                        <!-- Description -->
+                        <m:HBox justifyContent="Start" alignItems="Start" class="sapUiSmallMarginBottom">
+                            <m:Label text="Description" labelFor="descriptionInput" />
+                            <m:TextArea
+                                id="descriptionInput"
+                                width="100%"
+                                placeholder="Enter description here..."
+                                value="{dialogModel>/description}" />
+                        </m:HBox>
+                    </m:VBox>
                     
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="Code" />
-                    <table:template>
-                        <Text text="{path: 'code'}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="150px">
-                    <Label text="Task Name" />
-                    <table:template>
-                        <Text text="{path: 'label'}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="Owner" />
-                    <table:template>
-                        <Text text="{owner}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="Status" />
-                    <table:template>
-                        <Text text="{state}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="150px">
-                    <Label text="Start Process" class="paddingTopBottom"/>
-                    <table:template>
-                        <Text text="{path:'begin_at', 
-                        formatter:'.timeFormater'}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="150px">
-                    <Label text="Finish Process" />
-                    <table:template>
-                        <Text text="{path:'end_at', 
-                        formatter:'.timeFormater'}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="150px">
-                    <Label text="Process Time" />
-                    <table:template>
-                        <Text text="{path: 'calculate', 
-                        formatter:'.calculateProcessTime'}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="Iteration" />
-                    <table:template>
-                        <Text text="{path: 'iteration'}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="150px">
-                    <Label text="Result" />
-                    <table:template>
-                        <Text text="{path: 'results/script.log'}" class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="200px">
-                    <Label text="Parameters" />
-                    <table:template>
-                        <Text text="{path: 'parameters', 
-                        formatter: '.formatParameters'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="250px">
-                    <Label text="Custom Columns" />
-                    <table:template>
-                        <Text text="{path: 'customColumns', 
-                        formatter: '.formatCustomColumns'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="is Running" />
-                    <table:template>
-                        <Text text="{path: 'isRunning'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="Description" />
-                    <table:template>
-                        <Text text="{path: 'description'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="Created By" />
-                    <table:template>
-                        <Text text="{path: 'createBy/userName'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="150px">
-                    <Label text="Created At" />
-                    <table:template>
-                        <Text text="{path: 'createdAt',
-                        formatter:'.timeFormater'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="100px">
-                    <Label text="Updated By" />
-                    <table:template>
-                        <Text text="{path: 'updatedBy/userName'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-                <table:Column width="150px">
-                    <Label text="Updated At" />
-                    <table:template>
-                        <Text text="{path: 'updatedAt',
-                        formatter:'.timeFormater'}" 
-                        wrapping="true" 
-                        class="paddingTopBottom"/>
-                    </table:template>
-                </table:Column>
-            </table:columns>
-        	</table:Table>
+                    <!-- Toolbar Buttons -->
+                    <m:Toolbar>
+                        <m:ToolbarSpacer />
+                        <m:Button
+                            id="btnSave"
+                            text="Save"
+                            type="Emphasized"
+                            press=".onSaveDialogTask" />
+                        <m:Button
+                            id="btnCancel"
+                            text="Cancel"
+                            press=".onCancelDialogTask" />
+                    </m:Toolbar>
+                </m:Dialog>
 
-			<HBox renderType="Bare" justifyContent="End" width="100%">
-				<FlexBox  id="zoomButtons">
-					<Button  text="Zoom In" justifyContent="Start" press="onZoomIn" />
-
-					<Button text="Zoom Out" press="onZoomOut" />
-				</FlexBox>
-			</HBox>
-
-			<!-- ProcessFlow Component -->
-			<FlexBox height="400px" renderType="Bare">
-				<commons:ProcessFlow
-					id="processflow1"
-					scrollable="true"
-					foldedCorners="true"
-					nodePress="onNodePress"
-					nodes="{/nodes}"
-					lanes="{/lanes}"
-					class="hiddenLanes">
-
-					<commons:nodes>
-						<commons:ProcessFlowNode
-							laneId="{laneId}"
-							nodeId="{code}"
-							title="{path: 'label', formatter:'.formatUpperCase'}"
-							titleAbbreviation="{TITLE_ABBREVIATION}"
-							children="{children}"
-							state="Positive"
-							stateText="{state}"
-							texts="{description}"
-							highlighted="{highlighted}"
-							focused="{focused}" />
-					</commons:nodes>
-
-					<commons:lanes>
-						<commons:ProcessFlowLaneHeader
-							laneId="lane"
-							position="0"/>
-					</commons:lanes>
-
-				</commons:ProcessFlow>
-			</FlexBox>
-			
-			
-		</Panel>
-		
-	</Page>
+                <m:HBox justifyContent="End" width="auto">
+                    <m:Button id="NewProject" icon="sap-icon://add-document" press=".onNew" tooltip="{i18n>newButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="EditDetail" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="RefreshProject" icon="sap-icon://synchronize" press=".onRefresh" tooltip="{i18n>refreshButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="DeleteProject" icon="sap-icon://delete" press=".onDelete" tooltip="{i18n>deleteButtonTooltip}" class="sapUiTinyMarginEnd" />
+                </m:HBox>                
+            </m:HBox>
+            <l:BlockLayoutCell backgroundColorSet="ColorSet11" backgroundColorShade="ShadeA" width="3">
+                <table:Table
+                    id="TableTask"
+                    rows="{view>/tasks}"
+                    visibleRowCount="10"
+                    selectionMode="None">
+                    <table:columns>
+                        <!-- Kolom Checkbox dengan Select All -->
+                        <table:Column width="50px">
+                            <table:label>
+                                <m:CheckBox
+                                    select=".onSelectAll" />
+                            </table:label>
+                            <table:template>
+                                <m:CheckBox selected="{view>selected}" />
+                            </table:template>
+                        </table:Column>
+                        <!-- Kolom lainnya -->                        
+                        <table:Column width="400px">
+                            <m:Label text="Title" />
+                            <table:template>
+                                <m:Text text="{view>title}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="As of date" />
+                            <table:template>
+                                <m:Text text="{view>asOfDate}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Process Definition" />
+                            <table:template>
+                                <m:Text text="{view>processDefinition}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Description" />
+                            <table:template>
+                                <m:Text text="{view>processDefinition}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>             
+                        <table:Column width="400px">
+                            <m:Label text="Created By" />
+                            <table:template>
+                                <m:Text text="{view>createdBy}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Created At" />
+                            <table:template>
+                                <m:Text text="{view>createdAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Updated by" />
+                            <table:template>
+                                <m:Text text="{view>updatedBy}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Updated at" />
+                            <table:template>
+                                <m:Text text="{view>updatedAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                    </table:columns>
+                </table:Table>
+                <m:HBox justifyContent="Start" >
+                    <m:ComboBox
+                        id="rowProjectComboBox"
+                        selectedKey="10"
+                        width="70px"
+                        change=".onRowCountChange">
+                        <m:items>
+                            <core:ListItem text="All" key="-1" />
+                            <core:ListItem text="10" key="10" />
+                            <core:ListItem text="20" key="20" />
+                            <core:ListItem text="25" key="25" />
+                            <core:ListItem text="50" key="50" />
+                            <core:ListItem text="75" key="75" />
+                            <core:ListItem text="100" key="100" />
+                        </m:items>
+                    </m:ComboBox>
+                </m:HBox>
+            </l:BlockLayoutCell>
+        </m:Panel>
+	</m:Page>
 </mvc:View>

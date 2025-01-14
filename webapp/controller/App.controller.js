@@ -47,16 +47,21 @@ sap.ui.define([
 		onInit: function() {
 			console.log("masuk app controller");
 			this.appConfig = new Config();
-			this.onLoginPress();
-			this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());			
+			var login = this.onLoginPress();
+			if (login = true)
+				console.log("login:", login);
+				this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());			
+				
+				// if the app starts on desktop devices with small or medium screen size, collaps the side navigation
+				if (Device.resize.width <= 1024) {
+					this.onSideNavButtonPress();
+				}
 
-			// if the app starts on desktop devices with small or medium screen size, collaps the side navigation
-			if (Device.resize.width <= 1024) {
-				this.onSideNavButtonPress();
-			}
-
-			Device.media.attachHandler(this._handleWindowResize, this);
-			this.getRouter().attachRouteMatched(this.onRouteChange.bind(this));
+				Device.media.attachHandler(this._handleWindowResize, this);
+				this.getRouter().attachRouteMatched(this.onRouteChange.bind(this));
+				console.log("websocet : ",localStorage.getItem("websocet"));
+				this.msiWebSocket(localStorage.getItem("websocet"));
+				console.log("Set Header X:", axios.defaults.headers.common["Authorization"]);
 			
 		},
 
@@ -301,7 +306,8 @@ sap.ui.define([
                 if (!oRouter || typeof oRouter.navTo !== "function") {
                     throw new Error("Router tidak valid.");
                 }
-                oRouter.navTo("app");
+				return true;
+                //oRouter.navTo("app");
             } catch (error) {
                 console.error("Routing error:", error);
                 sap.m.MessageToast.show("Terjadi kesalahan saat navigasi.");
@@ -316,7 +322,57 @@ sap.ui.define([
 				// desktop to tablet screen sizes)
 				this._bExpanded = (oDevice.name === "Desktop");
 			}
-		}
+		},
 
+		msiWebSocket: function (urlwsc) {
+			
+            var ws = new WebSocket(`${urlwsc}`);
+
+            ws.onopen = function () {
+                console.log('Connected to WebSocket');
+                MessageToast.show("WebSocket Connected");
+            };
+
+            ws.onclose = function (event) {
+                console.log('Disconnected from WebSocket');
+                MessageToast.show("WebSocket Disconnected");
+            };
+
+            ws.onmessage = function (event) {
+                const is_parse = msiIsAllowJsonParse(event.data);
+                if (is_parse) {
+                    const ed = JSON.parse(event.data);
+                    const ed_error = w.msi.objectHas(ed, 'error');
+                    const ed_message = w.msi.objectHas(ed, 'message');
+                    const ed_payloads = w.msi.objectHas(ed, 'payloads');
+                    const payload_uid = w.msi.objectHas(ed_payloads, 'uid');
+
+                    if (w.msi.user.id === payload_uid) {
+                        if (!ed_error) {
+                            const payload_task_id = w.msi.objectHas(ed_payloads, 'task_id');
+                            if (payload_task_id) {
+                                const payload_is_process = w.msi.objectHas(ed_payloads, 'is_process');
+                                if (payload_is_process) {
+                                    MessageToast.show(`Task ${payload_task_id} in process: ${ed_message}`);
+                                    // Anda bisa menampilkan notifikasi di UI sesuai dengan logika ini
+                                } else {
+                                    MessageToast.show(`Task ${payload_task_id} completed: ${ed_message}`);
+                                }
+                            }
+                        } else {
+                            MessageToast.show(`Error: ${ed_message}`);
+                        }
+                    }
+                } else {
+                    // Jika tidak dapat parsing data JSON, tangani sesuai kebutuhan
+                    console.log("Invalid JSON data received:", event.data);
+                }
+            };
+
+            // Menangani error WebSocket
+            ws.onerror = function (error) {
+                console.error('WebSocket error:', error);
+            };
+        }
 	});
 });

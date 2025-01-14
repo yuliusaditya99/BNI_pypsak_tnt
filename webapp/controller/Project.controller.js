@@ -2,183 +2,522 @@ sap.ui.define([
 	'./BaseController',
 	'sap/ui/model/json/JSONModel',
 	'sap/ui/Device',
-	'sap/ui/bni/toolpageapp/model/formatter'
-], function (BaseController, JSONModel, Device, formatter) {
+	'sap/ui/bni/toolpageapp/model/formatter',
+    'sap/ui/bni/toolpageapp/util/Config',
+    'sap/m/MessageToast',
+], function (BaseController, JSONModel, Device, formatter, Config, MessageToast) {
 	"use strict";
 	return BaseController.extend("sap.ui.bni.toolpageapp.controller.Project", {
 		formatter: formatter,
 
-		//#region processflow
-		onInit: async function () {
-			var oViewModel = new JSONModel({
+		onInit: function () {
+            var oViewModel = new JSONModel({
 				isPhone : Device.system.phone
 			});
+
+            //this.appCon = new App();
 			this.setModel(oViewModel, "view");
-			Device.media.attachHandler(function (oDevice) {
-				this.getModel("view").setProperty("/isPhone", oDevice.name === "Phone");
-			}.bind(this));
 
-			var oView = this.getView();
-			this.oProcessFlow1 = oView.byId("processflow1");
-
-			// Define a single lane with the ID "lane"
-			const lanesData = [
-				{ laneId: "lane", label: "Single Lane", position: 0 }
-			];
-
-			// Step 1: Base64 encode client_id and client_secret
-			const clientId = 'clientid';
-			const clientSecret = 'secret';
-			const encodedCredentials = btoa(`${clientId}:${clientSecret}`);  // Base64 encode
-
-			// Step 2: Fetch OAuth token with client credentials in the Authorization header
-			const oauthResponse = await fetch('http://nexia-main.pypsak.cloud/token', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-					'Authorization': `Basic ${encodedCredentials}`  // Add the Authorization header
-				},
-				body: new URLSearchParams({
-					'grant_type': 'password',
-					'username': 'raymond',
-					'password': 'zbZX16}+'
-				})
-			});
-
-			if (!oauthResponse.ok) {
-				throw new Error('Failed to fetch OAuth token');
-			}
-
-			const oauthData = await oauthResponse.json();
-			const accessToken = oauthData.access_token; // Store the access token
-			console.log("OauthData: ",oauthData);
-			console.log("OAuth Access Token:", accessToken);
-
-			// Step 3: Fetch nodes data from the API with OAuth token
-			const nodesResponse = await fetch('http://nexia-main.pypsak.cloud/api/task_detail', {
-				headers: {
-					'Authorization': `Bearer ${accessToken}`  // Use Bearer token for authentication
-				}
-			});
-
-			const taskData = await nodesResponse.json();
-			const nodesData = taskData.payloads.data; // This is the array of tasks
-
-			console.log("Raw Nodes Data:", nodesData);
-
-			// Step 4: Fetch children relationships from the API with OAuth token
-			const childrenResponse = await fetch('http://nexia-main.pypsak.cloud/api/task_transition', {
-				headers: {
-					'Authorization': `Bearer ${accessToken}`  // Use Bearer token for authentication
-				}
-			});
-			const transitionData = await childrenResponse.json();
-			const childrenData = transitionData.payloads.data;
-			console.log("Children Data:", childrenData);
-
-			// Map children relationships to nodes
-			const childrenMap = {};
-			childrenData.forEach(child => {
-				const parentId = child.task_code_from;
-				const childId = child.task_code_to;
-				if (!childrenMap[parentId]) {
-					childrenMap[parentId] = [];
-				}
-				childrenMap[parentId].push(childId);
-			});
-			// Process nodes, assign all to the same lane, and map their children
-
-			const nodes = nodesData.map(node => ({
-				id: node.id, // Node ID
-				code: node.task_code, // Task code
-				laneId: "lane", // Assign all nodes to the same lane
-				label: node.task_name, // Task name, matches XML binding for `title`
-				owner: node.owner, // Owner of the task
-				customColumns: {
-					command: {
-						shellScript: node.custom_columns?.command?.shell_script || "", // Shell script
-						sasScript: node.custom_columns?.command?.sas_script || "", // SAS script
-						sasScriptParams: node.custom_columns?.command?.sas_script_params || "", // SAS script parameters
-						sasLog: node.custom_columns?.command?.sas_log || "", // SAS log path
-						sasPathPrint: node.custom_columns?.command?.sas_path_print || "", // SAS path print
-					},
-				},
-				parameters: {
-					currentVersion: node.parameters?.current_version || "", // Current version
-					adjust: node.parameters?.adjust || "", // Adjust value
-					startDate: node.parameters?.start_date || "", // Start date
-					countdown: node.parameters?.countdown || "", // Countdown
-					isShowCountdown: node.parameters?.is_show_countdown === "true", // Boolean for show countdown
-				},
-				results: {
-					"script.log": node.results?.["script.log"] || "",
-				},
-				state: node.state,
-				begin_at: node.process_begin_at,
-				end_at: node.process_end_at,
-				calculate:{
-					begin_at: node?.process_begin_at ||"",
-					end_at: node?.process_end_at || "",
-				},
-				iteration: node.iteration,
-				children: childrenMap[node.task_code] || [], // Assign children if available
-				description: node.description || "", // Task description, matches XML binding for `texts`
-				highlighted: node.highlighted || false, // Highlighted state (default false if not present)
-				focused: node.focused || false, // Focused state (default false if not present)
-				isRunning: node.is_running || false, // Is task running (default false if null)
-				createdAt: node.created_at, // Creation timestamp
-				updatedAt: node.updated_at, // Update timestamp
-				deletedAt: node.deleted_at, // Deletion timestamp
-				createdBy: {
-					userName: node.createdBy?.user_name || "", // Creator's username
-					fullName: node.createdBy?.full_name || "", // Creator's full name
-					email: node.createdBy?.email || "", // Creator's email
-					clientCode: node.createdBy?.client_code || "", // Client code
-					id: node.createdBy?.id || null, // Creator's ID
-				},
-				updatedBy: {
-					userName: node.createdBy?.user_name || "", // Creator's username
-					fullName: node.createdBy?.full_name || "", // Creator's full name
-					email: node.createdBy?.email || "", // Creator's email
-					clientCode: node.createdBy?.client_code || "", // Client code
-					id: node.createdBy?.id || null, // Creator's ID
-				}, // Updated by information
-				task: {
-					title: node.task?.title || "", // Task title
-					asOfDate: node.task?.as_of_date || "", // Task as of date
-					processDefinition: node.task?.process_definition || null, // Process definition
-					description: node.task?.description || "", // Task description
-					id: node.task?.id || null, // Task ID
-				},
-			}));
-
-			// Set up the combined model for the view
-			const combinedModel = new sap.ui.model.json.JSONModel({
-				lanes: lanesData,
-				nodes: nodes
-			});
-			oView.setModel(combinedModel);
-
-			console.log("Initialization completed with model data:", combinedModel.getData());
-
-
-			this.oProcessFlow1.setZoomLevel("Two");
-
+            var oDialogModel = new JSONModel({});
+            this.setModel(oDialogModel, "dialogModel");
+            
+			console.log("masuk 2");
+			this._initializeAsyncData();
+            this._loadProcessData();
+			
 		},
+
+		_initializeAsyncData: async function () {
+			try {
+			  
+			  console.log("Set Header 2:", axios.defaults.headers.common["Authorization"]);
+            //   if(localStorage.getItem("authToken")=="undefined")
+            //     appCon.onLoginPress();
+            //     console.log("Set Header 3:", axios.defaults.headers.common["Authorization"]);
+			  const taskResponse = await axios.get(Config.paths.apiBaseUrl +'/api/task?start=0&length=10&orders=id&dirs=desc');
+		  
+			  const taskData = taskResponse.data;
+			  const tasktableData = taskData.payloads.data;
+
+			  const tasks = tasktableData.map(task => ({
+				id: task.id,
+                title: task.title,
+                asOfDate: task.as_of_date,                
+				processDefinition: task.file.file_name || "N/A",
+				description: task.description,
+				createdBy: task.createdBy?.user_name || "N/A",
+				createdAt: task.created_at,
+				updatedBy: task.updatedBy?.user_name || "N/A",
+				updatedAt: task.updated_at,
+			  }));
+			  console.log("tasks:", tasks);
+		  
+			  // Langkah 3: Tambahkan data ke model "view"
+			  const oViewModel = this.getModel("view");
+			  if (oViewModel) {
+				oViewModel.setProperty("/tasks", tasks);
+			  } else {
+				console.error("View model not found.");
+			  }
+			} catch (error) {
+			  if (error.response) {
+				console.error("Error Response:", error.response.data);
+				console.error("Status:", error.response.status);
+			  } else if (error.request) {
+				console.error("Error Request:", error.request);
+			  } else {
+				console.error("Error Message:", error.message);
+			  }
+			}
+			
+		},
+        onNew: function () {
+			this._openDialog(); 
+		},
+
+        onEdit: function () {
+            var aTask = this.getView().getModel("view").getProperty("/tasks");
+        
+            var aSelectedTasks = aTask.filter(function (task) {
+                return task.selected === true;
+            });
+        
+            if (aSelectedTasks.length === 0) {
+                sap.m.MessageToast.show("Please select a row to edit.");
+                return;
+            }
+        
+            // Ambil data dari tugas pertama (single select)
+            var oSelectedData = aSelectedTasks[0];
+            console.log("oSelectedData:", oSelectedData);
+        
+            // Set data ke model dialog
+            var oDialogModel = this.getView().getModel("dialogModel");
+            oDialogModel.setData(oSelectedData);
+        
+            // Buka dialog
+            this.byId("ProjectTaskDialog").open();
+        },
+        
+        
+
+        onRefresh: function () {
+
+			this._initializeAsyncData().then(() => {
+				var oViewModel = this.getModel("view");
+				if (oViewModel) {
+					oViewModel.refresh(true); 
+				}
+			}).catch((error) => {
+				console.error("Error during refresh:", error);
+			});
+		},
+
+        onColumnChange: function (oEvent) {
+			var sSelectedKey = oEvent.getSource().getSelectedKey();
+			this._selectedColumn = sSelectedKey;
+		},
+
+        onRowCountChange: function (oEvent) {
+			console.log("Masuk onRowCountChange");
+			var sSelectedKey = oEvent.getSource().getSelectedKey();
+			var oTable = this.byId("TableTask");
+			console.log("oTable 1 : ",oTable);
+			if (sSelectedKey === "-1") {				
+				var aRows = this.getView().getModel("view").getProperty("/tasks");
+				console.log("aRows : ",aRows);
+				oTable.setVisibleRowCount(aRows.length);
+			} else {
+				var aRows = this.getView().getModel("view").getProperty("/tasks");
+				if(aRows.length <= parseInt(sSelectedKey, 10))
+				{
+					oTable.setVisibleRowCount(aRows.length);
+				}
+				else
+				{
+					oTable.setVisibleRowCount(parseInt(sSelectedKey, 10));
+					console.log("sSelectedKey : ",sSelectedKey);
+				}
+				
+			}
+		},
+
+        // onSearch: function (oEvent) {
+		// 	var sQuery = oEvent.getSource().getValue();
+		// 	var oTable = this.byId("TableTask");
+        //     console.log("oTable : ",oTable);
+		// 	var oBinding = oTable.getBinding("rows");
+		
+		// 	if (sQuery) {
+		// 		var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+		// 		oBinding.filter([oFilter]);
+		// 	} else {
+		// 		oBinding.filter([]);
+		// 	}
+		// },
+
+        onSearch: function (oEvent) {
+            var sQuery = oEvent.getSource().getValue();
+            var oTable = this.byId("TableTask");
+            var oBinding = oTable.getBinding("rows");
+        
+            // Menyaring berdasarkan kolom yang dipilih
+            if (this._selectedColumn === "asOfDate" || this._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt") {
+                // Jika sQuery berisi tanggal, ubah ke objek Date
+                var oDate = sap.ui.core.format.DateFormat.getInstance({ pattern: "yyyy-MM-dd" }).parse(sQuery);
+                if (oDate) {
+                    // Jika sQuery valid sebagai tanggal, gunakan EQ atau BT
+                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.EQ, oDate);
+                    oBinding.filter([oFilter]);
+                } else {
+                    // Jika sQuery tidak valid sebagai tanggal
+                    sap.m.MessageToast.show("Invalid date format");
+                }
+            } else {
+                // Jika kolom adalah string, gunakan FilterOperator.Contains
+                if (sQuery) {
+                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+                    oBinding.filter([oFilter]);
+                } else {
+                    oBinding.filter([]);
+                }
+            }
+        },
+
+        onSelectAll: function (oEvent) {
+			var bSelected = oEvent.getSource().getSelected();
+			var aTasks = this.getView().getModel("view").getProperty("/tasks");
+		
+			aTasks.forEach(function (task) {
+				task.selected = bSelected;
+			});
+		
+			this.getView().getModel("view").refresh();
+		},
+
+		onDelete: function (oEvent) {
+			var aTask = this.getView().getModel("view").getProperty("/tasks");		
+
+			var aSelectedTasks = aTask.filter(function (task) {
+				return task.selected === true;
+			});
+			console.log("aSelectedTasks: ", aSelectedTasks);
+			if (!aSelectedTasks || aSelectedTasks.length === 0) {
+				sap.m.MessageToast.show("No selected data to delete.");
+				return;
+			}
+		
+			// Tampilkan konfirmasi dialog
+			sap.m.MessageBox.confirm("Are you sure you want to delete the selected data?", {
+				actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+				onClose: async function (sAction) {
+					if (sAction === sap.m.MessageBox.Action.YES) {
+						try {
+							// Ambil ID dari data terpilih
+							var aIds = aSelectedTasks.map(function (item) {
+								return item.id;
+							});
+		
+							console.log("Selected IDs: ", aIds);
+		
+							// Kirim request DELETE dengan Axios
+							const response = await axios.delete(Config.paths.apiBaseUrl + "/api/task/delete",  {
+								data: aIds,
+								headers: {
+									"Content-Type": "application/json"
+								}
+							});
+		
+							console.log("Response: ", response);
+		
+							// Hapus data yang dihapus dari model
+							var aRemainingFiles = aFiles.filter(function (file) {
+								return !aIds.includes(file.id);
+							});
+		
+							this.getView().getModel("view").setProperty("/files", aRemainingFiles);
+		
+							// Refresh tabel
+							var oTable = this.byId("detailedTable");
+							if (oTable) {
+								oTable.getBinding("items").refresh();
+							}
+		
+							// Reset checkbox
+							var oCheckAll = this.byId("checkAll");
+							if (oCheckAll) {
+								oCheckAll.setSelected(false);
+							}
+		
+							// Tampilkan notifikasi
+							if (response.data.error) {
+								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
+							} else {
+								sap.m.MessageToast.show("Data deleted successfully.", { duration: 3000 });
+							}
+						} catch (error) {
+							// Tangani error dari Axios
+							if (error.response) {
+								sap.m.MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
+							} else {
+								sap.m.MessageToast.show("An unexpected error occurred.", { duration: 3000 });
+							}
+						}
+					}
+				}.bind(this)
+			});
+            this.onRefresh();
+		},
+
+        _openDialog: function (oData) {
+			// Dapatkan referensi ke dialog
+			console.log("oData : ",oData);
+			var oView = this.getView();
+			var oDialog = oView.byId("ProjectTaskDialog");
+		
+            
+			// Jika dialog belum ada, buat dialog baru
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.ProjectTaskDialog", this);
+				oView.addDependent(oDialog);
+			}
+		
+			// Tentukan apakah ini mode Edit atau New
+			if (oData) {
+				// Mode Edit: Set data ke dalam dialog
+				oDialog.setBindingContext(new sap.ui.model.Context(this.getView().getModel("view"), "/files/" + oData.id));
+			} else {
+				// Mode New: Kosongkan dialog (atau set default)
+				oDialog.setBindingContext(null);
+			}
+		
+			// Buka dialog
+			oDialog.open();
+		},
+
+        _loadProcessData: async function () {
+            const fileResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file');
+		  
+            const fileData = fileResponse.data;
+            const filetableData = fileData.payloads.data;
+        
+            const files = filetableData.map(file => ({
+              id: file.id,
+              fileName: file.file_name
+            }));
+            console.log("Files:", files);
+        
+            // Langkah 3: Tambahkan data ke model "view"
+            const oViewModel = this.getModel("view");
+            if (oViewModel) {
+              oViewModel.setProperty("/files", files);
+            } else {
+              console.error("View model not found.");
+            }
+        },
+
+        // onSaveDialogTask: async function () {
+        //      console.log("onSaveDialogTask");
+        //     const oDialog = this.byId("ProjectTaskDialog");
+        //     const titleValue = this.byId("titleInput") ? this.byId("titleInput").getValue() : "";
+        //     const asOfDateValue = this.byId("asOfDateInput") ? this.byId("asOfDateInput").getValue() : "";
+        //     const processDefComboValue = this.byId("processDefCombo") ? this.byId("processDefCombo").getSelectedKey() : "";
+        //     const descriptionInputValue = this.byId("descriptionInput") ? this.byId("descriptionInput").getValue() : "";
+
+        //     const processDefComboValueInt = parseInt(processDefComboValue, 10);
+        //     console.log("titleValue :", titleValue);
+        //     console.log("asOfDateValue :", asOfDateValue);
+        //     console.log("processDefComboValueInt :", processDefComboValueInt);
+        //     console.log("descriptionInputValue :", descriptionInputValue);
+
+        //     // Validasi input
+        //     if (!titleValue) {
+        //         MessageToast.show("Please enter a title.");
+        //         return;
+        //     }
+        //     if (!asOfDateValue) {
+        //         MessageToast.show("Please select a date.");
+        //         return;
+        //     }
+        //     if (!processDefComboValue) {
+        //         MessageToast.show("Please select a process definition.");
+        //         return;
+        //     }
+
+        //     // Ambil data dari model untuk menentukan mode Create atau Edit
+        //     const oDialogModel = this.getView().getModel("dialogModel");
+        //     const oDialogData = oDialogModel.getData();
+
+        //     const requestData = {
+        //         title: titleValue,
+        //         as_of_date: asOfDateValue,
+        //         process_definition: processDefComboValueInt,
+        //         description: descriptionInputValue
+        //     };
+
+        //     // Jika ada `id` di data, maka ini operasi edit
+        //     if (oDialogData && oDialogData.id) {
+        //         requestData.id = oDialogData.id;
+        //     }
+
+        //     const oRequestBody = JSON.stringify(requestData);
+        //     sap.ui.core.BusyIndicator.show(0);
+
+        //     try {
+        //         let oResponse;
+
+        //         if (requestData.id) {
+        //             // Edit data
+        //             console.log("Editing data with ID:", requestData.id);
+        //             oResponse = await axios.put(Config.paths.apiBaseUrl + `/api/task/${requestData.id}`, oRequestBody, {
+        //                 headers: {
+        //                     "Content-Type": "application/json"
+        //                 }
+        //             });
+        //         } else {
+        //             // Create data
+        //             console.log("Creating new data");
+        //             oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
+        //                 headers: {
+        //                     "Content-Type": "application/json"
+        //                 }
+        //             });
+        //         }
+
+        //         MessageToast.show("Data submitted successfully.");
+        //         console.log("Response:", oResponse.data);
+        //         oDialog.close();
+        //         this.onRefresh();
+
+        //     } catch (oError) {
+        //         console.error("Error:", oError);
+        //         MessageToast.show("Failed to submit data.");
+        //     } finally {
+        //         sap.ui.core.BusyIndicator.hide();
+        //     }
+        // },
+
+        
+        onSaveDialogTask: async function () {
+            console.log("onSaveDialogTask");
+            const oDialog = this.byId("ProjectTaskDialog");
+            const titleValue = this.byId("titleInput") ? this.byId("titleInput").getValue() : "";
+            const asOfDateValue = this.byId("asOfDateInput") ? this.byId("asOfDateInput").getValue() : "";
+            const processDefComboValue = this.byId("processDefCombo") ? this.byId("processDefCombo").getSelectedKey() : "";
+            const descriptionInputValue = this.byId("descriptionInput") ? this.byId("descriptionInput").getValue() : "";
+
+            const processDefComboValueInt = parseInt(processDefComboValue,10);
+            console.log("titleValue :", titleValue);
+            console.log("asOfDateValue :", asOfDateValue);
+            console.log("processDefComboValueInt :", processDefComboValueInt);
+            console.log("descriptionInputValue :", descriptionInputValue);
+
+            // Validasi input
+            if (!titleValue) {
+                MessageToast.show("Please enter a title.");
+                return;
+            }
+            if (!asOfDateValue) {
+                MessageToast.show("Please select a date.");
+                return;
+            }
+            if (!processDefComboValue) {
+                MessageToast.show("Please select a process definition.");
+                return;
+            }
+
+            const requestData = {
+                title: titleValue,
+                as_of_date: asOfDateValue,
+                process_definition: parseInt(processDefComboValue, 10), 
+                description: descriptionInputValue
+            };
+
+            const oRequestBody =  JSON.stringify(requestData); 
+            sap.ui.core.BusyIndicator.show(0);
+
+            try {
+                const oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
+                    headers: {
+                        "Content-Type": "application/json" 
+                    }
+                });
+
+                MessageToast.show("Data submitted successfully.");
+                console.log("Response:", oResponse.data);
+                oDialog.close();
+                this.onRefresh();
+
+            } catch (oError) {
+                console.error("Error:", oError);
+                MessageToast.show("Failed to submit data.");
+            } finally {
+                sap.ui.core.BusyIndicator.hide();
+            }
+        },
+
+        
+
+        // onSaveDialogTask: async function () {
+		// 	const oDialog = this.byId("ProjectTaskDialog");
+		// 	const oFileUploader = this.byId("fileUploader");
+		
+		// 	// Ambil elemen input file
+		// 	const oDomRef = oFileUploader.getDomRef();
+		// 	const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");
+		
+		// 	if (!oFileInput || !oFileInput.files || oFileInput.files.length === 0) {
+		// 		sap.m.MessageToast.show("Please select a file to upload.");
+		// 		return;
+		// 	}
+		
+		// 	const oFile = oFileInput.files[0];
+		// 	console.log("Selected file:", oFile);
+		
+		// 	// Validasi jenis file
+		// 	const sFileName = oFile.name.toLowerCase();
+		// 	if (!sFileName.endsWith(".xls") && !sFileName.endsWith(".xlsx")) {
+		// 		sap.m.MessageToast.show("Invalid file type. Please upload an Excel file.");
+		// 		return;
+		// 	}
+		
+		// 	try {
+		// 		sap.ui.core.BusyIndicator.show(0);
+		
+		// 		const oFormData = new FormData();
+		// 		oFormData.append("payload", JSON.stringify({ path: "text" }));
+		// 		oFormData.append("files", oFile);
+		
+		// 		const sApiUrl = "http://nexia-main.pypsak.cloud/api/file";
+		// 		const oResponse = await axios.post(sApiUrl, oFormData, {
+		// 			headers: {
+		// 				"Content-Type": "multipart/form-data",
+		// 			},
+		// 		});
+		
+		// 		sap.m.MessageToast.show("File uploaded successfully.");
+		// 		console.log("Upload response:", oResponse.data);
+		
+		// 		oDialog.close();
+		// 		//console.log("event : ",oEvent.data)
+		// 		this._initializeAsyncData();
+		// 	} catch (oError) {
+		// 		console.error("Error uploading file:", oError);
+		// 		sap.m.MessageToast.show("Failed to upload file.");
+		// 	} finally {
+		// 		sap.ui.core.BusyIndicator.hide();
+		// 	}
+		// },
+		
+        onCancelDialogTask: function () {
+            // Tutup dialog
+            this.getView().byId("ProjectTaskDialog").close();
+        },
 
 		onAfterRendering: function() {
 			this.oProcessFlow1.bindElement("/");
 		},
 
-        onZoomIn: function() {
-            this.oProcessFlow1.zoomIn();
-            MessageToast.show("Zoom level changed to: " + this.oProcessFlow1.getZoomLevel());
-        },
-
-        onZoomOut: function() {
-            this.oProcessFlow1.zoomOut();
-            MessageToast.show("Zoom level changed to: " + this.oProcessFlow1.getZoomLevel());
-        },
 		
 		onNodePress: function(event) {
 			const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
@@ -257,159 +596,5 @@ sap.ui.define([
             }
         },
 
-		runNode: async function(nodeId, nodeTitle) {
-            try {
-                // Step 1: Get the access token using the helper function
-                const accessToken = await this.getAccessToken();
-        
-                // Step 2: Execute the node using the access token
-                const apiUrl = `http://nexia-main.pypsak.cloud/api/task_detail/execute/${nodeId}`;
-                const executeResponse = await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${accessToken}`,
-                    },
-                });
-        
-                if (!executeResponse.ok) {
-                    throw new Error(`Execution failed: ${executeResponse.statusText}`);
-                }
-        
-                const data = await executeResponse.json();
-                console.log("Node execution response:", data);
-        
-                sap.m.MessageToast.show(`Process ${nodeTitle} executed successfully!`);
-
-            } catch (error) {
-                console.error("Error executing node:", error);
-                sap.m.MessageToast.show("Failed to execute node.");
-            }
-
-        },
-		//#endregion
-
-		//#region formatter
-		formatParameters: function (parameters) {
-            if (!parameters) {
-                return "No parameters available"; // Handle null or undefined parameters
-            }
-        
-            // Check if all fields are empty
-            const isEmpty = 
-                !parameters.currentVersion && 
-                !parameters.adjust && 
-                !parameters.startDate && 
-                !parameters.countdown && 
-                !parameters.isShowCountdown;
-        
-            if (isEmpty) {
-                return "";
-            }
-        
-            // Format parameters into a multi-line string
-            return `Current Version: ${parameters.currentVersion || ""}
-            Adjust: ${parameters.adjust || ""}
-            Start Date: ${parameters.startDate || ""}
-            Countdown: ${parameters.countdown || ""}
-            Show Countdown: ${parameters.isShowCountdown ? "Yes" : "No"}`;
-        },
-        
-        timeFormater: function (dateString) {
-            if (!dateString) {
-                return ""; // Return empty string if no date is provided
-            }
-        
-            const date = new Date(dateString); // Convert to a Date object
-            if (isNaN(date)) {
-                return dateString; // Return the original value if the date is invalid
-            }
-        
-            // Get day, month, year, and time
-            const day = String(date.getDate()).padStart(2, "0");
-            const monthNames = [
-                "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
-            ];
-            const month = monthNames[date.getMonth()]; // Get month name
-            const year = date.getFullYear();
-            const hours = String(date.getHours()).padStart(2, "0");
-            const minutes = String(date.getMinutes()).padStart(2, "0");
-            const seconds = String(date.getSeconds()).padStart(2, "0");
-        
-            return `${day} ${month} ${year} ${hours}:${minutes}:${seconds}`;
-        },
-
-        calculateProcessTime: function (task) {
-            // Extract the begin_at and end_at from the task object
-            const start = task?.begin_at;
-            const end = task?.end_at;
-        
-            // If either date is missing, return an empty string or a placeholder
-            if (!start || !end) {
-                return "";
-            }
-        
-            const startDate = new Date(start);
-            const endDate = new Date(end);
-        
-            if (isNaN(startDate) || isNaN(endDate)) {
-                return "Invalid dates";
-            }
-        
-            const timeDiff = endDate - startDate;
-        
-            if (timeDiff < 0) {
-                return "End time is earlier than start time";
-            }
-        
-            const seconds = Math.floor((timeDiff / 1000) % 60);
-            const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
-            const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
-            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-        
-            let result = "";
-            if (days > 0) {
-                result += `${days} days `;
-            }
-            if (hours > 0) {
-                result += `${hours} hours `;
-            }
-            if (minutes > 0) {
-                result += `${minutes} minutes `;
-            }
-            result += `${seconds} seconds`;
-
-            return result;
-        },
-
-        formatCustomColumns: function (customColumns) {
-            if (!customColumns || !customColumns.command) {
-                return "No command details available"; // Handle null or undefined command object
-            }
-            console.log(customColumns.command.shell_script)
-            // Check if all fields are empty
-            const isEmpty = 
-                !customColumns.command.shell_script &&
-                !customColumns.command.sas_script &&
-                !customColumns.command.sas_script_params &&
-                !customColumns.command.sas_log &&
-                !customColumns.command.sas_path_print;
-        
-            if (isEmpty) {
-                return ""; // Return empty if all fields are empty
-            }
-            console.log("Sesuatu")
-            // Format command data into a multi-line string
-            return `${command.shell_script ? `Shell Script: ${command.shell_script}` : ""}
-                    ${command.sas_script ? `SAS Script: ${command.sas_script}` : ""}
-                    ${command.sas_script_params ? `SAS Script Params: ${command.sas_script_params}` : ""}
-                    ${command.sas_log ? `SAS Log: ${command.sas_log}` : ""}
-                    ${command.sas_path_print ? `SAS Path Print: ${command.sas_path_print}` : ""}`.trim();
-        },
-
-        formatUpperCase: function (sText) {
-            return sText ? sText.toUpperCase() : ""; // Convert text to uppercase, handle null/undefined
-        }
-		//#endregion
 	});
 });

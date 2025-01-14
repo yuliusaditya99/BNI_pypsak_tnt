@@ -70,58 +70,38 @@ sap.ui.define([
         // },
 
         login: async function (credentials) {
-            const oController = this; // Simpan referensi controller
+            axios.defaults.headers.common["Authorization"] = "Bearer " + localStorage.getItem("authToken");
             try {
-                oController.showLoading();
+                this.showLoading();
                 console.log("Starting login process with credentials:", credentials);
-        
-                const response = await axios.post(Config.paths.apiBaseUrl + "/api/login", credentials);
-                //console.log("response X :",response);
+                console.log("URL :", Config.paths.apiBaseUrl + "/api/login");
+                
+                const response = await axios.post(Config.paths.apiBaseUrl + "/api/login", credentials, { timeout: 400000 });
+                console.log("response X :", response);
                 const token = response.data.payloads.token;
                 const user = response.data.payloads.user;
-                const websocet = response.data.payloads.ws;
-                console.log("token : ",token);
-                console.log("websocet : ",websocet);
+                const id = user.id;
+                const webSocket = response.data.payloads.ws + "/ws/" + id;
+        
+                console.log("Token:", token);
+                console.log("WebSocket URL:", webSocket);
         
                 if (typeof Storage !== "undefined") {
                     localStorage.setItem("authToken", token);
                     localStorage.setItem("user", JSON.stringify(user));
-                    localStorage.setItem("websocet", JSON.stringify(websocet));
+                    localStorage.setItem("websocet", webSocket);
                 }
-                console.log("after set global var");
         
                 axios.defaults.headers.common["Authorization"] = "Bearer " + token;
-                console.log("after set authorization");
-                console.log("Set Header:", axios.defaults.headers.common["Authorization"]);
-
-                
-                
-                //console.log(this.getView());
-                //const oView = this.getView(); // Ambil View dari Controller
-                //console.log(this.getView());
-                //const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                //const oComponent = sap.ui.core.Component.getOwnerComponentFor(oController.getView());
-                //console.log("Owner Component:", oComponent);
-        
-                //const oRouter = oComponent.getRouter();
-                //console.log("Router:", oRouter);            
-                //oRouter.navTo("app"); // Navigasi ke halaman App
-                //sap.ui.core.UIComponent.getRouterFor(this).navTo("app");
-              
                 return response.data;
             } catch (error) {
-                if (error.response) {
-                    console.error("API Error Response:", error.response.data);
-                } else if (error.request) {
-                    console.error("No response received:", error.request);
-                } else {
-                    console.error("Error during setup:", error.message);
-                }
+                console.error("Login error:", error);
                 throw error;
             } finally {
-                oController.hideLoading();
+                this.hideLoading();
             }
-        },        
+        },
+        
 
         // Logout
         logout: async function () {

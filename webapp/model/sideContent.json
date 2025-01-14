@@ -20,12 +20,12 @@
 	],
 	"masterSettings": [
 		{
-			"titleI18nKey": "sideProcessDefinitions",
+			"titleI18nKey": "Process Definitions",
 			"key": "processDefinitions",
 			"selected": true
 		},
 		{
-			"titleI18nKey": "sideContentOrderSettings",
+			"titleI18nKey": "User and Role Management",
 			"key": "orderSettings",
 			"selected": false
 		}

@@ -3,8 +3,9 @@ sap.ui.define([
 	'sap/m/MessageToast',
 	'sap/ui/model/json/JSONModel',
 	'sap/ui/bni/toolpageapp/model/formatter',
-	'sap/ui/core/date/UI5Date'
-], function (BaseController, MessageToast, JSONModel, formatter, UI5Date) {
+	'sap/ui/core/date/UI5Date',
+	"sap/ui/bni/toolpageapp/util/Config"
+], function (BaseController, MessageToast, JSONModel, formatter, UI5Date, Config) {
 	"use strict";
 	return BaseController.extend("sap.ui.bni.toolpageapp.controller.settings.MasterSettings", {
 		
@@ -20,24 +21,27 @@ sap.ui.define([
 			this.setModel(oViewModel, "view");
 			console.log("masuk");
 			this._initializeAsyncData();
+			
 		},
+
 
 		_initializeAsyncData: async function () {
 			try {
 			  
 			  console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
-			  const fileResponse = await axios.get('http://nexia-main.pypsak.cloud/api/file');
+			  const fileResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file');
 		  
 			  const fileData = fileResponse.data;
 			  const filetableData = fileData.payloads.data;
 		  
 			  const files = filetableData.map(file => ({
+				id: file.id,
 				fileName: file.file_name,
 				path: file.path,
 				contentType: file.content_type,
 				extension: file.extension,
 				createdAt: file.created_at,
-				createdBy: file.created_by,
+				createdBy: file.createdBy?.user_name || "N/A",
 				size: file.size_bytes,
 			  }));
 			  console.log("Files:", files);
@@ -59,6 +63,7 @@ sap.ui.define([
 				console.error("Error Message:", error.message);
 			  }
 			}
+			
 		},
 
 		// _initializeAsyncData: async function () {
@@ -161,7 +166,36 @@ sap.ui.define([
 			this.getOwnerComponent().myNavBack();
 		},
 
+		onRowCountChange: function (oEvent) {
+			console.log("Masuk onRowCountChange");
+			var sSelectedKey = oEvent.getSource().getSelectedKey();
+			var oTable = this.byId("TableUpload");
+			console.log("oTable 1 : ",oTable);
+			if (sSelectedKey === "-1") {				
+				var aRows = this.getView().getModel("view").getProperty("/files");
+				console.log("aRows : ",aRows);
+				oTable.setVisibleRowCount(aRows.length);
+			} else {
+				var aRows = this.getView().getModel("view").getProperty("/files");
+				if(aRows.length <= parseInt(sSelectedKey, 10))
+				{
+					oTable.setVisibleRowCount(aRows.length);
+				}
+				else
+				{
+					oTable.setVisibleRowCount(parseInt(sSelectedKey, 10));
+					console.log("sSelectedKey : ",sSelectedKey);
+				}
+				
+			}
+		},
 
+		// onColumnChange: function (oEvent) {
+		// 	// Menyimpan kolom yang dipilih
+		// 	var sSelectedKey = oEvent.getSource().getSelectedKey();
+		// 	this._selectedColumn = sSelectedKey;
+		// },
+		
 		onSelectAll: function (oEvent) {
 			var bSelected = oEvent.getSource().getSelected();
 			var aFiles = this.getView().getModel("view").getProperty("/files");
@@ -173,17 +207,189 @@ sap.ui.define([
 			this.getView().getModel("view").refresh();
 		},
 
-		onNew: function () {
-            // Buka dialog
-            var oView = this.getView();
-            var oDialog = oView.byId("excelUploadDialog");
+		// onNew: function () {
+        //     // Buka dialog
+        //     var oView = this.getView();
+        //     var oDialog = oView.byId("excelUploadDialog");
 
-            if (!oDialog) {
-                oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.ExcelUploadDialog", this);
-                oView.addDependent(oDialog);
-            }
-            oDialog.open();
-        },
+        //     if (!oDialog) {
+        //         oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.ExcelUploadDialog", this);
+        //         oView.addDependent(oDialog);
+        //     }
+        //     oDialog.open();
+        // },
+
+		onNew: function () {
+			this._openDialog(); // Panggil fungsi untuk membuka dialog dalam mode New
+		},
+
+		onEdit: function () {
+			// Ambil referensi tabel
+			var oTable = this.getView().byId("TableUpload");
+			console.log("oTable:", oTable);
+		
+			// Ambil data dari model tabel
+			var aRows = oTable.getBinding("rows").getModel().getProperty("/files");
+		
+			// Filter baris yang dipilih
+			var aSelectedRows = aRows.filter(row => row.selected);
+			console.log("aSelectedRows:", aSelectedRows);
+		
+			// Validasi jumlah baris yang dipilih
+			if (aSelectedRows.length === 0) {
+				sap.m.MessageToast.show("Pilih satu baris untuk diedit.");
+				return;
+			}
+		
+			if (aSelectedRows.length > 1) {
+				sap.m.MessageToast.show("Hanya satu baris yang dapat diedit pada satu waktu.");
+				return;
+			}
+		
+			// Ambil data baris pertama yang dipilih
+			var oSelectedRow = aSelectedRows[0];
+			console.log("Data yang dipilih untuk edit:", oSelectedRow);
+		
+			// Lakukan tindakan edit, seperti membuka dialog
+			this._openDialog(oSelectedRow);
+		},
+		
+		
+
+		_openDialog: function (oData) {
+			// Dapatkan referensi ke dialog
+			console.log("oData : ",oData);
+			var oView = this.getView();
+			var oDialog = oView.byId("excelUploadDialog");
+		
+			// Jika dialog belum ada, buat dialog baru
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.ExcelUploadDialog", this);
+				oView.addDependent(oDialog);
+			}
+		
+			// Tentukan apakah ini mode Edit atau New
+			if (oData) {
+				// Mode Edit: Set data ke dalam dialog
+				oDialog.setBindingContext(new sap.ui.model.Context(this.getView().getModel("view"), "/files/" + oData.id));
+			} else {
+				// Mode New: Kosongkan dialog (atau set default)
+				oDialog.setBindingContext(null);
+			}
+		
+			// Buka dialog
+			oDialog.open();
+		},
+
+		onRefresh: function () {
+			// Memanggil fungsi untuk mengambil data terbaru
+			this._initializeAsyncData().then(() => {
+				// Pastikan view model terupdate dan UI direfresh
+				var oViewModel = this.getModel("view");
+				if (oViewModel) {
+					oViewModel.refresh(true);  // Refresh view model untuk memastikan UI menggunakan data terbaru
+				}
+			}).catch((error) => {
+				console.error("Error during refresh:", error);
+			});
+		},
+		
+
+		onColumnChange: function (oEvent) {
+			// Menyimpan kolom yang dipilih
+			var sSelectedKey = oEvent.getSource().getSelectedKey();
+			this._selectedColumn = sSelectedKey;
+		},
+		
+		onSearch: function (oEvent) {
+			var sQuery = oEvent.getSource().getValue();
+			var oTable = this.byId("TableUpload");
+			var oBinding = oTable.getBinding("rows");
+		
+			if (sQuery) {
+				var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+				oBinding.filter([oFilter]);
+			} else {
+				oBinding.filter([]);
+			}
+		},
+
+
+		onDelete: function (oEvent) {
+			var aFiles = this.getView().getModel("view").getProperty("/files");
+		
+			// Filter hanya data yang dipilih
+			var aSelectedFiles = aFiles.filter(function (file) {
+				return file.selected === true;
+			});
+			console.log("aSelectedFiles: ", aSelectedFiles);
+			if (!aSelectedFiles || aSelectedFiles.length === 0) {
+				sap.m.MessageToast.show("No selected data to delete.");
+				return;
+			}
+		
+			// Tampilkan konfirmasi dialog
+			sap.m.MessageBox.confirm("Are you sure you want to delete the selected data?", {
+				actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+				onClose: async function (sAction) {
+					if (sAction === sap.m.MessageBox.Action.YES) {
+						try {
+							// Ambil ID dari data terpilih
+							var aIds = aSelectedFiles.map(function (item) {
+								return item.id;
+							});
+		
+							console.log("Selected IDs: ", aIds);
+		
+							// Kirim request DELETE dengan Axios
+							const response = await axios.delete(Config.paths.apiBaseUrl + "/api/file/delete",  {
+								data: aIds,
+								headers: {
+									"Content-Type": "application/json"
+								}
+							});
+		
+							console.log("Response: ", response);
+		
+							// Hapus data yang dihapus dari model
+							var aRemainingFiles = aFiles.filter(function (file) {
+								return !aIds.includes(file.id);
+							});
+		
+							this.getView().getModel("view").setProperty("/files", aRemainingFiles);
+		
+							// Refresh tabel
+							var oTable = this.byId("detailedTable");
+							if (oTable) {
+								oTable.getBinding("items").refresh();
+							}
+		
+							// Reset checkbox
+							var oCheckAll = this.byId("checkAll");
+							if (oCheckAll) {
+								oCheckAll.setSelected(false);
+							}
+		
+							// Tampilkan notifikasi
+							if (response.data.error) {
+								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
+							} else {
+								sap.m.MessageToast.show("Data deleted successfully.", { duration: 3000 });
+							}
+						} catch (error) {
+							// Tangani error dari Axios
+							if (error.response) {
+								sap.m.MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
+							} else {
+								sap.m.MessageToast.show("An unexpected error occurred.", { duration: 3000 });
+							}
+						}
+					}
+				}.bind(this)
+			});
+			this.onRefresh();
+		},
+		
 
         onCloseDialog: function () {
             // Tutup dialog
@@ -242,6 +448,8 @@ sap.ui.define([
 				console.log("Upload response:", oResponse.data);
 		
 				oDialog.close();
+				//console.log("event : ",oEvent.data)
+				this.onRefresh();
 			} catch (oError) {
 				console.error("Error uploading file:", oError);
 				sap.m.MessageToast.show("Failed to upload file.");
