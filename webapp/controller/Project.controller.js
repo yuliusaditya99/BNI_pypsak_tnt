@@ -72,6 +72,15 @@ sap.ui.define([
 			
 		},
         onNew: function () {
+            const dialogModel = this.getView().getModel("dialogModel");
+
+            // Reset data model
+            dialogModel.setData({
+                title: "",
+                date: "",
+                processDefinition: "",
+                description: ""
+            });
 			this._openDialog(); 
 		},
 
@@ -231,11 +240,11 @@ sap.ui.define([
 							console.log("Response: ", response);
 		
 							// Hapus data yang dihapus dari model
-							var aRemainingFiles = aFiles.filter(function (file) {
-								return !aIds.includes(file.id);
+							var aRemainingTasks = aTask.filter(function (task) {
+								return !aIds.includes(task.id);
 							});
-		
-							this.getView().getModel("view").setProperty("/files", aRemainingFiles);
+                            console.log("aRemainingTasks: ", aRemainingTasks);
+							this.getView().getModel("view").setProperty("/tasks", aRemainingTasks);
 		
 							// Refresh tabel
 							var oTable = this.byId("detailedTable");

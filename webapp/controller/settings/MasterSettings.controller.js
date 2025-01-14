@@ -359,7 +359,7 @@ sap.ui.define([
 							this.getView().getModel("view").setProperty("/files", aRemainingFiles);
 		
 							// Refresh tabel
-							var oTable = this.byId("detailedTable");
+							var oTable = this.byId("TableUpload");
 							if (oTable) {
 								oTable.getBinding("items").refresh();
 							}
