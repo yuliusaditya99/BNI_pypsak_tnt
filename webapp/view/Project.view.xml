@@ -130,10 +130,12 @@
                     id="TableTask"
                     rows="{view>/tasks}"
                     visibleRowCount="10"
-                    selectionMode="None">
-                    <table:columns>
+                    selectionMode="None"
+                    rowSelectionChange=".onRowSelect"
+                    cellClick=".onCellClick">
+                    <table:columns press="onRowSelect">
                         <!-- Kolom Checkbox dengan Select All -->
-                        <table:Column width="50px">
+                            <table:Column width="50px" press=".onRowSelect">
                             <table:label>
                                 <m:CheckBox
                                     select=".onSelectAll" />

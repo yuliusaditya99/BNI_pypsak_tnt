@@ -11,21 +11,32 @@ sap.ui.define([
 		formatter: formatter,
 
 		onInit: function () {
-            var oViewModel = new JSONModel({
-				isPhone : Device.system.phone
-			});
-
-            //this.appCon = new App();
-			this.setModel(oViewModel, "view");
-
-            var oDialogModel = new JSONModel({});
+            // Initialize View Model
+            var oViewModel = new sap.ui.model.json.JSONModel({
+                isPhone: sap.ui.Device.system.phone
+            });
+            this.setModel(oViewModel, "view");
+        
+            // Initialize Dialog Model
+            var oDialogModel = new sap.ui.model.json.JSONModel({});
             this.setModel(oDialogModel, "dialogModel");
-            
-			console.log("masuk 2");
-			this._initializeAsyncData();
+        
+            console.log("onInit executed successfully."); // Debugging Log
+        
+            // Ensure async data loading and process initialization
+            this._initializeAsyncData();
             this._loadProcessData();
-			
-		},
+        
+            // Attach row selection event to the table
+            var oTable = this.byId("TableTask");
+            if (oTable) {
+                console.log("TableTask found, attaching row selection event.");
+                oTable.attachRowSelectionChange(this.onRowSelect.bind(this));
+            } else {
+                console.error("TableTask not found in the view.");
+            }
+        },
+        
 
 		_initializeAsyncData: async function () {
 			try {
@@ -108,8 +119,6 @@ sap.ui.define([
             this.byId("ProjectTaskDialog").open();
         },
         
-        
-
         onRefresh: function () {
 
 			this._initializeAsyncData().then(() => {
@@ -206,10 +215,13 @@ sap.ui.define([
 
 		onDelete: function (oEvent) {
 			var aTask = this.getView().getModel("view").getProperty("/tasks");		
-
 			var aSelectedTasks = aTask.filter(function (task) {
-				return task.selected === true;
+                return task.selected === true;
 			});
+            var aIds = aSelectedTasks.map(function (item) {
+                return item.id;
+            });
+            console.log("Selected IDs: ", aIds);
 			console.log("aSelectedTasks: ", aSelectedTasks);
 			if (!aSelectedTasks || aSelectedTasks.length === 0) {
 				sap.m.MessageToast.show("No selected data to delete.");
@@ -277,6 +289,75 @@ sap.ui.define([
 			});
             this.onRefresh();
 		},
+
+        onCellClick: function (oEvent) {
+            // Log the full event parameters to inspect available data
+            console.log("Event Parameters:", oEvent.getParameters());
+        
+            var oTable = this.byId("TableTask");
+            var iRowIndex = oEvent.getParameter("rowIndex"); // Get row index
+        
+            console.log("Row Index:", iRowIndex);
+        
+            if (iRowIndex !== undefined) {
+                var oModel = this.getView().getModel("view");
+                var aRows = oModel.getProperty("/tasks");
+                var oRowData = aRows[iRowIndex]; // Retrieve data by index
+        
+                // Navigate using router
+                this._navigateToTaskDetail(oRowData.id);
+                localStorage.setItem("taskId", oRowData.id);
+                console.log("Navigating to ProjectDetail with ID:", oRowData.id);
+            } else {
+                sap.m.MessageToast.show("No valid row index found!");
+            }
+        },
+
+        onRowSelect: function (oEvent) {
+            console.log("masuk select row");
+            var oSelectedRowContext = oEvent.getParameter("rowContext");
+            var aTask = this.getView().getModel("view").getProperty("/tasks");
+            var aSelectedTasks = aTask.filter(function (task) {
+                return task.selected === true;
+            });
+        
+            var aIds = aSelectedTasks.map(function (item) {
+                return item.id;
+            });
+        
+            console.log("Selected IDs: ", aIds);
+            console.log("aSelectedTasks: ", aSelectedTasks);
+            if (oSelectedRowContext) {
+                var oModel = this.getView().getModel("view");
+                var oRowData = oModel.getProperty(oSelectedRowContext.getPath());
+
+                // Lakukan navigasi ke halaman detail dengan data baris
+                var oRouter = UIComponent.getRouterFor(this);
+                oRouter.navTo("ProjectDetail", {
+                    projectId: oRowData.id // Pastikan ID unik tersedia dalam data baris
+                });
+            } else {
+                MessageToast.show("No row selected!");
+            }
+        },       
+        
+        
+        _navigateToTaskDetail: function (sTaskId) {
+            if (!sTaskId) {
+                sap.m.MessageToast.show("Task ID is missing.");
+                return;
+            }
+        
+            // Simulate navigation (replace with real routing logic)
+            sap.m.MessageToast.show("Navigating to Task Detail for Task ID: " + sTaskId);
+            localStorage.setItem("taskId", sTaskId);
+            // Example: Use router to navigate to a task detail page
+            this.getRouter().navTo("TaskDetail", { taskId: sTaskId });
+        },
+        
+        
+
+        
 
         _openDialog: function (oData) {
 			// Dapatkan referensi ke dialog
@@ -575,7 +656,6 @@ sap.ui.define([
 			this.oProcessFlow1.bindElement("/");
 		},
 
-		
 		onNodePress: function(event) {
 			const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
 			const oModel = this.getView().getModel();  // Get the model
@@ -616,6 +696,7 @@ sap.ui.define([
 			}
 		},
         
+        //getAccessToken gak dipake
         getAccessToken: async function() {
             try {
                 // Step 1: Base64 encode client_id and client_secret
