@@ -74,7 +74,8 @@
             id="nodesTableProjectDetail"
             rows="{/nodes}"
             visibleRowCount="4"
-            selectionMode="None">
+            selectionMode="None"
+            cellClick=".onCellClick">
             <table:columns>
                 <table:Column width="150px">
                     <Label text="As of Date" />
@@ -237,8 +238,8 @@
 							title="{path: 'label', formatter:'.formatUpperCase'}"
 							titleAbbreviation="{TITLE_ABBREVIATION}"
 							children="{children}"
-							state="Positive"
-							stateText="{state}"
+							state="{stateColor}"
+							stateText="{path: 'state', formatter:'.formatUpperCase'}"
 							texts="{description}"
 							highlighted="{highlighted}"
 							focused="{focused}" />

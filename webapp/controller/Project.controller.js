@@ -82,6 +82,7 @@ sap.ui.define([
 			}
 			
 		},
+        
         onNew: function () {
             const dialogModel = this.getView().getModel("dialogModel");
 
@@ -341,7 +342,6 @@ sap.ui.define([
             }
         },       
         
-        
         _navigateToTaskDetail: function (sTaskId) {
             if (!sTaskId) {
                 sap.m.MessageToast.show("Task ID is missing.");
@@ -354,11 +354,7 @@ sap.ui.define([
             // Example: Use router to navigate to a task detail page
             this.getRouter().navTo("TaskDetail", { taskId: sTaskId });
         },
-        
-        
-
-        
-
+          
         _openDialog: function (oData) {
 			// Dapatkan referensi ke dialog
 			console.log("oData : ",oData);
@@ -486,8 +482,7 @@ sap.ui.define([
         //         sap.ui.core.BusyIndicator.hide();
         //     }
         // },
-
-        
+       
         onSaveDialogTask: async function () {
             let idTask;
             console.log("onSaveDialogTask");
@@ -594,8 +589,6 @@ sap.ui.define([
             }
         },
 
-        
-
         // onSaveDialogTask: async function () {
 		// 	const oDialog = this.byId("ProjectTaskDialog");
 		// 	const oFileUploader = this.byId("fileUploader");
@@ -656,83 +649,85 @@ sap.ui.define([
 			this.oProcessFlow1.bindElement("/");
 		},
 
-		onNodePress: function(event) {
-			const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
-			const oModel = this.getView().getModel();  // Get the model
+		// onNodePress: function(event) {
+		// 	const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
+		// 	const oModel = this.getView().getModel();  // Get the model
 		
-			// Get the current nodes data from the model
-			const nodes = oModel.getProperty("/nodes");
-            console.log("node:", nodes);
+		// 	// Get the current nodes data from the model
+		// 	const nodes = oModel.getProperty("/nodes");
+        //     console.log("node:", nodes);
 		
-			// Find the node by its ID in the model data
-			const nodeIndex = nodes.findIndex(node => node.code === nodeId);
+		// 	// Find the node by its ID in the model data
+		// 	const nodeIndex = nodes.findIndex(node => node.code === nodeId);
 		
-			if (nodeIndex !== -1) {
-				console.log("index:", nodeIndex);
-                const oDialog = new sap.m.Dialog({
-                    title: "Choose Action",
-                    content: new sap.m.Text({ text: "Do you want to run " + nodes[nodeIndex].label +"?" }),
-                    buttons: [
-                        new sap.m.Button({
-                            text: "Run",
-                            icon: "sap-icon://play",
-                            press: () => {
-                                this.runNode(nodes[nodeIndex].id, nodes[nodeIndex].label)    ;
-                                oDialog.close(); // Close the dialog
-                            }
-                        }),
-                        new sap.m.Button({
-                            type: sap.m.ButtonType.Emphasized,
-                            text: "Cancel",
-                            icon: "sap-icon://cancel",
-                            press: () => {
-                                oDialog.close(); // Close the dialog
-                            }
-                        })
-                    ]});
-                    oDialog.open(); // Open the dialog
-        } else {
-				MessageToast.show("Node not found.");
-			}
-		},
+		// 	if (nodeIndex !== -1) {
+		// 		console.log("index:", nodeIndex);
+        //         const oDialog = new sap.m.Dialog({
+        //             title: "Choose Action",
+        //             content: new sap.m.Text({ text: "Do you want to run " + nodes[nodeIndex].label +"?" }),
+        //             buttons: [
+        //                 new sap.m.Button({
+        //                     text: "Run",
+        //                     icon: "sap-icon://play",
+        //                     press: () => {
+        //                         this.runNode(nodes[nodeIndex].id, nodes[nodeIndex].label)    ;
+        //                         oDialog.close(); // Close the dialog
+        //                     }
+        //                 }),
+        //                 new sap.m.Button({
+        //                     type: sap.m.ButtonType.Emphasized,
+        //                     text: "Cancel",
+        //                     icon: "sap-icon://cancel",
+        //                     press: () => {
+        //                         oDialog.close(); // Close the dialog
+        //                     }
+        //                 })
+        //             ]});
+        //             oDialog.open(); // Open the dialog
+        // } else {
+		// 		MessageToast.show("Node not found.");
+		// 	}
+		// },
         
+
+
         //getAccessToken gak dipake
-        getAccessToken: async function() {
-            try {
-                // Step 1: Base64 encode client_id and client_secret
-                const clientId = 'clientid';
-                const clientSecret = 'secret';
-                const encodedCredentials = btoa(`${clientId}:${clientSecret}`);  // Base64 encode
+        // getAccessToken: async function() {
+        //     try {
+        //         // Step 1: Base64 encode client_id and client_secret
+        //         const clientId = 'clientid';
+        //         const clientSecret = 'secret';
+        //         const encodedCredentials = btoa(`${clientId}:${clientSecret}`);  // Base64 encode
 
-                // Step 2: Fetch OAuth token with client credentials in the Authorization header
-                const oauthResponse = await fetch('http://nexia-main.pypsak.cloud/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Basic ${encodedCredentials}`  // Add the Authorization header
-                    },
-                    body: new URLSearchParams({
-                        'grant_type': 'password',
-                        'username': 'raymond',
-                        'password': 'zbZX16}+'
-                    })
-                });
+        //         // Step 2: Fetch OAuth token with client credentials in the Authorization header
+        //         const oauthResponse = await fetch('http://nexia-main.pypsak.cloud/token', {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/x-www-form-urlencoded',
+        //                 'Authorization': `Basic ${encodedCredentials}`  // Add the Authorization header
+        //             },
+        //             body: new URLSearchParams({
+        //                 'grant_type': 'password',
+        //                 'username': 'raymond',
+        //                 'password': 'zbZX16}+'
+        //             })
+        //         });
 
-                if (!oauthResponse.ok) {
-                    throw new Error('Failed to fetch OAuth token');
-                }
+        //         if (!oauthResponse.ok) {
+        //             throw new Error('Failed to fetch OAuth token');
+        //         }
 
-                const oauthData = await oauthResponse.json();
-                const accessToken = oauthData.access_token; // Store the access token
-                console.log("OauthData: ",oauthData);
-                console.log("OAuth Access Token:", accessToken);
+        //         const oauthData = await oauthResponse.json();
+        //         const accessToken = oauthData.access_token; // Store the access token
+        //         console.log("OauthData: ",oauthData);
+        //         console.log("OAuth Access Token:", accessToken);
 
-                return accessToken // Return the access token
-            } catch (error) {
-                console.error("Error fetching access token:", error);
-                throw new Error("Failed to retrieve access token.");
-            }
-        },
+        //         return accessToken // Return the access token
+        //     } catch (error) {
+        //         console.error("Error fetching access token:", error);
+        //         throw new Error("Failed to retrieve access token.");
+        //     }
+        // },
 
 	});
 });

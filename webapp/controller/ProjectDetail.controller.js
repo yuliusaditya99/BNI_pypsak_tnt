@@ -61,6 +61,7 @@ sap.ui.define([
         },
         
         mapNodes: function (nodesData, childrenData) {
+            // Create a mapping of parent-to-children relationships
             const childrenMap = {};
             childrenData.forEach(child => {
                 const parentId = child.task_code_from;
@@ -71,75 +72,93 @@ sap.ui.define([
                 childrenMap[parentId].push(childId);
             });
         
-            return nodesData.map(node => ({
-                id: node.id,
-                code: node.task_code,
-                laneId: "lane",
-                label: node.task_name,
-                owner: node.owner,
-                customColumns: {
-                    command: {
-                        shellScript: node.custom_columns?.command?.shell_script || "",
-                        sasScript: node.custom_columns?.command?.sas_script || "",
-                        sasScriptParams: node.custom_columns?.command?.sas_script_params || "",
-                        sasLog: node.custom_columns?.command?.sas_log || "",
-                        sasPathPrint: node.custom_columns?.command?.sas_path_print || "",
+            return nodesData.map(node => {
+                // Map state to state_color
+                let stateColor;
+                switch (node.state) {
+                    case "Running":
+                        stateColor = "Neutral";
+                        break;
+                    case "Error":
+                        stateColor = "Negative";
+                        break;
+                    case "Completed":
+                        stateColor = "Positive";
+                        break;
+                    default:
+                        stateColor = "Neutral"; // Default color if state is undefined or unrecognized
+                }
+        
+                return {
+                    id: node.id,
+                    code: node.task_code,
+                    laneId: "lane",
+                    label: node.task_name,
+                    owner: node.owner,
+                    customColumns: {
+                        command: {
+                            shellScript: node.custom_columns?.command?.shell_script || "",
+                            sasScript: node.custom_columns?.command?.sas_script || "",
+                            sasScriptParams: node.custom_columns?.command?.sas_script_params || "",
+                            sasLog: node.custom_columns?.command?.sas_log || "",
+                            sasPathPrint: node.custom_columns?.command?.sas_path_print || "",
+                        },
                     },
-                },
-                parameters: {
-                    currentVersion: node.parameters?.current_version || "",
-                    adjust: node.parameters?.adjust || "",
-                    startDate: node.parameters?.start_date || "",
-                    countdown: node.parameters?.countdown || "",
-                    isShowCountdown: node.parameters?.is_show_countdown || "",
-                },
-                results: {
-                    "script.log": node.results?.["script.log"] || "",
-                },
-                state: node.state,
-                begin_at: node.process_begin_at,
-                end_at: node.process_end_at,
-                calculate: {
-                    begin_at: node?.process_begin_at || "",
-                    end_at: node?.process_end_at || "",
-                },
-                iteration: node.iteration,
-                children: childrenMap[node.task_code] || [],
-                description: node.description || "",
-                highlighted: node.highlighted || false,
-                focused: node.focused || false,
-                isRunning: node.is_running || false,
-                createdAt: node.created_at,
-                updatedAt: node.updated_at,
-                deletedAt: node.deleted_at,
-                createdBy: {
-                    userName: node.createdBy?.user_name || "",
-                    fullName: node.createdBy?.full_name || "",
-                    email: node.createdBy?.email || "",
-                    clientCode: node.createdBy?.client_code || "",
-                    id: node.createdBy?.id || null,
-                },
-                updatedBy: {
-                    userName: node.createdBy?.user_name || "",
-                    fullName: node.createdBy?.full_name || "",
-                    email: node.createdBy?.email || "",
-                    clientCode: node.createdBy?.client_code || "",
-                    id: node.createdBy?.id || null,
-                },
-                task: {
-                    title: node.task?.title || "",
-                    asOfDate: node.task?.as_of_date || "",
-                    processDefinition: node.task?.process_definition || null,
-                    description: node.task?.description || "",
-                    id: node.task?.id || null,
-                },
-            }));
+                    parameters: {
+                        currentVersion: node.parameters?.current_version || "",
+                        adjust: node.parameters?.adjust || "",
+                        startDate: node.parameters?.start_date || "",
+                        countdown: node.parameters?.countdown || "",
+                        isShowCountdown: node.parameters?.is_show_countdown || "",
+                    },
+                    results: {
+                        "script.log": node.results?.["script.log"] || "",
+                    },
+                    state: node.state, // Original state
+                    stateColor: stateColor, // Mapped state color
+                    begin_at: node.process_begin_at,
+                    end_at: node.process_end_at,
+                    calculate: {
+                        begin_at: node?.process_begin_at || "",
+                        end_at: node?.process_end_at || "",
+                    },
+                    iteration: node.iteration,
+                    children: childrenMap[node.task_code] || [],
+                    description: node.description || "",
+                    highlighted: node.highlighted || false,
+                    focused: node.focused || false,
+                    isRunning: node.is_running || false,
+                    createdAt: node.created_at,
+                    updatedAt: node.updated_at,
+                    deletedAt: node.deleted_at,
+                    createdBy: {
+                        userName: node.createdBy?.user_name || "",
+                        fullName: node.createdBy?.full_name || "",
+                        email: node.createdBy?.email || "",
+                        clientCode: node.createdBy?.client_code || "",
+                        id: node.createdBy?.id || null,
+                    },
+                    updatedBy: {
+                        userName: node.createdBy?.user_name || "",
+                        fullName: node.createdBy?.full_name || "",
+                        email: node.createdBy?.email || "",
+                        clientCode: node.createdBy?.client_code || "",
+                        id: node.createdBy?.id || null,
+                    },
+                    task: {
+                        title: node.task?.title || "",
+                        asOfDate: node.task?.as_of_date || "",
+                        processDefinition: node.task?.process_definition || null,
+                        description: node.task?.description || "",
+                        id: node.task?.id || null,
+                    },
+                };
+            });
         },
-
         
         _initializeWebSocket: function () {
 
-            this._webSocket = new WebSocket(localStorage.getItem("ws"));
+            this._webSocket = new WebSocket(localStorage.getItem("websocet"));
         
             this._webSocket.onopen = () => {
                 console.log("WebSocket connection established.");
@@ -323,43 +342,6 @@ sap.ui.define([
         onCancelPress: function() {
             this._oDialog.close(); // Close the dialog
         },
-        
-        getAccessToken: async function() {
-            try {
-                // Step 1: Base64 encode client_id and client_secret
-                const clientId = 'clientid';
-                const clientSecret = 'secret';
-                const encodedCredentials = btoa(`${clientId}:${clientSecret}`);  // Base64 encode
-
-                // Step 2: Fetch OAuth token with client credentials in the Authorization header
-                const oauthResponse = await fetch('http://nexia-main.pypsak.cloud/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': `Basic ${encodedCredentials}`  // Add the Authorization header
-                    },
-                    body: new URLSearchParams({
-                        'grant_type': 'password',
-                        'username': 'raymond',
-                        'password': 'zbZX16}+'
-                    })
-                });
-
-                if (!oauthResponse.ok) {
-                    throw new Error('Failed to fetch OAuth token');
-                }
-
-                const oauthData = await oauthResponse.json();
-                const accessToken = oauthData.access_token; // Store the access token
-                console.log("OauthData: ",oauthData);
-                console.log("OAuth Access Token:", accessToken);
-
-                return accessToken // Return the access token
-            } catch (error) {
-                console.error("Error fetching access token:", error);
-                throw new Error("Failed to retrieve access token.");
-            }
-        },
 
 		runNode: async function(nodeId, nodeTitle, parameters) {
             try {
@@ -403,9 +385,9 @@ sap.ui.define([
             
                 const data = await response.json();
                 console.log("Node execution response:", data);
-            
+                sap.m.MessageToast.show(data.message);
                 // Show success message
-                localStorage.setItem('postReloadMessage', `Process ${nodeTitle} is running`);
+                sap.m.MessageToast.show(`Process ${nodeTitle} is running`);
                 
         
             } catch (error) {
@@ -430,12 +412,105 @@ sap.ui.define([
                 oModel.setProperty("/nodes", updatedNodes);
                 oModel.refresh(true);
         
-                sap.m.MessageToast.show("Data refreshed successfully.");
+                // sap.m.MessageToast.show("Data refreshed successfully.");
             } catch (error) {
                 console.error("Error during refresh:", error);
-                sap.m.MessageToast.show("Failed to refresh data.");
+                // sap.m.MessageToast.show("Failed to refresh data.");
             }
         },
+
+        // onCellClick: function (oEvent) {
+        //     // Log the full event parameters to inspect available data
+        //     console.log("Event Parameters:", oEvent.getParameters());
+        
+        //     var oTable = this.byId("nodesTableProjectDetail");
+        //     var iRowIndex = oEvent.getParameter("rowIndex"); // Get row index
+        
+        //     console.log("Row Index:", iRowIndex);
+        
+        //     if (iRowIndex !== undefined) {
+        //         var oModel = this.getView().getModel("view");
+        //         var aRows = oModel.getProperty("/tasks");
+        //         var oRowData = aRows[iRowIndex]; // Retrieve data by index
+        
+        //         // Navigate using router
+        //         this._navigateToTaskDetail(oRowData.id);
+        //         localStorage.setItem("taskId", oRowData.id);
+        //         console.log("Navigating to ProjectDetail with ID:", oRowData.id);
+        //     } else {
+        //         sap.m.MessageToast.show("No valid row index found!");
+        //     }
+        // },
+        
+        onCellClick: function (oEvent) {
+            try {
+                // Log the event parameters
+                console.log("Event Parameters:", oEvent.getParameters());
+        
+                // Get the row index
+                const iRowIndex = oEvent.getParameter("rowIndex");
+                console.log("Row Index:", iRowIndex);
+        
+                // Retrieve the model and check its validity
+                const oModel = this.getView().getModel("view");
+                if (!oModel) {
+                    throw new Error("View model is not found.");
+                }
+        
+                // Get nodes array and validate it
+                const nodes = oModel.getProperty("/nodes");
+                console.log("Nodes Array:", nodes);
+                if (!Array.isArray(nodes) || nodes.length === 0) {
+                    throw new Error("Nodes array is empty or not an array.");
+                }
+        
+                // Ensure the row index is valid
+                if (iRowIndex < 0 || iRowIndex >= nodes.length) {
+                    throw new Error(`Row index ${iRowIndex} is out of bounds.`);
+                }
+        
+                // Retrieve node data
+                const node = nodes[iRowIndex];
+                console.log("Selected Node Data:", node);
+        
+                if (node && node.id) {
+                    // Open the dialog or navigate as needed
+                    const dialogData = {
+                        label: node.label, // Dialog title
+                        parameters: {
+                            currentVersion: node.parameters?.currentVersion || null,
+                            adjust: node.parameters?.adjust || null,
+                            startDate: node.parameters?.startDate || null,
+                            countdown: node.parameters?.countdown || null,
+                            isShowCountdown: node.parameters?.isShowCountdown || null
+                        }
+                    };
+        
+                    console.log("Dialog Parameters:", dialogData.parameters);
+        
+                    if (!this._oDialog) {
+                        this._oDialog = sap.ui.xmlfragment(this.getView().getId(), "sap.ui.bni.toolpageapp.fragments.NodeDialog", this);
+                        this.getView().addDependent(this._oDialog);
+                    }
+        
+                    const oDialogModel = new sap.ui.model.json.JSONModel(dialogData);
+                    this._oDialog.setModel(oDialogModel, "dialogModel");
+        
+                    this._currentNodeId = node.id;
+                    this._currentNodeTitle = node.label;
+        
+                    this._oDialog.open();
+                } else {
+                    sap.m.MessageToast.show("No valid node data found.");
+                }
+            } catch (error) {
+                console.error("Error in onCellClick:", error.message);
+                sap.m.MessageToast.show("An error occurred while processing the cell click.");
+            }
+        }
+        ,
+        
+        
         
         
 		//#endregion
@@ -558,7 +633,7 @@ sap.ui.define([
         
         emptyIfNull: function (value) {
             return value || "";
-        }
+        },
         
 		//#endregion
 	});
