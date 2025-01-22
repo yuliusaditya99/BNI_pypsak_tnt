@@ -13,9 +13,14 @@ sap.ui.define([
         onInit: async function () {
             try{
             console.log("Project controller initialized.");
+
+            
+
+            console.log("local storage id: ", localStorage.getItem("taskId"));
             var oViewModel = new JSONModel({
                 isPhone: Device.system.phone
             });
+            
             this.setModel(oViewModel, "view");
             Device.media.attachHandler(function (oDevice) {
                 this.getModel("view").setProperty("/isPhone", oDevice.name === "Phone");
@@ -24,28 +29,16 @@ sap.ui.define([
             var oView = this.getView();
             this.oProcessFlow1 = oView.byId("processflow1");
             
-            // Define a single lane with the ID "lane"
-            const lanesData = [
-                { laneId: "lane", label: "Single Lane", position: 0 }
-            ];
             
-            // Fetch OAuth token and data
-            const nodesData = await this.fetchNodes();
-            console.log("process initialitaion running");
+        
+            // Get the router and route object
+            const oRouter = this.getRouter();
+            const oRoute = oRouter.getRoute("TaskDetail");
 
-            const childrenData = await this.fetchChildren();
-            console.log("Nodes data:", nodesData);
-
-            const nodes = this.mapNodes(nodesData, childrenData);
+            // Daftarkan patternMatched
+            oRoute.attachPatternMatched(this._onRouteMatched, this);
             
-            const combinedModel = new sap.ui.model.json.JSONModel({
-                lanes: lanesData,
-                nodes: nodes
-            });
-            oView.setModel(combinedModel);
-        
-        
-            console.log("Initialization completed with model data:", combinedModel.getData());
+            console.log("Initialization completed");
         
             this.oProcessFlow1.setZoomLevel("Two");
             
@@ -59,6 +52,59 @@ sap.ui.define([
             sap.m.MessageToast.show("Initialization failed.");
         }
         },
+        
+
+        _onRouteMatched: async function (oEvent) {
+            // Ambil parameter taskId dari rute
+            const sTaskId = oEvent.getParameter("arguments").taskId;
+        
+            // Debugging untuk melihat ID task yang aktif
+            console.log("Navigated to TaskDetail with ID:", sTaskId);
+        
+            try {
+                var oView = this.getView();
+                this.oProcessFlow1 = oView.byId("processflow1");
+        
+                // Define a single lane with the ID "lane"
+                const lanesData = [
+                    { laneId: "lane", label: "Single Lane", position: 0 }
+                ];
+        
+                // Fetch OAuth token and data
+                const nodesData = await this.fetchNodes(sTaskId);
+                console.log("Process initialization running");
+        
+                const childrenData = await this.fetchChildren();
+                console.log("Nodes data:", nodesData);
+        
+                // Map nodes data with children data
+                const nodes = this.mapNodes(nodesData, childrenData);
+        
+                // Combine lanes and nodes into a model
+                const combinedModel = new sap.ui.model.json.JSONModel({
+                    lanes: lanesData,
+                    nodes: nodes
+                });
+                oView.setModel(combinedModel);
+        
+                // Additional debugging to confirm everything is set up
+                console.log("Combined model set to view:", combinedModel.getData());
+            } catch (error) {
+                console.error("Error during _onRouteMatched execution:", error);
+            }
+        },
+        
+
+        _loadTaskDetail: function (sTaskId) {
+            // Contoh: Memperbarui model tampilan
+            const oModel = this.getView().getModel();
+            const oTaskDetail = oModel.getProperty(`/tasks/${sTaskId}`);
+            this.getView().getModel("viewModel").setProperty("/selectedTaskDetail", oTaskDetail);
+
+            // Debugging untuk memastikan data dimuat ulang
+            console.log("Task Detail Loaded:", oTaskDetail);
+        },
+
         
         mapNodes: function (nodesData, childrenData) {
             // Create a mapping of parent-to-children relationships
@@ -88,6 +134,12 @@ sap.ui.define([
                     default:
                         stateColor = "Neutral"; // Default color if state is undefined or unrecognized
                 }
+                const resultsFormatted = [];
+                const resultsfileName =[];
+                for (let [fileName, filePath] of Object.entries(node.results || {})) {
+                    resultsFormatted.push(`${fileName} : ${filePath}`);
+                    resultsfileName.push(`${fileName}`);
+                }
         
                 return {
                     id: node.id,
@@ -111,9 +163,8 @@ sap.ui.define([
                         countdown: node.parameters?.countdown || "",
                         isShowCountdown: node.parameters?.is_show_countdown || "",
                     },
-                    results: {
-                        "script.log": node.results?.["script.log"] || "",
-                    },
+                    results: resultsFormatted,
+                    resultsfileName: resultsfileName,
                     state: node.state, // Original state
                     stateColor: stateColor, // Mapped state color
                     begin_at: node.process_begin_at,
@@ -193,7 +244,7 @@ sap.ui.define([
             };
         },
         
-        fetchNodes: async function () {
+        fetchNodes: async function (taskId) {
             try {
                 const token = localStorage.getItem("authToken");
                 if (!token) {
@@ -207,7 +258,7 @@ sap.ui.define([
                     length: 10,
                     orders: "task_code",
                     dirs: "asc",
-                    id: localStorage.getItem("taskId")
+                    id: taskId
                 };
 
                 // Make the API request with query parameters
@@ -260,6 +311,7 @@ sap.ui.define([
         },
         
         onAfterRendering: function () {
+            console.log("Project controller rendered.");
             this.oProcessFlow1.bindElement("/");
         },
 
@@ -306,7 +358,7 @@ sap.ui.define([
         
                 this._currentNodeId = node.id;
                 this._currentNodeTitle = node.label;
-        
+                console.log("currentNodeId", this._currentNodeId);
                 this._oDialog.open();
             } else {
                 sap.m.MessageToast.show("Node not found.");
@@ -401,7 +453,7 @@ sap.ui.define([
         onRefresh: async function () {
             try {
                 // Re-fetch nodes and children data
-                const nodesData = await this.fetchNodes();
+                const nodesData = await this.fetchNodes(localStorage.getItem("taskId"));
                 const childrenData = await this.fetchChildren();
         
                 // Map updated nodes
@@ -418,97 +470,106 @@ sap.ui.define([
                 // sap.m.MessageToast.show("Failed to refresh data.");
             }
         },
-
-        // onCellClick: function (oEvent) {
-        //     // Log the full event parameters to inspect available data
-        //     console.log("Event Parameters:", oEvent.getParameters());
-        
-        //     var oTable = this.byId("nodesTableProjectDetail");
-        //     var iRowIndex = oEvent.getParameter("rowIndex"); // Get row index
-        
-        //     console.log("Row Index:", iRowIndex);
-        
-        //     if (iRowIndex !== undefined) {
-        //         var oModel = this.getView().getModel("view");
-        //         var aRows = oModel.getProperty("/tasks");
-        //         var oRowData = aRows[iRowIndex]; // Retrieve data by index
-        
-        //         // Navigate using router
-        //         this._navigateToTaskDetail(oRowData.id);
-        //         localStorage.setItem("taskId", oRowData.id);
-        //         console.log("Navigating to ProjectDetail with ID:", oRowData.id);
-        //     } else {
-        //         sap.m.MessageToast.show("No valid row index found!");
-        //     }
-        // },
         
         onCellClick: function (oEvent) {
             try {
-                // Log the event parameters
-                console.log("Event Parameters:", oEvent.getParameters());
-        
-                // Get the row index
-                const iRowIndex = oEvent.getParameter("rowIndex");
-                console.log("Row Index:", iRowIndex);
-        
-                // Retrieve the model and check its validity
-                const oModel = this.getView().getModel("view");
-                if (!oModel) {
-                    throw new Error("View model is not found.");
+                // Retrieve the binding context and row data
+                const oBindingContext = oEvent.getParameters().rowBindingContext;
+                if (!oBindingContext) {
+                    throw new Error("Invalid binding context. No data found for the selected row.");
                 }
         
-                // Get nodes array and validate it
-                const nodes = oModel.getProperty("/nodes");
-                console.log("Nodes Array:", nodes);
-                if (!Array.isArray(nodes) || nodes.length === 0) {
-                    throw new Error("Nodes array is empty or not an array.");
+                const oRowData = oBindingContext.getObject();
+                if (!oRowData || !oRowData.id) {
+                    throw new Error("Invalid row data. ID is missing.");
                 }
         
-                // Ensure the row index is valid
-                if (iRowIndex < 0 || iRowIndex >= nodes.length) {
-                    throw new Error(`Row index ${iRowIndex} is out of bounds.`);
-                }
+                console.log("Row Data:", oRowData);
         
-                // Retrieve node data
-                const node = nodes[iRowIndex];
-                console.log("Selected Node Data:", node);
-        
-                if (node && node.id) {
-                    // Open the dialog or navigate as needed
-                    const dialogData = {
-                        label: node.label, // Dialog title
-                        parameters: {
-                            currentVersion: node.parameters?.currentVersion || null,
-                            adjust: node.parameters?.adjust || null,
-                            startDate: node.parameters?.startDate || null,
-                            countdown: node.parameters?.countdown || null,
-                            isShowCountdown: node.parameters?.isShowCountdown || null
-                        }
-                    };
-        
-                    console.log("Dialog Parameters:", dialogData.parameters);
-        
-                    if (!this._oDialog) {
-                        this._oDialog = sap.ui.xmlfragment(this.getView().getId(), "sap.ui.bni.toolpageapp.fragments.NodeDialog", this);
-                        this.getView().addDependent(this._oDialog);
+                // Prepare dialog data
+                const dialogData = {
+                    label: oRowData.label, // For the dialog title
+                    parameters: {
+                        currentVersion: oRowData.parameters?.currentVersion || null,
+                        adjust: oRowData.parameters?.adjust || null,
+                        startDate: oRowData.parameters?.startDate || null,
+                        countdown: oRowData.parameters?.countdown || null,
+                        isShowCountdown: oRowData.parameters?.isShowCountdown || null
                     }
+                };
         
-                    const oDialogModel = new sap.ui.model.json.JSONModel(dialogData);
-                    this._oDialog.setModel(oDialogModel, "dialogModel");
+                console.log("Dialog Parameters:", dialogData.parameters);
         
-                    this._currentNodeId = node.id;
-                    this._currentNodeTitle = node.label;
-        
-                    this._oDialog.open();
-                } else {
-                    sap.m.MessageToast.show("No valid node data found.");
+                // Create and open the dialog if not already created
+                if (!this._oDialog) {
+                    this._oDialog = sap.ui.xmlfragment(this.getView().getId(), "sap.ui.bni.toolpageapp.fragments.NodeDialog", this);
+                    this.getView().addDependent(this._oDialog);
                 }
+        
+                // Set the dialog model with the row data
+                const oDialogModel = new sap.ui.model.json.JSONModel(dialogData);
+                this._oDialog.setModel(oDialogModel, "dialogModel");
+        
+                // Store the current node details for use in further operations
+                this._currentNodeId = oRowData.id;
+                this._currentNodeTitle = oRowData.label;
+                console.log("Current Node ID:", this._currentNodeId);
+        
+                // Open the dialog
+                this._oDialog.open();
             } catch (error) {
                 console.error("Error in onCellClick:", error.message);
                 sap.m.MessageToast.show("An error occurred while processing the cell click.");
             }
-        }
-        ,
+        },
+
+        onDownloadFile: function (oEvent) {
+            // Get the clicked Text control
+            const oText = oEvent.getSource();
+            
+            // Retrieve the value of the clicked file name
+            const fileName = oText.getText();
+
+            // Retrieve the row data from the binding context
+            var oBindingContext = oEvent.getSource().getBindingContext();
+            const oRowData = oBindingContext.getObject();
+
+            const nodeId= oRowData.id;
+
+            this.triggerDownloadResult(nodeId, fileName);
+
+
+        },
+
+        triggerDownloadResult: function (id, filename) {
+            const url = `http://nexia-main.pypsak.cloud/api/task_detail/download/${id}/${filename}`;
+        
+            axios({
+                method: 'GET',
+                url: url,
+                responseType: 'blob',
+            })
+                .then((response) => {
+                    const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.setAttribute('download', filename);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(downloadUrl); // Cleanup
+                })
+                .catch((error) => {
+                    let errorMessage = 'Error occurred while downloading.';
+                    if (error.response && error.response.data) {
+                        const errorData = error.response.data;
+                        errorMessage = errorData.message || errorMessage;
+                    }
+                    sap.m.MessageToast.show(errorMessage);
+                });
+        },
+        
+          
         
         
         

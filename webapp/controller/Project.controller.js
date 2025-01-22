@@ -304,7 +304,7 @@ sap.ui.define([
                 var oModel = this.getView().getModel("view");
                 var aRows = oModel.getProperty("/tasks");
                 var oRowData = aRows[iRowIndex]; // Retrieve data by index
-        
+                
                 // Navigate using router
                 this._navigateToTaskDetail(oRowData.id);
                 localStorage.setItem("taskId", oRowData.id);
