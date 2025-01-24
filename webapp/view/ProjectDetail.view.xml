@@ -74,9 +74,10 @@
             id="nodesTableProjectDetail"
             rows="{/nodes}"
             visibleRowCount="4"
-            selectionMode="None">
+            selectionMode="None"
+            cellClick=".onCellClick">
             <table:columns>
-                <table:Column width="150px">
+                <table:Column width="110px">
                     <Label text="As of Date" />
                     <table:template>
                         <Text text="{path: 'task/asOfDate'}" class="paddingTopBottom" />
@@ -95,7 +96,7 @@
                         <Text text="{path: 'label'}" class="paddingTopBottom"/>
                     </table:template>
                 </table:Column>
-                <table:Column width="100px">
+                <table:Column width="75px">
                     <Label text="Owner" />
                     <table:template>
                         <Text text="{owner}" class="paddingTopBottom"/>
@@ -121,7 +122,7 @@
                         formatter:'.timeFormater'}" class="paddingTopBottom"/>
                     </table:template>
                 </table:Column>
-                <table:Column width="150px">
+                <table:Column width="120px">
                     <Label text="Process Time" />
                     <table:template>
                         <Text text="{path: 'calculate', 
@@ -137,7 +138,7 @@
                 <table:Column width="150px">
                     <Label text="Result" />
                     <table:template>
-                        <Text text="{path: 'results/script.log'}" class="paddingTopBottom"/>
+                        <Link text="{path: 'resultsfileName'}" target="_blank" href="{path: 'resultsfilePath'}" press="onDownloadFile"/>
                     </table:template>
                 </table:Column>
                 <table:Column width="200px">
@@ -225,7 +226,6 @@
 					id="processflow1"
 					scrollable="true"
 					foldedCorners="true"
-					nodePress="onNodePress"
 					nodes="{/nodes}"
 					lanes="{/lanes}"
 					class="hiddenLanes">
@@ -237,8 +237,8 @@
 							title="{path: 'label', formatter:'.formatUpperCase'}"
 							titleAbbreviation="{TITLE_ABBREVIATION}"
 							children="{children}"
-							state="Positive"
-							stateText="{state}"
+							state="{stateColor}"
+							stateText="{path: 'state', formatter:'.formatUpperCase'}"
 							texts="{description}"
 							highlighted="{highlighted}"
 							focused="{focused}" />

@@ -116,6 +116,11 @@
 					]
 				},
 				{
+					"pattern": "taskDetail/{taskId}",
+					"name": "TaskDetail",
+					"target": "TaskDetail"
+				},
+				{
 					"pattern": "MasterSettings/ProcessDefinitions",
 					"name": "processDefinitions",
 					"target": [
@@ -137,11 +142,12 @@
 				"project": {
 					"viewId": "project",
 					"viewName": "Project"
-				},	
-				"projectDetail": {
-					"viewId": "projectDetail",
-					"viewName": "ProjectDetail"
 				},
+				"TaskDetail": {
+					"viewName": "ProjectDetail",
+					"viewType": "XML",
+					"viewLevel": 2
+				},			
 				"appSettings": {
 					"viewId": "appSettings",
 					"viewName": "settings.AppSettings"
