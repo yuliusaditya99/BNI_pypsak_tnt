@@ -23,7 +23,7 @@
 					text="{i18n>appTitle}"
 					level="H2" />
 				<ToolbarSpacer/>
-				<Button
+				<!-- <Button
 					id="errorButton"
 					icon="sap-icon://message-popup"
 					visible="{= ${alerts>/alerts/errors}.length === 0 ? false : true }"
@@ -44,7 +44,7 @@
 					<layoutData>
 						<OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
 					</layoutData>
-				</Button>
+				</Button> -->
 				<Button
 					id="userButton"
 					text="{i18n>userName}"

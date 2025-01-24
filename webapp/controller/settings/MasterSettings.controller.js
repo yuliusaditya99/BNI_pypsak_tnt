@@ -18,41 +18,29 @@ sap.ui.define([
 					lastLogin: UI5Date.getInstance(Date.now() - 86400000)
 				});
 
+			var oDialogModel = new JSONModel({});
+			this.setModel(oDialogModel, "dialogModel");
+
 			this.setModel(oViewModel, "view");
 			console.log("masuk");
-			this._initializeAsyncData();
+			var sViewId = this.getView().getId();
+
+            if (sViewId.includes("userManagement")) {
+                this._setupUserManagement();
+				//this._loadProcessData();
+            } else if (sViewId.includes("detailSettings")) {
+                this._initializeAsyncData();
+            }		
 			
 		},
 
-
 		_initializeAsyncData: async function () {
+			
+			this._selectedColumn = "fileName";			
 			try {
 			  
 			  console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
-			  const fileResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file');
-		  
-			  const fileData = fileResponse.data;
-			  const filetableData = fileData.payloads.data;
-		  
-			  const files = filetableData.map(file => ({
-				id: file.id,
-				fileName: file.file_name,
-				path: file.path,
-				contentType: file.content_type,
-				extension: file.extension,
-				createdAt: file.created_at,
-				createdBy: file.createdBy?.user_name || "N/A",
-				size: file.size_bytes,
-			  }));
-			  console.log("Files:", files);
-		  
-			  // Langkah 3: Tambahkan data ke model "view"
-			  const oViewModel = this.getModel("view");
-			  if (oViewModel) {
-				oViewModel.setProperty("/files", files);
-			  } else {
-				console.error("View model not found.");
-			  }
+			  this.onGetData(10,"File");
 			} catch (error) {
 			  if (error.response) {
 				console.error("Error Response:", error.response.data);
@@ -66,73 +54,184 @@ sap.ui.define([
 			
 		},
 
-		// _initializeAsyncData: async function () {
-		// 	try {
-		// 		const clientId = 'clientid';
-		// 		const clientSecret = 'secret';
-		// 		const encodedCredentials = btoa(`${clientId}:${clientSecret}`); 
-		
-		// 		const oauthResponse = await fetch('http://nexia-main.pypsak.cloud/token', {
-		// 			method: 'POST',
-		// 			headers: {
-		// 				'Content-Type': 'application/x-www-form-urlencoded',
-		// 				'Authorization': `Basic ${encodedCredentials}`
-		// 			},
-		// 			body: new URLSearchParams({
-		// 				'grant_type': 'password',
-		// 				'username': 'raymond',
-		// 				'password': 'zbZX16}+'
-		// 			})
-		// 		});
-		
-		// 		if (!oauthResponse.ok) {
-		// 			throw new Error('Failed to fetch OAuth token');
-		// 		}
-		
-		// 		const oauthData = await oauthResponse.json();
-		// 		const accessToken = oauthData.access_token;
-		// 		console.log("OauthData: ", oauthData);
-		// 		console.log("OAuth Access Token:", accessToken);
-		
-		// 		const fileResponse = await fetch('http://nexia-main.pypsak.cloud/api/file', {
-		// 			headers: {
-		// 				'Authorization': `Bearer ${accessToken}`
-		// 			}
-		// 		});
-		
-		// 		const fileData = await fileResponse.json();
-		// 		const filetableData = fileData.payloads.data;
-		
-		// 		const files = filetableData.map(file => ({
-		// 			fileName: file.file_name,
-		// 			path: file.path,
-		// 			contentType: file.content_type,
-		// 			extension: file.extension,
-		// 			createdAt: file.created_at,
-		// 			createdBy: file.created_by,
-		// 			size: file.size_bytes,
-		// 		}));
-		// 		console.log("Files:", files);
-		
-		// 		// Tambahkan data ke model "view"
-		// 		const oViewModel = this.getModel("view");
-		// 		if (oViewModel) {
-		// 			oViewModel.setProperty("/files", files);
-		// 		} else {
-		// 			console.error("View model not found.");
-		// 		}
-		// 	} catch (error) {
-		// 		console.error("Error during async initialization:", error);
-		// 	}
-		// },
+		_loadProcessData: async function () {
+			this._selectedColumn = "clientCode";
+            const clientResponse = await axios.get(Config.paths.apiBaseUrl +'/api/client?start=0&length=100000000&orders=id&dirs=desc');
+			const roleResponse = await axios.get(Config.paths.apiBaseUrl +'/api/role?start=0&length=100000000&orders=id&dirs=desc');
+			//console.log("clientResponse:", clientResponse);
+            const clientData = clientResponse.data;
+            const cleintTableData = clientData.payloads.data;
+			//
+			const roleData = roleResponse.data;
+            const roleTableData = roleData.payloads.data;
+        
+        
+            const clients = cleintTableData.map(client => ({
+              clientCode: client.code
+            }));
+            console.log("Clients:", clients);
+
+			const roles = roleTableData.map(role => ({
+				idRoles: role.id,
+				rolesName: role.name,
+			  }));
+			console.log("Roles:", roles);
+        
+            // Langkah 3: Tambahkan data ke model "view"
+            const oViewModel = this.getModel("view");
+            if (oViewModel) {
+              oViewModel.setProperty("/clients", clients);
+			  oViewModel.setProperty("/roles", roles);
+            } else {
+              console.error("View model not found.");
+            }
+        },
+
+		_setupUserManagement: async function () {
+			this._selectedColumn = "clientCode";
+			this.getView().getModel("view").setProperty("/showRolesId", false);
+			try {
+			  console.log("Masuk User Management");
+			  console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
+			  this.onGetData(10,"User");
+			} catch (error) {
+			  if (error.response) {
+				console.error("Error Response:", error.response.data);
+				console.error("Status:", error.response.status);
+			  } else if (error.request) {
+				console.error("Error Request:", error.request);
+			  } else {
+				console.error("Error Message:", error.message);
+			  }
+			}
+			
+		},
+
+		onGetData: async function(paramLength, navactive) {
+
+            try {
+			  
+                let dataResponse;
+				let pageCount;
+				let totalRowCount;
+
+                console.log("paramLength : ",paramLength);
+				if(navactive == "User")
+				{
+					if(paramLength == "-1")
+					{
+						console.log("masuk -1");
+						dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length=10&orders=id&dirs=desc');
+					}
+					else
+					{
+						dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length='+paramLength+'&orders=id&dirs=desc');
+					}
+					console.log("dataResponse User : ",dataResponse);
+					const userData = dataResponse.data;
+					const usertableData = userData.payloads.data;
+					pageCount = userData.payloads.per_page;
+					totalRowCount = userData.payloads.total;
+					const users = usertableData.map(user => ({
+						id: user.id,
+						clientCode: user.client_code,
+						username: user.user_name,
+						fullname: user.full_name,
+						division: user.division,
+						email: user.email,
+						password: user.password,
+						passwordStartAt: user.password_start_at,
+						online: user.online,
+						status: user.status,
+						roles: Array.isArray(user.roles) 
+							? user.roles.map(role => role.pivot_role.name).join(", ") : "N/A", 
+						idRoles: Array.isArray(user.roles) 
+							? user.roles.map(role => role.role_id).join(", ") : "N/A",
+						LoginAt: user.login_at,
+						LogoutAt: user.logout_at,
+						ResetAt: user.reset_at,
+						CreatedBy: user.created_by,
+						CreatedAt: user.created_at,
+						UpdatedBy: user.updated_by,
+						UpdatedAt: user.updated_at				
+					}));
+					console.log("Users:", users);
+				
+					const oViewModel = this.getModel("view");
+					if (oViewModel) {
+						oViewModel.setProperty("/users", users);
+					} else {
+						console.error("View model not found.");
+					}
+				}
+				else
+				{
+					if(paramLength == "-1")
+					{
+						console.log("masuk -1");
+						dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
+					}
+					else
+					{
+						dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length='+paramLength+'&orders=id&dirs=desc');
+					}
+					const fileData = dataResponse.data;
+					const filetableData = fileData.payloads.data;
+
+					pageCount = fileData.payloads.per_page;
+					totalRowCount = fileData.payloads.total;
+				
+					const files = filetableData.map(file => ({
+						id: file.id,
+						fileName: file.file_name,
+						path: file.path,
+						contentType: file.content_type,
+						extension: file.extension,
+						createdAt: file.created_at,
+						createdBy: file.createdBy?.user_name || "N/A",
+						size: file.size_bytes,
+					}));
+					console.log("Files:", files);
+				
+					// Langkah 3: Tambahkan data ke model "view"
+					const oViewModel = this.getModel("view");
+					if (oViewModel) {
+						oViewModel.setProperty("/files", files);
+					} else {
+						console.error("View model not found.");
+					}
+				}
+				
+
+                return {
+                    perpage : pageCount,
+                    totalrow: totalRowCount
+                };
+            } catch (error) {
+                if (error.response) {
+                    console.error("Error Response:", error.response.data);
+                    console.error("Status:", error.response.status);
+                } else if (error.request) {
+                    console.error("Error Request:", error.request);
+                } else {
+                    console.error("Error Message:", error.message);
+                }
+            }
+            
+        },
 
 		onMasterPressed: function (oEvent) {
 			var oContext = oEvent.getParameter("listItem").getBindingContext("side");
 			var sPath = oContext.getPath() + "/selected";
 			oContext.getModel().setProperty(sPath, true);
 			var sKey = oContext.getProperty("key");
+			console.log("sKey : ",sKey);
 			switch (sKey) {
 				case "processDefinitions": {
+					this.getRouter().navTo(sKey);
+					break;
+				}
+				case "userManagement": {
 					this.getRouter().navTo(sKey);
 					break;
 				}
@@ -162,50 +261,188 @@ sap.ui.define([
 			});
 		},
 
+		onConfirmRolesSelection: function () {
+			const oMultiComboBox = this.byId("rolesUNCombo");
+			const selectedKeys = oMultiComboBox.getSelectedKeys(); // Ambil semua key yang dipilih
+		
+			// Simpan ke model dialog
+			this.getModel("dialogModel").setProperty("/roles", selectedKeys);
+		
+			// Anda bisa mengambil nama roles yang dipilih jika perlu
+			const selectedRoles = selectedKeys.map(key => {
+				const allRoles = this.getModel("view").getProperty("/users");
+				return allRoles.find(role => role.idRoles === key)?.roles || "Unknown";
+			});
+		
+			console.log("Selected Roles:", selectedRoles); // Menampilkan roles yang dipilih
+		
+			// Tutup dialog
+			this._oRolesDialog.close();
+		},
+
+
+		onSaveDialogUser: async function () {
+			console.log("onSaveDialogUser");
+		
+			const usernameValue = this.byId("usernameUNInput") ? this.byId("usernameUNInput").getValue() : "";
+			const fullnameValue = this.byId("fullnameUNInput") ? this.byId("fullnameUNInput").getValue() : "";
+			const emailValue = this.byId("emailUNInput") ? this.byId("emailUNInput").getValue() : "";
+			const clientCodeValue = this.byId("branchCodeUNCombo") ? this.byId("branchCodeUNCombo").getValue() : "";
+			const rolesValue = this.byId("rolesUNCombo") ? this.byId("rolesUNCombo").getSelectedKeys().filter(key => key !== "") 
+    : [];
+			console.log("usernameValue :", usernameValue);
+			console.log("fullnameValue :", fullnameValue);
+			console.log("emailValue :", emailValue);
+			console.log("clientCodeValue :", clientCodeValue);
+			console.log("rolesValue :", rolesValue);
+		
+			if (!usernameValue) {
+				MessageToast.show("Please enter a username.");
+				return;
+			}
+			if (!fullnameValue) {
+				MessageToast.show("Please enter a full name.");
+				return;
+			}
+			if (!emailValue) {
+				MessageToast.show("Please enter an email.");
+				return;
+			}
+			if (!clientCodeValue) {
+				MessageToast.show("Please enter a client code.");
+				return;
+			}
+			if (rolesValue.length === 0) {
+				MessageToast.show("Please select at least one role.");
+				return;
+			}
+		
+			try {
+				
+				const oDialog = this.byId("UserDialog");
+				const oDialogModel = this.getView().getModel("dialogModel");
+				console.log("oDialogModel : ",oDialogModel);
+				console.log("oDialogModel data : ",oDialogModel.getData());
+				const oDialogData = oDialogModel ? oDialogModel.getData() : {};
+				const idUser = oDialogData.id || null;
+				let payload;
+		
+					
+				sap.ui.core.BusyIndicator.show(0);
+				console.log("idUser:", idUser);	
+				let oResponse;
+				if (idUser) {
+					payload = {
+								payload: {
+											user_name: usernameValue,
+											full_name: fullnameValue,
+											email: emailValue,
+											client_code: clientCodeValue,
+											id: idUser
+										},
+										relation: {
+											roles: rolesValue.map(roleId => ({ id: parseInt(roleId, 10) }))
+										}
+									};
+	
+					console.log("Payload to send:", payload);	
+					console.log("Editing user with ID:", idUser);
+		
+					oResponse = await axios.put(`${Config.paths.apiBaseUrl}/api/user/${idUser}`, payload, {
+						headers: {
+							"Content-Type": "application/json"
+						}
+					});
+				} else {
+					// Create new data
+					console.log("Creating new user");
+					payload = {
+						payload: {
+									user_name: usernameValue,
+									full_name: fullnameValue,
+									email: emailValue,
+									client_code: clientCodeValue
+								},
+								relation: {
+									roles: rolesValue.map(roleId => ({ id: parseInt(roleId, 10) }))
+								}
+							};
+		
+					oResponse = await axios.post(`${Config.paths.apiBaseUrl}/api/user`, payload, {
+						headers: {
+							"Content-Type": "application/json"
+						}
+					});
+				}
+		
+				if (oResponse.data.error) {
+					MessageToast.show("Failed to save user: " + oResponse.data.message);
+				} else {
+					MessageToast.show("User saved successfully.");
+					console.log("API Response:", oResponse.data);
+				}
+		
+				oDialog.close();
+				this.onRefresh(); // Refresh data setelah simpan
+		
+			} catch (oError) {
+				console.error("Error response:", oError.response);// Menangani error
+				if (oError.response) {
+					console.error("Error status:", oError.response.status);
+					console.error("Error data:", oError.response.data);
+					console.error("Error msg:", oError.response.data.detail[0].msg);
+					console.error("Error message:", oError.response.data.message || oError.response.statusText);
+					MessageToast.show("Error: " + oError.response.data.detail[0].msg, { duration: 3000 });
+				} else {
+					console.error("Unexpected error:", oError);
+					MessageToast.show("An unexpected error occurred.", { duration: 3000 });
+				}
+			} finally {
+				sap.ui.core.BusyIndicator.hide();
+			}
+		},
+
+        onCancelDialogUser: function () {
+			this.getView().byId("UserDialog").close();
+        },
+
 		onNavButtonPress: function  () {
 			this.getOwnerComponent().myNavBack();
 		},
 
-		onRowCountChange: function (oEvent) {
+		
+		onRowCountChange: async function (oEvent) {
+			var sViewId = this.getView().getId();
 			console.log("Masuk onRowCountChange");
-			var sSelectedKey = oEvent.getSource().getSelectedKey();
-			var oTable = this.byId("TableUpload");
-			console.log("oTable 1 : ",oTable);
-			if (sSelectedKey === "-1") {				
-				var aRows = this.getView().getModel("view").getProperty("/files");
-				console.log("aRows : ",aRows);
-				oTable.setVisibleRowCount(aRows.length);
-			} else {
-				var aRows = this.getView().getModel("view").getProperty("/files");
-				if(aRows.length <= parseInt(sSelectedKey, 10))
-				{
-					oTable.setVisibleRowCount(aRows.length);
-				}
-				else
-				{
-					oTable.setVisibleRowCount(parseInt(sSelectedKey, 10));
-					console.log("sSelectedKey : ",sSelectedKey);
-				}
-				
-			}
-		},
+			const sSelectedKey = oEvent.getSource().getSelectedKey();
+            if (sViewId.includes("userManagement")) {                
+				const oTable = this.byId("TableUser");
+				const result = await this.onGetData(sSelectedKey,"User");
+				countPerPage = result.perpage;
+				countTotal = result.tasks;
+				console.log("countTotal : ", countTotal);
+				console.log("countPerPage : ", countPerPage);
+            } else if (sViewId.includes("detailSettings")) {
+				const oTable = this.byId("TableUpload");
+				const result = await this.onGetData(sSelectedKey,"File");
+				countPerPage = result.perpage;
+				countTotal = result.tasks;
+				console.log("countTotal : ", countTotal);
+				console.log("countPerPage : ", countPerPage);
+            }          
+        },
 
-		// onColumnChange: function (oEvent) {
-		// 	// Menyimpan kolom yang dipilih
-		// 	var sSelectedKey = oEvent.getSource().getSelectedKey();
-		// 	this._selectedColumn = sSelectedKey;
+		
+		// onSelectAll: function (oEvent) {
+		// 	var bSelected = oEvent.getSource().getSelected();
+		// 	var aFiles = this.getView().getModel("view").getProperty("/files");
+		
+		// 	aFiles.forEach(function (file) {
+		// 		file.selected = bSelected;
+		// 	});
+		
+		// 	this.getView().getModel("view").refresh();
 		// },
-		
-		onSelectAll: function (oEvent) {
-			var bSelected = oEvent.getSource().getSelected();
-			var aFiles = this.getView().getModel("view").getProperty("/files");
-		
-			aFiles.forEach(function (file) {
-				file.selected = bSelected;
-			});
-		
-			this.getView().getModel("view").refresh();
-		},
 
 		// onNew: function () {
         //     // Buka dialog
@@ -220,43 +457,205 @@ sap.ui.define([
         // },
 
 		onNew: function () {
-			this._openDialog(); // Panggil fungsi untuk membuka dialog dalam mode New
+			
+			var sViewId = this.getView().getId();
+            if (sViewId.includes("userManagement")) {
+				const dialogModel = this.getView().getModel("dialogModel");
+				console.log("open dialog User");
+				dialogModel.setData({
+					title: "",
+					date: "",
+					processDefinition: "",
+					description: "",
+					clientCode: "",
+					username: "",
+					fullname: "",
+					division: "",
+					email: "",
+					password: "",
+					passwordStartAt: "",
+					online: "",
+					status: "",
+					roles: "", 
+					idRoles: "",
+					LoginAt: "",
+					LogoutAt: "",
+					ResetAt: "",
+					CreatedBy: "",
+					CreatedAt: "",
+					UpdatedBy: "",
+					UpdatedAt: ""
+				});
+				this._loadProcessData();
+				this._openDialogUser();
+            } else if (sViewId.includes("detailSettings")) {
+				this._openDialogFile();
+            }          
+			
 		},
+
+		// onEdit: function () {
+		// 	// Ambil referensi tabel
+		// 	var oTable = this.getView().byId("TableUpload");
+		// 	console.log("oTable:", oTable);
+		
+		// 	// Ambil data dari model tabel
+		// 	var aRows = oTable.getBinding("rows").getModel().getProperty("/files");
+		
+		// 	// Filter baris yang dipilih
+		// 	var aSelectedRows = aRows.filter(row => row.selected);
+		// 	console.log("aSelectedRows:", aSelectedRows);
+		
+
+		// 	if (aSelectedRows.length > 1) {
+        //         sap.m.MessageToast.show("Please select only one row to edit.");
+        //         return;
+        //     }
+		
+		// 	if (aSelectedRows.length > 1) {
+		// 		sap.m.MessageToast.show("Hanya satu baris yang dapat diedit pada satu waktu.");
+		// 		return;
+		// 	}
+		
+		// 	// Ambil data baris pertama yang dipilih
+		// 	var oSelectedRow = aSelectedRows[0];
+		// 	console.log("Data yang dipilih untuk edit:", oSelectedRow);
+		
+		// 	// Lakukan tindakan edit, seperti membuka dialog
+		// 	this._openDialog(oSelectedRow);
+		// },
 
 		onEdit: function () {
-			// Ambil referensi tabel
-			var oTable = this.getView().byId("TableUpload");
-			console.log("oTable:", oTable);
-		
-			// Ambil data dari model tabel
-			var aRows = oTable.getBinding("rows").getModel().getProperty("/files");
-		
-			// Filter baris yang dipilih
-			var aSelectedRows = aRows.filter(row => row.selected);
-			console.log("aSelectedRows:", aSelectedRows);
-		
-			// Validasi jumlah baris yang dipilih
-			if (aSelectedRows.length === 0) {
-				sap.m.MessageToast.show("Pilih satu baris untuk diedit.");
-				return;
-			}
-		
-			if (aSelectedRows.length > 1) {
-				sap.m.MessageToast.show("Hanya satu baris yang dapat diedit pada satu waktu.");
-				return;
-			}
-		
-			// Ambil data baris pertama yang dipilih
-			var oSelectedRow = aSelectedRows[0];
-			console.log("Data yang dipilih untuk edit:", oSelectedRow);
-		
-			// Lakukan tindakan edit, seperti membuka dialog
-			this._openDialog(oSelectedRow);
+
+			var sViewId = this.getView().getId();
+            if (sViewId.includes("userManagement")) {	
+				this._loadProcessData();			
+				this._editUser();
+            } else if (sViewId.includes("detailSettings")) {
+				//this._editFile();
+            }       
+            
+        },
+
+		_editUser: function()
+		{
+			var oTable = this.byId("TableUser"); 
+            var aSelectedIndices = oTable.getSelectedIndices(); 
+        
+            console.log("aSelectedIndices: ", aSelectedIndices);
+            if (!aSelectedIndices || aSelectedIndices.length === 0) {
+                sap.m.MessageToast.show("No selected data to edit."); 
+                return;
+            }
+
+            if (aSelectedIndices.length > 1) {
+                sap.m.MessageToast.show("Please select only one row to edit.");
+                return;
+            }
+			        
+            var oModel = this.getView().getModel("view");
+            var aFiles = oModel.getProperty("/users"); 
+        
+            var aSelectedFiles = aSelectedIndices.map(function (iIndex) {
+                var oContext = oTable.getContextByIndex(iIndex); 
+                return oContext ? oContext.getObject() : null; 
+            }).filter(function (oFile) {
+                return oFile !== null;
+            });
+        
+            console.log("Selected Files: ", aSelectedFiles);
+        
+            if (aSelectedFiles.length === 1) {
+             
+                var oSelectedData = aSelectedFiles[0];
+                console.log("oSelectedData:", oSelectedData);
+        
+          
+                var oDialogModel = this.getView().getModel("dialogModel");
+                oDialogModel.setData(oSelectedData);  
+        
+               
+                console.log("oSelectedData.clientCode:", oSelectedData.clientCode);
+				console.log("oSelectedData.roles:", oSelectedData.idRoles);
+				console.log("Type of oSelectedData.roles:", typeof oSelectedData.idRoles);
+				
+				const type = typeof oSelectedData.idRoles;
+				if( type == "string")
+				{
+					var rolesArray = oSelectedData.idRoles ? oSelectedData.idRoles.split(",").map(function(idrole) {
+						return idrole.trim();
+					}) : [];
+				}
+				
+				
+                
+                oDialogModel.setProperty("/clientCode", oSelectedData.clientCode);
+				//oDialogModel.setProperty("/roles", rolesArray);
+				oDialogModel.setProperty("/roles", rolesArray);
+
+				
+                
+      
+                this.byId("UserDialog").open();
+            } else {
+                sap.m.MessageToast.show("Please select only one row to edit.");
+            }
 		},
 		
+		// _editFile: function()
+		// {
+		// 	var oTable = this.byId("TableUser"); 
+        //     var aSelectedIndices = oTable.getSelectedIndices(); 
+        
+        //     console.log("aSelectedIndices: ", aSelectedIndices);
+        //     if (!aSelectedIndices || aSelectedIndices.length === 0) {
+        //         sap.m.MessageToast.show("No selected data to edit."); 
+        //         return;
+        //     }
+
+        //     if (aSelectedIndices.length > 1) {
+        //         sap.m.MessageToast.show("Please select only one row to edit.");
+        //         return;
+        //     }
+			        
+        //     var oModel = this.getView().getModel("view");
+        //     var aFiles = oModel.getProperty("/users"); 
+        
+        //     var aSelectedFiles = aSelectedIndices.map(function (iIndex) {
+        //         var oContext = oTable.getContextByIndex(iIndex); 
+        //         return oContext ? oContext.getObject() : null; 
+        //     }).filter(function (oFile) {
+        //         return oFile !== null;
+        //     });
+        
+        //     console.log("Selected Files: ", aSelectedFiles);
+        
+        //     if (aSelectedFiles.length === 1) {
+             
+        //         var oSelectedData = aSelectedFiles[0];
+        //         console.log("oSelectedData:", oSelectedData);
+        
+          
+        //         var oDialogModel = this.getView().getModel("dialogModel");
+        //         oDialogModel.setData(oSelectedData);  
+        
+               
+        //         console.log("oSelectedData.processDefinition:", oSelectedData.processDefinition);
+        //         if (oSelectedData.processDefinition) {
+        //             oDialogModel.setProperty("dialogModel?=>/processDefinition", oSelectedData.processDefinition);
+        //         } else {
+            
+        //             oDialogModel.setProperty("dialogModel>/processDefinition", "Default_Value_If_Needed");
+        //         }
+      
+        //         this.byId("ProjectFileDialog").open();
+        //     } else {
+        //         sap.m.MessageToast.show("Please select only one row to edit.");
+        //     }
+		// },
 		
 
-		_openDialog: function (oData) {
+		_openDialogFile: function (oData) {
 			// Dapatkan referensi ke dialog
 			console.log("oData : ",oData);
 			var oView = this.getView();
@@ -264,9 +663,12 @@ sap.ui.define([
 		
 			// Jika dialog belum ada, buat dialog baru
 			if (!oDialog) {
-				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.ExcelUploadDialog", this);
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.excelUploadDialog", this);
 				oView.addDependent(oDialog);
 			}
+
+			var oDialogModel = new sap.ui.model.json.JSONModel();
+			oDialog.setModel(oDialogModel, "dialog");
 		
 			// Tentukan apakah ini mode Edit atau New
 			if (oData) {
@@ -281,53 +683,186 @@ sap.ui.define([
 			oDialog.open();
 		},
 
+		_openDialogUser: function (oData) {
+			// Dapatkan referensi ke dialog
+			console.log("oData : ",oData);
+			var oView = this.getView();
+			var oDialog = oView.byId("UserDialog");
+		
+			// Jika dialog belum ada, buat dialog baru
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.UserDialog", this);
+				oView.addDependent(oDialog);
+			}
+
+			var oDialogModel = new sap.ui.model.json.JSONModel();
+			oDialog.setModel(oDialogModel, "dialog");
+		
+			// Tentukan apakah ini mode Edit atau New
+			if (oData) {
+				// Mode Edit: Set data ke dalam dialog
+				oDialog.setBindingContext(new sap.ui.model.Context(this.getView().getModel("view"), "/users/" + oData.id));
+			} else {
+				// Mode New: Kosongkan dialog (atau set default)
+				oDialog.setBindingContext(null);
+			}
+		
+			// Buka dialog
+			oDialog.open();
+		},
+
 		onRefresh: function () {
-			// Memanggil fungsi untuk mengambil data terbaru
-			this._initializeAsyncData().then(() => {
-				// Pastikan view model terupdate dan UI direfresh
-				var oViewModel = this.getModel("view");
-				if (oViewModel) {
-					oViewModel.refresh(true);  // Refresh view model untuk memastikan UI menggunakan data terbaru
-				}
-			}).catch((error) => {
-				console.error("Error during refresh:", error);
-			});
+			let oBinding;
+			var sViewId = this.getView().getId();
+            if (sViewId.includes("userManagement")) {                
+				this._setupUserManagement().then(() => {
+					var oViewModel = this.getModel("view");
+					if (oViewModel) {
+						oViewModel.refresh(true); 
+					}
+					var oTable = this.byId("TableUser");  
+					if (oTable) {
+						oTable.clearSelection();
+					}
+					oBinding = oTable.getBinding("rows");
+                	oBinding.filter([]);
+				}).catch((error) => {
+					console.error("Error during refresh:", error);
+				});
+            } else if (sViewId.includes("detailSettings")) {
+				this._initializeAsyncData().then(() => {
+					var oViewModel = this.getModel("view");
+					if (oViewModel) {
+						oViewModel.refresh(true); 
+					}
+					var oTable = this.byId("TableUpload");  
+					if (oTable) {
+						oTable.clearSelection();
+					}
+					oBinding = oTable.getBinding("rows");
+                	oBinding.filter([]);
+				}).catch((error) => {
+					console.error("Error during refresh:", error);
+				});
+            }          
+
+			
 		},
 		
 
 		onColumnChange: function (oEvent) {
-			// Menyimpan kolom yang dipilih
 			var sSelectedKey = oEvent.getSource().getSelectedKey();
 			this._selectedColumn = sSelectedKey;
 		},
 		
 		onSearch: function (oEvent) {
 			var sQuery = oEvent.getSource().getValue();
-			var oTable = this.byId("TableUpload");
-			var oBinding = oTable.getBinding("rows");
+			var sViewId = this.getView().getId();
+			let oTable;
+
+            if (sViewId.includes("userManagement")) {
+                oTable = this.byId("TableUser");
+            } else if (sViewId.includes("detailSettings")) {
+                oTable = this.byId("TableUpload");
+            }		
+            var oBinding = oTable.getBinding("rows");
+
+            // Menyaring berdasarkan kolom yang dipilih
+            console.log("this._selectedColumn : ", this._selectedColumn);
+            if (this._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt" || this._selectedColumn === "LoginAt" || this._selectedColumn === "LogoutAt" || this._selectedColumn === "ResetAt") {
+                // Jika sQuery berisi tanggal, ubah ke objek Date
+                console.log("sQuery : ", sQuery);
+                if (sQuery) {
+                    // Menggunakan FilterOperator.Contains untuk pencarian yang lebih fleksibel
+                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+                    oBinding.filter([oFilter]);
+                } else {
+                    oBinding.filter([]);
+                }
+            } else {
+                // Jika kolom adalah string, gunakan FilterOperator.Contains
+                if (sQuery) {
+                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+                    oBinding.filter([oFilter]);
+                } else {
+                    oBinding.filter([]);
+                }
+            }
+        },      
 		
-			if (sQuery) {
-				var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
-				oBinding.filter([oFilter]);
-			} else {
-				oBinding.filter([]);
-			}
+		
+        // onSearch: function (oEvent) {
+        //     var sQuery = oEvent.getSource().getValue();
+		// 	var sViewId = this.getView().getId();
+		// 	let oTable;
+
+        //     if (sViewId.includes("userManagement")) {
+        //         oTable = this.byId("TableUser");
+        //     } else if (sViewId.includes("detailSettings")) {
+        //         oTable = this.byId("TableUpload");
+        //     }		
+
+			
+        //     var oBinding = oTable.getBinding("rows");
+        
+        //     // Menyaring berdasarkan kolom yang dipilih
+        //     if (his._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt" || this._selectedColumn === "LoginAt" || this._selectedColumn === "LogoutAt" || this._selectedColumn === "ResetAt" ) {
+        //         // Jika sQuery berisi tanggal, ubah ke objek Date
+        //         var oDate = sap.ui.core.format.DateFormat.getInstance({ pattern: "yyyy-MM-dd" }).parse(sQuery);
+        //         if (oDate) {
+        //             // Jika sQuery valid sebagai tanggal, gunakan EQ atau BT
+        //             var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.EQ, oDate);
+        //             oBinding.filter([oFilter]);
+        //         } else {
+        //             // Jika sQuery tidak valid sebagai tanggal
+        //             sap.m.MessageToast.show("Invalid date format");
+        //         }
+        //     } else {
+        //         // Jika kolom adalah string, gunakan FilterOperator.Contains
+        //         if (sQuery) {
+        //             var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+        //             oBinding.filter([oFilter]);
+        //         } else {
+        //             oBinding.filter([]);
+        //         }
+        //     }
+        // },
+
+		onDelete:function(){
+			var sViewId = this.getView().getId();
+
+            if (sViewId.includes("userManagement")) {
+                this.onDeleteUser();
+				//this._loadProcessData();
+            } else if (sViewId.includes("detailSettings")) {
+                this.onDeleteFile();
+            }	
 		},
+		
+		onDeleteFile: function () {
 
 
-		onDelete: function (oEvent) {
-			var aFiles = this.getView().getModel("view").getProperty("/files");
-		
-			// Filter hanya data yang dipilih
-			var aSelectedFiles = aFiles.filter(function (file) {
-				return file.selected === true;
-			});
-			console.log("aSelectedFiles: ", aSelectedFiles);
-			if (!aSelectedFiles || aSelectedFiles.length === 0) {
-				sap.m.MessageToast.show("No selected data to delete.");
-				return;
-			}
-		
+            var oTable = this.byId("TableUpload");
+            var aSelectedIndices = oTable.getSelectedIndices();
+            console.log("aSelectedIndices: ", aSelectedIndices);
+            if (!aSelectedIndices || aSelectedIndices.length === 0) {
+                sap.m.MessageToast.show("No selected data to delete.");
+                return;
+            }
+            
+            // Ambil model tabel
+            var oModel = this.getView().getModel("view");
+            var aFiles = oModel.getProperty("/files"); // Data asli dari model
+
+            // Ambil data yang dipilih
+            var aSelectedFiles = aSelectedIndices.map(function (iIndex) {
+                var oContext = oTable.getContextByIndex(iIndex); // Dapatkan context
+                return oContext ? oContext.getObject() : null; // Ambil data baris
+            }).filter(function (oFile) {
+                return oFile !== null; // Filter data null (jika ada)
+            });
+
+            console.log("Selected Files: ", aSelectedFiles);
 			// Tampilkan konfirmasi dialog
 			sap.m.MessageBox.confirm("Are you sure you want to delete the selected data?", {
 				actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
@@ -355,21 +890,9 @@ sap.ui.define([
 							var aRemainingFiles = aFiles.filter(function (file) {
 								return !aIds.includes(file.id);
 							});
-		
-							this.getView().getModel("view").setProperty("/files", aRemainingFiles);
-		
-							// Refresh tabel
-							var oTable = this.byId("TableUpload");
-							if (oTable) {
-								oTable.getBinding("items").refresh();
-							}
-		
-							// Reset checkbox
-							var oCheckAll = this.byId("checkAll");
-							if (oCheckAll) {
-								oCheckAll.setSelected(false);
-							}
-		
+                            console.log("aRemainingFiles: ", aRemainingFiles);
+							this.getView().getModel("view").setProperty("/files", aRemainingFiles);							
+                            this.onRefresh();		
 							// Tampilkan notifikasi
 							if (response.data.error) {
 								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
@@ -387,8 +910,81 @@ sap.ui.define([
 					}
 				}.bind(this)
 			});
-			this.onRefresh();
 		},
+
+		onDeleteUser: function () {
+
+
+            var oTable = this.byId("TableUser");
+            var aSelectedIndices = oTable.getSelectedIndices();
+            console.log("aSelectedIndices: ", aSelectedIndices);
+            if (!aSelectedIndices || aSelectedIndices.length === 0) {
+                sap.m.MessageToast.show("No selected data to delete.");
+                return;
+            }
+            
+            // Ambil model tabel
+            var oModel = this.getView().getModel("view");
+            var aUsers = oModel.getProperty("/users"); // Data asli dari model
+
+            // Ambil data yang dipilih
+            var aSelectedUsers = aSelectedIndices.map(function (iIndex) {
+                var oContext = oTable.getContextByIndex(iIndex); // Dapatkan context
+                return oContext ? oContext.getObject() : null; // Ambil data baris
+            }).filter(function (oFile) {
+                return oFile !== null; // Filter data null (jika ada)
+            });
+
+            console.log("Selected Users: ", aSelectedUsers);
+			// Tampilkan konfirmasi dialog
+			sap.m.MessageBox.confirm("Are you sure you want to delete the selected data?", {
+				actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+				onClose: async function (sAction) {
+					if (sAction === sap.m.MessageBox.Action.YES) {
+						try {
+							// Ambil ID dari data terpilih
+							var aIds = aSelectedUsers.map(function (item) {
+								return item.id;
+							});
+		
+							console.log("Selected IDs: ", aIds);
+		
+							// Kirim request DELETE dengan Axios
+							const response = await axios.delete(Config.paths.apiBaseUrl + "/api/user/delete",  {
+								data: aIds,
+								headers: {
+									"Content-Type": "application/json"
+								}
+							});
+		
+							console.log("Response: ", response);
+		
+							// Hapus data yang dihapus dari model
+							var aRemainingUsers = aUsers.filter(function (user) {
+								return !aIds.includes(user.id);
+							});
+                            console.log("aRemainingUsers: ", aRemainingUsers);
+							this.getView().getModel("view").setProperty("/users", aRemainingUsers);							
+                            this.onRefresh();		
+							// Tampilkan notifikasi
+							if (response.data.error) {
+								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
+							} else {
+								sap.m.MessageToast.show("Data deleted successfully.", { duration: 3000 });
+							}
+						} catch (error) {
+							// Tangani error dari Axios
+							if (error.response) {
+								sap.m.MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
+							} else {
+								sap.m.MessageToast.show("An unexpected error occurred.", { duration: 3000 });
+							}
+						}
+					}
+				}.bind(this)
+			});
+		},
+		
 		
 
         onCloseDialog: function () {

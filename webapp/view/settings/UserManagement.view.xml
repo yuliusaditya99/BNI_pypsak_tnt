@@ -1,0 +1,280 @@
+<mvc:View
+    controllerName="sap.ui.bni.toolpageapp.controller.settings.MasterSettings"
+    xmlns="sap.uxap"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout"
+    xmlns:m="sap.m"
+    xmlns:u="sap.ui.unified"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table"
+    xmlns:mvc="sap.ui.core.mvc">
+    <m:Page
+        title="User Management"
+        showHeader="{device>/system/phone}"
+        showNavButton="{device>/system/phone}"
+        navButtonPress=".onNavButtonPress"
+        >
+        <m:Panel
+            id="UserManagement"
+            accessibleRole="Region"
+            class="sapUiNoContentPadding">
+            <m:HBox justifyContent="SpaceBetween" width="100%" >
+                <m:HBox class="sapUiSmallMargin">
+                    <m:ComboBox
+                        id="columnUserMComboBox"
+                        selectedKey="clientCode"
+                        width="150px"
+                        change=".onColumnChange">
+                        <m:items>
+                            <core:ListItem text="Branch Code" key="clientCode" />
+                            <core:ListItem text="User Name" key="username" />
+                            <core:ListItem text="Full Name" key="fullname" />
+                            <core:ListItem text="Devision" key="division" />
+                            <core:ListItem text="Email" key="email" />
+                            <core:ListItem text="Password temp" key="password" />
+                            <core:ListItem text="Password Start at" key="passwordStartAt" />
+                            <core:ListItem text="Online" key="online" />
+                            <core:ListItem text="Status" key="status" />
+                            <core:ListItem text="Roles" key="roles" />
+                            <core:ListItem text="Login at" key="LoginAt" />
+                            <core:ListItem text="Logout at" key="LogoutAt" />
+                            <core:ListItem text="Reset at" key="ResetAt" />
+                            <core:ListItem text="Created By" key="CreatedBy" />
+                            <core:ListItem text="Created At" key="CreatedAt" />
+                            <core:ListItem text="Updated By" key="UpdatedBy" />
+                            <core:ListItem text="Updated At" key="UpdatedAt" />
+                        </m:items>
+                    </m:ComboBox>
+                    <m:SearchField
+                        id="searchUserMField"
+                        placeholder="{i18n>searchPlaceholder}"
+                        liveChange=".onSearch"
+                        width="300px"
+                        tooltip="{i18n>searchTooltip}"
+                        class="sapUiTinyMarginEnd" />
+                </m:HBox>            
+                <m:Dialog
+                    id="UserDialog"
+                    title="Input User"
+                    draggable="true"
+                    resizable="true"
+                    stretch="{device>/system/phone}"
+                    model="dialogModel"
+                    >
+                    <m:VBox class="sapUiSmallMargin">                                           
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Username" labelFor="usernameUNInput" />
+                            <m:Input
+                                id="usernameUNInput"
+                                width="100%"
+                                placeholder="Enter username here..."
+                                value="{dialogModel>/username}" />
+                        </m:HBox>
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Fullname" labelFor="fullNameUNInput" />
+                            <m:Input
+                                id="fullnameUNInput"
+                                width="100%"
+                                placeholder="Enter fullname here..."
+                                value="{dialogModel>/fullname}" />
+                        </m:HBox>
+                         <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Email" labelFor="emailUNInput" />
+                            <m:Input
+                                id="emailUNInput"
+                                width="100%"
+                                placeholder="Enter email here..."
+                                value="{dialogModel>/email}" />
+                        </m:HBox>
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Roles" labelFor="rolesUNCombo" />
+                            <m:MultiComboBox
+                                id="rolesUNCombo"
+                                width="100%"
+                                placeholder="Select roles..."
+                                selectedKeys="{dialogModel>/roles}" 
+                                items="{
+                                    path: 'view>/roles'
+                                }">
+                                <core:Item key="{view>idRoles}" text="{view>rolesName}" />
+                            </m:MultiComboBox>
+                        </m:HBox>                                           
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Branch Code" labelFor="branchCodeUNCombo" />
+                            <m:ComboBox
+                                id="branchCodeUNCombo"
+                                width="100%"
+                                placeholder="Select brach..."
+                                selectedKey="{dialogModel>/clientCode}" 
+                                items="{
+                                    path: 'view>/clients'
+                                }">
+                                <core:Item key="{view>clientCode}" text="{view>clientCode}" />
+                            </m:ComboBox>
+                        </m:HBox>
+                        <!-- <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Division" labelFor="divisionUNInput" />
+                            <m:ComboBox
+                                id="divisionUNInput"
+                                width="100%"
+                                placeholder="Enter devision here..."
+                                value="{dialogModel>/devision}" />
+                        </m:HBox> -->
+                    </m:VBox>                   
+                    <!-- Toolbar Buttons -->
+                    <m:Toolbar>
+                        <m:ToolbarSpacer />
+                        <m:Button
+                            id="btnSaveUN"
+                            text="Save"
+                            type="Emphasized"
+                            press=".onSaveDialogUser" />
+                        <m:Button
+                            id="btnCancelUN"
+                            text="Cancel"
+                            press=".onCancelDialogUser" />
+                    </m:Toolbar>
+                </m:Dialog>
+                <m:HBox justifyContent="End" width="auto">
+                    <m:Button id="NewDetailUN" icon="sap-icon://add-document" press=".onNew" tooltip="{i18n>newButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="EditDetailUN" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="RefreshDetailUN" icon="sap-icon://synchronize" press=".onRefresh" tooltip="{i18n>refreshButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="DeleteDetailUN" icon="sap-icon://delete" press=".onDelete" tooltip="{i18n>deleteButtonTooltip}" class="sapUiTinyMarginEnd" />
+                </m:HBox>                
+            </m:HBox>
+            <l:BlockLayoutCell backgroundColorSet="ColorSet11" backgroundColorShade="ShadeA" width="3">
+                <table:Table
+                    id="TableUser"
+                    rows="{view>/users}"
+                    visibleRowCount="10"
+                    selectionMode="MultiToggle"
+                    rowSelectionChange=".onRowSelect"
+                    cellClick=".onCellClick"
+                    class="highlight-row-on-hover" 
+                    sort=".onSortColumn">
+                    <table:columns>
+                        <table:Column width="400px">
+                            <m:Label text="Branch Code" />
+                            <table:template>
+                                <m:Text text="{view>clientCode}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="User Name" />
+                            <table:template>
+                                <m:Text text="{view>username}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Full Name" />
+                            <table:template>
+                                <m:Text text="{view>fullname}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Devision" />
+                            <table:template>
+                                <m:Text text="{view>devision}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Email" />
+                            <table:template>
+                                <m:Text text="{view>email}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Password temp" />
+                            <table:template>
+                                <m:Text text="{view>password}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Password Start At" />
+                            <table:template>
+                                <m:Text text="{view>passwordStartAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Online" />
+                            <table:template>
+                                <m:Text text="{view>online}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Status" />
+                            <table:template>
+                                <m:Text text="{view>status}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px" visible="{view>/showRolesId}">
+                            <m:Label text="Roles Id" />
+                            <table:template>
+                                <m:Text text="{view>idRoles}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Roles" />
+                            <table:template>
+                                <m:Text text="{view>roles}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Login at" />
+                            <table:template>
+                                <m:Text text="{view>loginAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Logout at" />
+                            <table:template>
+                                <m:Text text="{view>logoutAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Reset At" />
+                            <table:template>
+                                <m:Text text="{view>resetAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Created By" />
+                            <table:template>
+                                <m:Text text="{view>createdBy}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Updated By" />
+                            <table:template>
+                                <m:Text text="{view>updatedBy}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px">
+                            <m:Label text="Updated At" />
+                            <table:template>
+                                <m:Text text="{view>UpdatedAt}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                    </table:columns>
+                </table:Table>
+                <m:HBox justifyContent="Start" >
+                    <m:ComboBox
+                        id="rowCountComboBoxUN"
+                        selectedKey="10"
+                        width="70px"
+                        change=".onRowCountChange">
+                        <m:items>
+                            <core:ListItem text="All" key="-1" />
+                            <core:ListItem text="10" key="10" />
+                            <core:ListItem text="20" key="20" />
+                            <core:ListItem text="25" key="25" />
+                            <core:ListItem text="50" key="50" />
+                            <core:ListItem text="75" key="75" />
+                            <core:ListItem text="100" key="100" />
+                        </m:items>
+                    </m:ComboBox>
+                </m:HBox>
+            </l:BlockLayoutCell>
+        </m:Panel>
+    </m:Page>
+</mvc:View>

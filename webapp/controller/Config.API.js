@@ -37,38 +37,7 @@ sap.ui.define([
             }
         },
 
-        // Login
-        // login: async function (credentials) {
-        //     try {
-        //         this.showLoading();
-        //         console.log("Starting login process with credentials:", credentials);
-        //         console.log("before response");
-        //         const response = await axios.post(Config.paths.apiBaseUrl+ "/api/login", credentials);
-        //         console.log("after response");
-        //         const { token, user } = response.data;
-
-        //         // Save token and user info
-        //         localStorage.setItem("authToken", token);
-        //         localStorage.setItem("user", JSON.stringify(user));
-        //         axios.defaults.headers.common['Authorization'] = 'Bearer '+token;
-        //         console.log("masuk oRouter");
-                
-        //         const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-        //         console.log("oRouter : ", oRouter);
-        //         oRouter.navTo("app");
-
-        //         // console
-        //         // MessageToast.show("Login successful!");
-
-        //         return response.data;
-        //     } catch (error) {
-        //         MessageBox.error("Invalid credentials. Please try again.");
-        //         throw error;
-        //     } finally {
-        //         this.hideLoading();
-        //     }
-        // },
-
+        
         login: async function (credentials) {
             axios.defaults.headers.common["Authorization"] = "Bearer " + localStorage.getItem("authToken");
             try {

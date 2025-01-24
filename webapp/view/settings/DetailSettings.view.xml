@@ -12,13 +12,6 @@
         showHeader="{device>/system/phone}"
         showNavButton="{device>/system/phone}"
         navButtonPress=".onNavButtonPress">
-        <m:landmarkInfo>
-            <m:PageAccessibleLandmarkInfo
-                rootRole="Region"
-                rootLabel="{i18n>SystemSettings_rootLabel}"
-                contentRole="Main"
-                contentLabel="{i18n>SystemSettings_contentLabel}" />
-        </m:landmarkInfo>
         <m:Panel
             id="ProjectContainerDetail"
             accessibleRole="Region"
@@ -97,19 +90,12 @@
                     id="TableUpload"
                     rows="{view>/files}"
                     visibleRowCount="10"
-                    selectionMode="None">
+                    selectionMode="MultiToggle"
+                    rowSelectionChange=".onRowSelect"
+                    cellClick=".onCellClick"
+                    class="highlight-row-on-hover" 
+                    >
                     <table:columns>
-                        <!-- Kolom Checkbox dengan Select All -->
-                        <table:Column width="50px">
-                            <table:label>
-                                <m:CheckBox
-                                    select=".onSelectAll" />
-                            </table:label>
-                            <table:template>
-                                <m:CheckBox selected="{view>selected}" />
-                            </table:template>
-                        </table:Column>
-                        <!-- Kolom lainnya -->
                         <table:Column width="400px">
                             <m:Label text="Name" />
                             <table:template>

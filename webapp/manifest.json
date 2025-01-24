@@ -103,6 +103,11 @@
 					"target": "project"
 				},
 				{
+					"pattern": "ProjectDetail",
+					"name": "projectDetail",
+					"target": "projectDetail"
+				},
+				{
 					"pattern": "MasterSettings",
 					"name": "masterSettings",
 					"target": [
@@ -117,6 +122,14 @@
 						"detailSettings",
 						"masterSettings"
 					]
+				},
+				{
+					"pattern": "MasterSettings/UserManagement",
+					"name": "userManagement",
+					"target": [
+						"userManagement",
+						"masterSettings"
+					]
 				}
 			],
 			"targets": {
@@ -124,7 +137,11 @@
 				"project": {
 					"viewId": "project",
 					"viewName": "Project"
-				},			
+				},	
+				"projectDetail": {
+					"viewId": "projectDetail",
+					"viewName": "ProjectDetail"
+				},
 				"appSettings": {
 					"viewId": "appSettings",
 					"viewName": "settings.AppSettings"
@@ -139,6 +156,13 @@
 				"detailSettings": {
 					"viewId": "detailSettings",
 					"viewName": "settings.DetailSettings",
+					"controlId": "appSettings",
+					"controlAggregation": "detailPages",
+					"parent": "appSettings"
+				},
+				"userManagement": {
+					"viewId": "userManagement",
+					"viewName": "settings.UserManagement",
 					"controlId": "appSettings",
 					"controlAggregation": "detailPages",
 					"parent": "appSettings"

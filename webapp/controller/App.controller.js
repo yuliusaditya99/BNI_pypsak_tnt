@@ -49,6 +49,7 @@ sap.ui.define([
 			this.appConfig = new Config();
 			var login = this.onLoginPress();
 			if (login = true)
+			{
 				console.log("login:", login);
 				this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());			
 				
@@ -62,7 +63,7 @@ sap.ui.define([
 				console.log("websocet : ",localStorage.getItem("websocet"));
 				this.msiWebSocket(localStorage.getItem("websocet"));
 				console.log("Set Header X:", axios.defaults.headers.common["Authorization"]);
-			
+			}
 		},
 
 		onExit: function() {

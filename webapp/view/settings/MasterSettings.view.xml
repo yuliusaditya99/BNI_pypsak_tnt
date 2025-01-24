@@ -26,7 +26,7 @@
 			<StandardListItem
 				title="{path: 'side>titleI18nKey', formatter: '.getBundleText'}"
 				type="Navigation"
-				selected="{= ${device>/system/phone} ? false : ${side>selected}}"/>
+				selected="{${side>selected}}"/>
 		</List>
 	</Page>
 </mvc:View>

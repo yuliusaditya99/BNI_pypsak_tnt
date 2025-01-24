@@ -62,3 +62,8 @@
     padding: 8px;                 /* Sets padding for text cells */
     text-align: center;             /* Aligns text in cells */
 }
+
+.highlight-row-on-hover .sapMListTblRow:hover {
+    background-color: #e0f7fa !important; 
+    cursor: not-allowed; 
+}

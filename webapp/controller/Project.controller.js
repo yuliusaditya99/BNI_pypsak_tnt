@@ -23,57 +23,82 @@ sap.ui.define([
             
 			console.log("masuk 2");
 			this._initializeAsyncData();
-            this._loadProcessData();
+            
 			
 		},
 
 		_initializeAsyncData: async function () {
-			try {
-			  
-			  console.log("Set Header 2:", axios.defaults.headers.common["Authorization"]);
-            //   if(localStorage.getItem("authToken")=="undefined")
-            //     appCon.onLoginPress();
-            //     console.log("Set Header 3:", axios.defaults.headers.common["Authorization"]);
-			  const taskResponse = await axios.get(Config.paths.apiBaseUrl +'/api/task?start=0&length=10&orders=id&dirs=desc');
-		  
-			  const taskData = taskResponse.data;
-			  const tasktableData = taskData.payloads.data;
-
-			  const tasks = tasktableData.map(task => ({
-				id: task.id,
-                title: task.title,
-                asOfDate: task.as_of_date,                
-				processDefinition: task.file.file_name || "N/A",
-				description: task.description,
-				createdBy: task.createdBy?.user_name || "N/A",
-				createdAt: task.created_at,
-				updatedBy: task.updatedBy?.user_name || "N/A",
-				updatedAt: task.updated_at,
-			  }));
-			  console.log("tasks:", tasks);
-		  
-			  // Langkah 3: Tambahkan data ke model "view"
-			  const oViewModel = this.getModel("view");
-			  if (oViewModel) {
-				oViewModel.setProperty("/tasks", tasks);
-			  } else {
-				console.error("View model not found.");
-			  }
-			} catch (error) {
-			  if (error.response) {
-				console.error("Error Response:", error.response.data);
-				console.error("Status:", error.response.status);
-			  } else if (error.request) {
-				console.error("Error Request:", error.request);
-			  } else {
-				console.error("Error Message:", error.message);
-			  }
-			}
+            this._selectedColumn = "title";
+            this.getView().getModel("view").setProperty("/showProcessDefinitionId", false); 
+			this.onGetTask(10).then((result) => {
+                console.log("perpage:", result.perpage);
+                console.log("Total Rows:", result.totalrow);
+            });
 			
 		},
+
+        onGetTask: async function(paramLength) {
+
+            try {
+			  
+                let taskResponse;
+                console.log("paramLength : ",paramLength);
+                if(paramLength == "-1")
+                {
+                    console.log("masuk -1");
+                    taskResponse= await axios.get(Config.paths.apiBaseUrl +'/api/task?start=0&length=100000000&orders=id&dirs=desc');
+                }
+                else
+                {
+                    taskResponse= await axios.get(Config.paths.apiBaseUrl +'/api/task?start=0&length='+paramLength+'&orders=id&dirs=desc');
+                }
+		  
+                const taskData = taskResponse.data;
+                const tasktableData = taskData.payloads.data;
+                const pageCount = taskData.payloads.per_page;
+                const totalRowCount = taskData.payloads.total;
+
+                const tasks = tasktableData.map(task => ({
+                    id: task.id,
+                    title: task.title,
+                    asOfDate: task.as_of_date,
+                    processDefinitionId: task.process_definition,
+                    processDefinition: task.file.file_name || "N/A",
+                    description: task.description,
+                    createdBy: task.createdBy?.user_name || "N/A",
+                    createdAt: task.created_at,
+                    updatedBy: task.updatedBy?.user_name || "N/A",
+                    updatedAt: task.updated_at,
+                }));
+                console.log("tasks:", tasks);
+
+                const oViewModel = this.getModel("view");
+                if (oViewModel) {
+                    oViewModel.setProperty("/tasks", tasks);
+                } else {
+                    console.error("View model not found.");
+                }
+
+                return {
+                    perpage : pageCount,
+                    totalrow: totalRowCount
+                };
+            } catch (error) {
+                if (error.response) {
+                    console.error("Error Response:", error.response.data);
+                    console.error("Status:", error.response.status);
+                } else if (error.request) {
+                    console.error("Error Request:", error.request);
+                } else {
+                    console.error("Error Message:", error.message);
+                }
+            }
+            
+        },
+
         onNew: function () {
             const dialogModel = this.getView().getModel("dialogModel");
-
+            this._loadProcessData();
             // Reset data model
             dialogModel.setData({
                 title: "",
@@ -84,32 +109,76 @@ sap.ui.define([
 			this._openDialog(); 
 		},
 
+        // onEdit: function () {
+        //     var aTask = this.getView().getModel("view").getProperty("/tasks");
+        
+        //     var aSelectedTasks = aTask.filter(function (task) {
+        //         return task.selected === true;
+        //     });
+        
+        //     if (aSelectedTasks.length === 0) {
+        //         sap.m.MessageToast.show("Please select a row to edit.");
+        //         return;
+        //     }
+        
+        //     // Ambil data dari tugas pertama (single select)
+        //     var oSelectedData = aSelectedTasks[0];
+        //     console.log("oSelectedData:", oSelectedData);
+        
+        //     // Set data ke model dialog
+        //     var oDialogModel = this.getView().getModel("dialogModel");
+        //     oDialogModel.setData(oSelectedData);
+        
+        //     // Buka dialog
+        //     this.byId("ProjectTaskDialog").open();
+        // },
+        
         onEdit: function () {
-            var aTask = this.getView().getModel("view").getProperty("/tasks");
+            this._loadProcessData();
+            var oTable = this.byId("TableTask"); 
+            var aSelectedIndices = oTable.getSelectedIndices(); 
         
-            var aSelectedTasks = aTask.filter(function (task) {
-                return task.selected === true;
-            });
-        
-            if (aSelectedTasks.length === 0) {
-                sap.m.MessageToast.show("Please select a row to edit.");
+            console.log("aSelectedIndices: ", aSelectedIndices);
+            if (!aSelectedIndices || aSelectedIndices.length === 0) {
+                sap.m.MessageToast.show("No selected data to edit."); 
+                return;
+            }
+
+            if (aSelectedIndices.length > 1) {
+                sap.m.MessageToast.show("Please select only one row to edit.");
                 return;
             }
         
-            // Ambil data dari tugas pertama (single select)
-            var oSelectedData = aSelectedTasks[0];
-            console.log("oSelectedData:", oSelectedData);
+            var oModel = this.getView().getModel("view");
+            var aTasks = oModel.getProperty("/tasks"); 
         
-            // Set data ke model dialog
-            var oDialogModel = this.getView().getModel("dialogModel");
-            oDialogModel.setData(oSelectedData);
+            var aSelectedTasks = aSelectedIndices.map(function (iIndex) {
+                var oContext = oTable.getContextByIndex(iIndex); 
+                return oContext ? oContext.getObject() : null; 
+            }).filter(function (oTask) {
+                return oTask !== null;
+            });
         
-            // Buka dialog
-            this.byId("ProjectTaskDialog").open();
+            console.log("Selected tasks: ", aSelectedTasks);
+        
+            if (aSelectedTasks.length === 1) {
+                // Ambil data dari tugas pertama (single select)
+                var oSelectedData = aSelectedTasks[0];
+                console.log("oSelectedData:", oSelectedData);
+        
+                // Set data ke model dialog
+                var oDialogModel = this.getView().getModel("dialogModel");
+                oDialogModel.setData(oSelectedData);  // Bind data ke model dialog
+                
+                oDialogModel.setProperty("/processDefinitionId", oSelectedData.processDefinitionId);
+                
+                this.byId("ProjectTaskDialog").open();
+            } else {
+                sap.m.MessageToast.show("Please select only one row to edit."); 
+            }
         },
         
         
-
         onRefresh: function () {
 
 			this._initializeAsyncData().then(() => {
@@ -117,6 +186,12 @@ sap.ui.define([
 				if (oViewModel) {
 					oViewModel.refresh(true); 
 				}
+                var oTable = this.byId("TableTask");  
+                if (oTable) {
+                    oTable.clearSelection();
+                }
+                var oBinding = oTable.getBinding("rows");
+                oBinding.filter([]);
 			}).catch((error) => {
 				console.error("Error during refresh:", error);
 			});
@@ -127,60 +202,40 @@ sap.ui.define([
 			this._selectedColumn = sSelectedKey;
 		},
 
-        onRowCountChange: function (oEvent) {
-			console.log("Masuk onRowCountChange");
-			var sSelectedKey = oEvent.getSource().getSelectedKey();
-			var oTable = this.byId("TableTask");
-			console.log("oTable 1 : ",oTable);
-			if (sSelectedKey === "-1") {				
-				var aRows = this.getView().getModel("view").getProperty("/tasks");
-				console.log("aRows : ",aRows);
-				oTable.setVisibleRowCount(aRows.length);
-			} else {
-				var aRows = this.getView().getModel("view").getProperty("/tasks");
-				if(aRows.length <= parseInt(sSelectedKey, 10))
-				{
-					oTable.setVisibleRowCount(aRows.length);
-				}
-				else
-				{
-					oTable.setVisibleRowCount(parseInt(sSelectedKey, 10));
-					console.log("sSelectedKey : ",sSelectedKey);
-				}
-				
-			}
-		},
-
-        // onSearch: function (oEvent) {
-		// 	var sQuery = oEvent.getSource().getValue();
-		// 	var oTable = this.byId("TableTask");
-        //     console.log("oTable : ",oTable);
-		// 	var oBinding = oTable.getBinding("rows");
-		
-		// 	if (sQuery) {
-		// 		var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
-		// 		oBinding.filter([oFilter]);
-		// 	} else {
-		// 		oBinding.filter([]);
-		// 	}
-		// },
-
+        onRowCountChange: async function (oEvent) {
+            let countPerPage;
+            let countTotal;
+        
+            console.log("Masuk onRowCountChange");
+            const sSelectedKey = oEvent.getSource().getSelectedKey();
+            const oTable = this.byId("TableTask");
+            console.log("oTable 1 : ", oTable);
+            console.log("sSelectedKey : ", sSelectedKey);
+        
+            // Tunggu hasil dari onGetTask
+            const result = await this.onGetTask(sSelectedKey);
+            countPerPage = result.perpage;
+            countTotal = result.tasks;
+            console.log("countTotal : ", countTotal);
+            console.log("countPerPage : ", countPerPage);
+        },
+        
         onSearch: function (oEvent) {
             var sQuery = oEvent.getSource().getValue();
             var oTable = this.byId("TableTask");
             var oBinding = oTable.getBinding("rows");
-        
+
             // Menyaring berdasarkan kolom yang dipilih
+            console.log("this._selectedColumn : ", this._selectedColumn);
             if (this._selectedColumn === "asOfDate" || this._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt") {
                 // Jika sQuery berisi tanggal, ubah ke objek Date
-                var oDate = sap.ui.core.format.DateFormat.getInstance({ pattern: "yyyy-MM-dd" }).parse(sQuery);
-                if (oDate) {
-                    // Jika sQuery valid sebagai tanggal, gunakan EQ atau BT
-                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.EQ, oDate);
+                console.log("sQuery : ", sQuery);
+                if (sQuery) {
+                    // Menggunakan FilterOperator.Contains untuk pencarian yang lebih fleksibel
+                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
                     oBinding.filter([oFilter]);
                 } else {
-                    // Jika sQuery tidak valid sebagai tanggal
-                    sap.m.MessageToast.show("Invalid date format");
+                    oBinding.filter([]);
                 }
             } else {
                 // Jika kolom adalah string, gunakan FilterOperator.Contains
@@ -191,7 +246,7 @@ sap.ui.define([
                     oBinding.filter([]);
                 }
             }
-        },
+        },      
 
         onSelectAll: function (oEvent) {
 			var bSelected = oEvent.getSource().getSelected();
@@ -205,17 +260,35 @@ sap.ui.define([
 		},
 
 		onDelete: function (oEvent) {
-			var aTask = this.getView().getModel("view").getProperty("/tasks");		
+            // var bSelected = oEvent.getSource().getSelected();
+            // var aTask = this.getView().getModel("view").getProperty("/tasks");
 
-			var aSelectedTasks = aTask.filter(function (task) {
-				return task.selected === true;
-			});
-			console.log("aSelectedTasks: ", aSelectedTasks);
-			if (!aSelectedTasks || aSelectedTasks.length === 0) {
-				sap.m.MessageToast.show("No selected data to delete.");
-				return;
-			}
-		
+            // // Filter data untuk mendapatkan baris yang dipilih
+            // var aSelectedTasks = aTask.filter(function (task) {
+            //     return task.selected === true; // Gunakan properti `selected`
+            // });
+
+            var oTable = this.byId("TableTask"); // ID tabel Anda
+            var aSelectedIndices = oTable.getSelectedIndices(); // Indeks baris yang dipilih
+            console.log("aSelectedIndices: ", aSelectedIndices);
+            if (!aSelectedIndices || aSelectedIndices.length === 0) {
+                sap.m.MessageToast.show("No selected data to delete."); // Pesan jika tidak ada data dipilih
+                return;
+            }
+            
+            // Ambil model tabel
+            var oModel = this.getView().getModel("view");
+            var aTasks = oModel.getProperty("/tasks"); // Data asli dari model
+
+            // Ambil data yang dipilih
+            var aSelectedTasks = aSelectedIndices.map(function (iIndex) {
+                var oContext = oTable.getContextByIndex(iIndex); // Dapatkan context
+                return oContext ? oContext.getObject() : null; // Ambil data baris
+            }).filter(function (oTask) {
+                return oTask !== null; // Filter data null (jika ada)
+            });
+
+            console.log("Selected tasks: ", aSelectedTasks);
 			// Tampilkan konfirmasi dialog
 			sap.m.MessageBox.confirm("Are you sure you want to delete the selected data?", {
 				actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
@@ -240,23 +313,19 @@ sap.ui.define([
 							console.log("Response: ", response);
 		
 							// Hapus data yang dihapus dari model
-							var aRemainingTasks = aTask.filter(function (task) {
+							var aRemainingTasks = aTasks.filter(function (task) {
 								return !aIds.includes(task.id);
 							});
                             console.log("aRemainingTasks: ", aRemainingTasks);
 							this.getView().getModel("view").setProperty("/tasks", aRemainingTasks);
 		
 							// Refresh tabel
-							var oTable = this.byId("detailedTable");
-							if (oTable) {
-								oTable.getBinding("items").refresh();
-							}
-		
-							// Reset checkbox
-							var oCheckAll = this.byId("checkAll");
-							if (oCheckAll) {
-								oCheckAll.setSelected(false);
-							}
+							// var oTable = this.byId("detailedTable");
+							// if (oTable) {
+							// 	oTable.getBinding("items").refresh();
+							// }	
+							
+                            this.onRefresh();
 		
 							// Tampilkan notifikasi
 							if (response.data.error) {
@@ -275,8 +344,45 @@ sap.ui.define([
 					}
 				}.bind(this)
 			});
-            this.onRefresh();
+            //this.onRefresh();
 		},
+
+        onCellClick: function (oEvent) {
+			// Ambil referensi tabel
+			var oTable = this.byId("TableTask");
+			var oRowContext = oEvent.getParameter("rowContext"); // Ambil konteks baris yang diklik
+
+			if (oRowContext) {
+				// Pilih baris yang diklik
+				oTable.setSelectedIndex(oRowContext.getIndex());
+			}
+            this.moveToDetail(oEvent);
+		},
+
+        moveToDetail: function (oEvent) {
+            console.log("masuk select row");
+
+
+            var oModel = this.getView().getModel("view");
+            var oRowData = oModel.getProperty("/Project");
+
+            // Lakukan navigasi ke halaman detail dengan data baris
+            var oRouter = UIComponent.getRouterFor(this);
+            oRouter.navTo("ProjectDetail")
+            // console.log("oSelectedRowContext : ",oSelectedRowContext);
+            // if (oSelectedRowContext) {
+            //     var oModel = this.getView().getModel("view");
+            //     var oRowData = oModel.getProperty(oSelectedRowContext.getPath());
+
+            //     // Lakukan navigasi ke halaman detail dengan data baris
+            //     var oRouter = UIComponent.getRouterFor(this);
+            //     oRouter.navTo("ProjectDetail", {
+            //         projectId: oRowData.id // Pastikan ID unik tersedia dalam data baris
+            //     });
+            // } else {
+            //     MessageToast.show("No row selected!");
+            // }
+        },
 
         _openDialog: function (oData) {
 			// Dapatkan referensi ke dialog
@@ -305,7 +411,7 @@ sap.ui.define([
 		},
 
         _loadProcessData: async function () {
-            const fileResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file');
+            const fileResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
 		  
             const fileData = fileResponse.data;
             const filetableData = fileData.payloads.data;
@@ -319,94 +425,12 @@ sap.ui.define([
             // Langkah 3: Tambahkan data ke model "view"
             const oViewModel = this.getModel("view");
             if (oViewModel) {
-              oViewModel.setProperty("/files", files);
+              oViewModel.setProperty("/filename", files);
             } else {
               console.error("View model not found.");
             }
         },
 
-        // onSaveDialogTask: async function () {
-        //      console.log("onSaveDialogTask");
-        //     const oDialog = this.byId("ProjectTaskDialog");
-        //     const titleValue = this.byId("titleInput") ? this.byId("titleInput").getValue() : "";
-        //     const asOfDateValue = this.byId("asOfDateInput") ? this.byId("asOfDateInput").getValue() : "";
-        //     const processDefComboValue = this.byId("processDefCombo") ? this.byId("processDefCombo").getSelectedKey() : "";
-        //     const descriptionInputValue = this.byId("descriptionInput") ? this.byId("descriptionInput").getValue() : "";
-
-        //     const processDefComboValueInt = parseInt(processDefComboValue, 10);
-        //     console.log("titleValue :", titleValue);
-        //     console.log("asOfDateValue :", asOfDateValue);
-        //     console.log("processDefComboValueInt :", processDefComboValueInt);
-        //     console.log("descriptionInputValue :", descriptionInputValue);
-
-        //     // Validasi input
-        //     if (!titleValue) {
-        //         MessageToast.show("Please enter a title.");
-        //         return;
-        //     }
-        //     if (!asOfDateValue) {
-        //         MessageToast.show("Please select a date.");
-        //         return;
-        //     }
-        //     if (!processDefComboValue) {
-        //         MessageToast.show("Please select a process definition.");
-        //         return;
-        //     }
-
-        //     // Ambil data dari model untuk menentukan mode Create atau Edit
-        //     const oDialogModel = this.getView().getModel("dialogModel");
-        //     const oDialogData = oDialogModel.getData();
-
-        //     const requestData = {
-        //         title: titleValue,
-        //         as_of_date: asOfDateValue,
-        //         process_definition: processDefComboValueInt,
-        //         description: descriptionInputValue
-        //     };
-
-        //     // Jika ada `id` di data, maka ini operasi edit
-        //     if (oDialogData && oDialogData.id) {
-        //         requestData.id = oDialogData.id;
-        //     }
-
-        //     const oRequestBody = JSON.stringify(requestData);
-        //     sap.ui.core.BusyIndicator.show(0);
-
-        //     try {
-        //         let oResponse;
-
-        //         if (requestData.id) {
-        //             // Edit data
-        //             console.log("Editing data with ID:", requestData.id);
-        //             oResponse = await axios.put(Config.paths.apiBaseUrl + `/api/task/${requestData.id}`, oRequestBody, {
-        //                 headers: {
-        //                     "Content-Type": "application/json"
-        //                 }
-        //             });
-        //         } else {
-        //             // Create data
-        //             console.log("Creating new data");
-        //             oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
-        //                 headers: {
-        //                     "Content-Type": "application/json"
-        //                 }
-        //             });
-        //         }
-
-        //         MessageToast.show("Data submitted successfully.");
-        //         console.log("Response:", oResponse.data);
-        //         oDialog.close();
-        //         this.onRefresh();
-
-        //     } catch (oError) {
-        //         console.error("Error:", oError);
-        //         MessageToast.show("Failed to submit data.");
-        //     } finally {
-        //         sap.ui.core.BusyIndicator.hide();
-        //     }
-        // },
-
-        
         onSaveDialogTask: async function () {
             let idTask;
             console.log("onSaveDialogTask");
@@ -444,15 +468,10 @@ sap.ui.define([
             if (oDialogData && oDialogData.id) {
                 idTask = oDialogData.id;
             }
-        
+            console.log("idTask : ",idTask);
 
             try {
-                // const oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
-                //     headers: {
-                //         "Content-Type": "application/json" 
-                //     }
-                // });
-
+ 
                 let oResponse;
                 let requestData;
                 let oRequestBody;
@@ -466,7 +485,12 @@ sap.ui.define([
                         description: descriptionInputValue,
                         id: idTask
                     };
-        
+                  
+
+                    if (requestData.description === "") {
+                        delete requestData.description;
+                    }
+                    console.log("requestData : ",requestData);
                     oRequestBody =  JSON.stringify(requestData); 
                     sap.ui.core.BusyIndicator.show(0);
                     console.log("Editing data with ID:", idTask);
@@ -475,7 +499,17 @@ sap.ui.define([
                             "Content-Type": "application/json"
                         }
                     });
-                    MessageToast.show("Add data successfully.");
+
+                    console.log("oResponse.error : ",oResponse.data.error);
+                    if(oResponse.data.error==true)
+                    {
+                        MessageToast.show("Failed Update Data : ",oResponse.data.message);
+                    }
+                    else
+                    {
+                        MessageToast.show("Update data successfully.");
+                    }
+                    
                 } else {
                     // Create data
 
@@ -485,86 +519,79 @@ sap.ui.define([
                         process_definition: parseInt(processDefComboValue, 10), 
                         description: descriptionInputValue
                     };
-        
+
+                    if (requestData.description === "") {
+                        delete requestData.description;
+                    }
+                    console.log("requestData.description : ",requestData.description);
                     oRequestBody =  JSON.stringify(requestData); 
                     sap.ui.core.BusyIndicator.show(0);
                     console.log("Creating new data");
-                    oResponse = await axios.post(Config.paths.apiBaseUrl + '/api/task', oRequestBody, {
+                    oResponse = await axios.post(`${Config.paths.apiBaseUrl}/api/task`, oRequestBody, {
                         headers: {
                             "Content-Type": "application/json"
                         }
                     });
-                    MessageToast.show("Update data successfully.");
+
+                    // oResponse = await axios.post(`${Config.paths.apiBaseUrl}/api/user`, payload, {
+					// 	headers: {
+					// 		"Content-Type": "application/json"
+					// 	}
+					// });
+                    
+                  
+
+                    console.log("oResponse.error : ",oResponse.data.error);
+                    if(oResponse.data.error==true)
+                    {
+                        //oError.response.data.detail[0].msg
+                        MessageToast.show("Failed Add Data : ",oResponse.data.message);
+                    }
+                    else
+                    {
+                        MessageToast.show("Add data successfully.");
+                    }
+                
                 }
                 
                 
                 console.log("Response:", oResponse.data);
                 oDialog.close();
-                this.onRefresh();
+                this.onRefresh();                
 
-                
-                
-
-            } catch (oError) {
-                console.error("Error:", oError);
-                MessageToast.show("Failed to save data.");
-            } finally {
+            } 
+            catch (oError) {
+                console.error("oError :", oError);
+                console.error("oError.response :", oError.response);
+            
+                if (oError.response) {
+                    // Akses status dan pesan error dari response
+                    console.error("Error status:", oError.response.status);
+            
+                    if (oError.response.data && Array.isArray(oError.response.data)) {
+                        // Jika respons adalah array JSON (seperti yang Anda tunjukkan)
+                        const errorMessage = oError.response.data.map(err => err.msg).join(", ");
+                        console.error("Error messages:", errorMessage);
+                        sap.m.MessageToast.show("Error: " + errorMessage, { duration: 3000 });
+                    } else if (oError.response.data.message) {
+                        // Jika ada pesan error langsung
+                        console.error("Error message:", oError.response.data.message);
+                        sap.m.MessageToast.show("Error: " + oError.response.data.message, { duration: 3000 });
+                    } else {
+                        // Default jika format data tidak diketahui
+                        console.error("Error response data:", oError.response.data);
+                        sap.m.MessageToast.show("An error occurred.", { duration: 3000 });
+                    }
+                } else {
+                    // Error lain seperti masalah jaringan
+                    console.error("Unexpected error:", oError);
+                    sap.m.MessageToast.show("An unexpected error occurred.", { duration: 3000 });
+                }
+            }
+            finally {
                 sap.ui.core.BusyIndicator.hide();
             }
-        },
-
-        
-
-        // onSaveDialogTask: async function () {
-		// 	const oDialog = this.byId("ProjectTaskDialog");
-		// 	const oFileUploader = this.byId("fileUploader");
-		
-		// 	// Ambil elemen input file
-		// 	const oDomRef = oFileUploader.getDomRef();
-		// 	const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");
-		
-		// 	if (!oFileInput || !oFileInput.files || oFileInput.files.length === 0) {
-		// 		sap.m.MessageToast.show("Please select a file to upload.");
-		// 		return;
-		// 	}
-		
-		// 	const oFile = oFileInput.files[0];
-		// 	console.log("Selected file:", oFile);
-		
-		// 	// Validasi jenis file
-		// 	const sFileName = oFile.name.toLowerCase();
-		// 	if (!sFileName.endsWith(".xls") && !sFileName.endsWith(".xlsx")) {
-		// 		sap.m.MessageToast.show("Invalid file type. Please upload an Excel file.");
-		// 		return;
-		// 	}
-		
-		// 	try {
-		// 		sap.ui.core.BusyIndicator.show(0);
-		
-		// 		const oFormData = new FormData();
-		// 		oFormData.append("payload", JSON.stringify({ path: "text" }));
-		// 		oFormData.append("files", oFile);
-		
-		// 		const sApiUrl = "http://nexia-main.pypsak.cloud/api/file";
-		// 		const oResponse = await axios.post(sApiUrl, oFormData, {
-		// 			headers: {
-		// 				"Content-Type": "multipart/form-data",
-		// 			},
-		// 		});
-		
-		// 		sap.m.MessageToast.show("File uploaded successfully.");
-		// 		console.log("Upload response:", oResponse.data);
-		
-		// 		oDialog.close();
-		// 		//console.log("event : ",oEvent.data)
-		// 		this._initializeAsyncData();
-		// 	} catch (oError) {
-		// 		console.error("Error uploading file:", oError);
-		// 		sap.m.MessageToast.show("Failed to upload file.");
-		// 	} finally {
-		// 		sap.ui.core.BusyIndicator.hide();
-		// 	}
-		// },
+        },       
 		
         onCancelDialogTask: function () {
             // Tutup dialog
@@ -651,6 +678,29 @@ sap.ui.define([
                 console.error("Error fetching access token:", error);
                 throw new Error("Failed to retrieve access token.");
             }
+        },
+
+        onSortColumn: function (oEvent) {
+            console.log("masuk SortColumn");
+            const oTable = oEvent.getSource(); 
+            const oBinding = oTable.getBinding("rows"); 
+            const oColumn = oEvent.getParameter("column");
+            const sSortProperty = oColumn.getSortProperty(); 
+            const sSortOrder = oColumn.getSortOrder(); 
+        
+            if (!sSortProperty) {
+                return;
+            }
+        
+            // Toggle Sort Order
+            const bDescending = sSortOrder === "Descending";
+            const oSorter = new sap.ui.model.Sorter(sSortProperty, bDescending);
+        
+            // Terapkan Sorting
+            oBinding.sort(oSorter);
+        
+            // Perbarui tampilan arah sort di header
+            oColumn.setSortOrder(bDescending ? "Ascending" : "Descending");
         },
 
 	});

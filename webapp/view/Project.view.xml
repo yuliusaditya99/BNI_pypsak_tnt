@@ -50,10 +50,12 @@
                 </m:HBox>
                 <m:Dialog
                     id="ProjectTaskDialog"
-                    title="Input Form"
+                    title="Input Project"
                     draggable="true"
                     resizable="true"
-                    stretch="{device>/system/phone}">
+                    stretch="{device>/system/phone}"
+                    model="dialogModel">
+                    
                     <m:VBox class="sapUiSmallMargin">
                         <!-- Input Title -->
                         <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
@@ -62,7 +64,7 @@
                                 id="titleInput"
                                 width="100%"
                                 placeholder="Enter title here..."
-                                value="{dialogModel>/title}" />
+                                value="{dialogModel>/title}" /> <!-- Binding title -->
                         </m:HBox>
                         
                         <!-- Date Input -->
@@ -74,7 +76,7 @@
                                 placeholder="mm/dd/yyyy"
                                 displayFormat="MM/dd/yyyy"
                                 valueFormat="yyyy-MM-dd"
-                                value="{dialogModel>/date}" />
+                                value="{dialogModel>/asOfDate}" /> <!-- Binding asOfDate -->
                         </m:HBox>
                         
                         <!-- Process Definition -->
@@ -84,9 +86,9 @@
                                 id="processDefCombo"
                                 width="100%"
                                 placeholder="Select process..."
-                                selectedKey="{dialogModel>/processDefinition}"
+                                selectedKey="{dialogModel>/processDefinitionId}" 
                                 items="{
-                                    path: 'view>/files'
+                                    path: 'view>/filename'
                                 }">
                                 <core:Item key="{view>id}" text="{view>fileName}" />
                             </m:ComboBox>
@@ -99,10 +101,10 @@
                                 id="descriptionInput"
                                 width="100%"
                                 placeholder="Enter description here..."
-                                value="{dialogModel>/description}" />
+                                value="{dialogModel>/description}" /> <!-- Binding description -->
                         </m:HBox>
                     </m:VBox>
-                    
+
                     <!-- Toolbar Buttons -->
                     <m:Toolbar>
                         <m:ToolbarSpacer />
@@ -118,6 +120,7 @@
                     </m:Toolbar>
                 </m:Dialog>
 
+
                 <m:HBox justifyContent="End" width="auto">
                     <m:Button id="NewProject" icon="sap-icon://add-document" press=".onNew" tooltip="{i18n>newButtonTooltip}" class="sapUiTinyMarginEnd" />
                     <m:Button id="EditDetail" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />
@@ -130,62 +133,62 @@
                     id="TableTask"
                     rows="{view>/tasks}"
                     visibleRowCount="10"
-                    selectionMode="None">
-                    <table:columns>
-                        <!-- Kolom Checkbox dengan Select All -->
-                        <table:Column width="50px">
-                            <table:label>
-                                <m:CheckBox
-                                    select=".onSelectAll" />
-                            </table:label>
-                            <table:template>
-                                <m:CheckBox selected="{view>selected}" />
-                            </table:template>
-                        </table:Column>
-                        <!-- Kolom lainnya -->                        
-                        <table:Column width="400px">
+                    selectionMode="MultiToggle"
+                    rowSelectionChange=".onRowSelect"
+                    cellClick=".onCellClick"
+                    class="highlight-row-on-hover" 
+                    sort=".onSortColumn"
+                    >
+                    <table:columns>                         
+                        <table:Column width="400px" sortProperty="title">
                             <m:Label text="Title" />
                             <table:template>
                                 <m:Text text="{view>title}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="asOfDate">
                             <m:Label text="As of date" />
                             <table:template>
                                 <m:Text text="{view>asOfDate}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="processDefinitionId" visible="{view>/showProcessDefinitionId}">
+                            <m:Label text="Process Definition Id" />
+                            <table:template>
+                                <m:Text text="{view>processDefinitionId}" class="paddingTopBottom" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="400px" sortProperty="processDefinition">
                             <m:Label text="Process Definition" />
                             <table:template>
                                 <m:Text text="{view>processDefinition}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="description">
                             <m:Label text="Description" />
                             <table:template>
-                                <m:Text text="{view>processDefinition}" class="paddingTopBottom" />
+                                <m:Text text="{view>description}" class="paddingTopBottom" />
                             </table:template>
-                        </table:Column>             
-                        <table:Column width="400px">
+                        </table:Column>
+                        <table:Column width="400px" sortProperty="createdBy">
                             <m:Label text="Created By" />
                             <table:template>
                                 <m:Text text="{view>createdBy}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="createdAt">
                             <m:Label text="Created At" />
                             <table:template>
                                 <m:Text text="{view>createdAt}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="updatedBy">
                             <m:Label text="Updated by" />
                             <table:template>
                                 <m:Text text="{view>updatedBy}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px"  sortProperty="updatedAt">
                             <m:Label text="Updated at" />
                             <table:template>
                                 <m:Text text="{view>updatedAt}" class="paddingTopBottom" />
