@@ -81,6 +81,13 @@
                             </m:MultiComboBox>
 
                         </m:HBox>
+                        <m:Hbox class="sapUiSmallMarginBottom">
+                            <m:Label text="Note: All data is readable; permission grants write access."/>
+                        </m:Hbox>
+                        <m:Hbox class="sapUiSmallMarginBottom">
+                            <m:Label text="Catatan: Semua data dapat dibaca; izin memberikan akses menulis."/>
+                        </m:Hbox>
+                            
                     </m:VBox>                   
 
                     <!-- Toolbar Buttons -->
