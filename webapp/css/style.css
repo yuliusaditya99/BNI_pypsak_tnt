@@ -20,28 +20,6 @@
 }
 
 
-
-/* Entire Table Border */
-[id*="nodesTable"] .sapUiTable {
-    border: 2px solid #000000d4 !important; /* Border around the entire table */
-    border-collapse: collapse; /* Ensures the borders are seamless */
-}
-
-/* Row Borders */
-[id*="nodesTable"] .sapUiTableRow {
-    border-bottom: 1px solid #000000d4 !important; /* Bottom border for each row */
-    border-top: 1px solid #000000d4 !important;   /* Top border for each row */
-}
-
-/* Cell Borders */
-[id*="nodesTable"] .sapUiTableCell {
-    border-left: 1x solid #000000d4 !important;  /* Left border for each cell */
-    border-right: 1px solid #000000d4 !important; /* Right border for each cell */
-    border-top: 1px solid #000000d4 !important;   /* Top border for each cell */
-    border-bottom: 1px solid #000000d4 !important; /* Bottom border for each cell */
-}
-
-
 /* Nodes Title */
 .sapSuiteUiCommonsProcessFlowNodeTitle {
     text-align: center;

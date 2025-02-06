@@ -28,6 +28,11 @@
 			"titleI18nKey": "User Management",
 			"key": "userManagement",
 			"selected": false
+		},
+		{
+			"titleI18nKey": "Role Management",
+			"key": "roleManagement",
+			"selected": false
 		}
 	]
 }

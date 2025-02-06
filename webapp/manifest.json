@@ -135,6 +135,14 @@
 						"userManagement",
 						"masterSettings"
 					]
+				},
+				{
+					"pattern": "MasterSettings/RoleManagement",
+					"name": "roleManagement",
+					"target": [
+						"roleManagement",
+						"masterSettings"
+					]
 				}
 			],
 			"targets": {
@@ -169,6 +177,13 @@
 				"userManagement": {
 					"viewId": "userManagement",
 					"viewName": "settings.UserManagement",
+					"controlId": "appSettings",
+					"controlAggregation": "detailPages",
+					"parent": "appSettings"
+				},
+				"roleManagement": {
+					"viewId": "roleManagement",
+					"viewName": "settings.RoleManagement",
 					"controlId": "appSettings",
 					"controlAggregation": "detailPages",
 					"parent": "appSettings"

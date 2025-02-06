@@ -80,7 +80,6 @@ sap.ui.define([
                     updatedBy: task.updatedBy?.user_name || "N/A",
                     updatedAt: task.updated_at,
                 }));
-                console.log("tasks:", tasks);
 
                 const oViewModel = this.getModel("view");
                 if (oViewModel) {
@@ -767,10 +766,7 @@ sap.ui.define([
             this.getView().byId("ProjectTaskDialog").close();
         },
 
-		onAfterRendering: function() {
-			this.oProcessFlow1.bindElement("/");
-		},
-
+		
 		// onNodePress: function(event) {
 		// 	const nodeId = event.getParameters().getNodeId();  // Get the ID of the clicked node
 		// 	const oModel = this.getView().getModel();  // Get the model

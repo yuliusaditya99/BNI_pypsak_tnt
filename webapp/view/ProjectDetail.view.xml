@@ -105,9 +105,14 @@
                 <table:Column width="100px">
                     <Label text="Status" />
                     <table:template>
-                        <Text text="{state}" class="paddingTopBottom"/>
+                        <HBox alignItems="Center" justifyContent="Start">
+                            <BusyIndicator visible="{= ${state} === 'Running' }" size="0.5rem" />
+                            <Text text="{state}" class="paddingTopBottom"/>
+                        </HBox>
                     </table:template>
                 </table:Column>
+
+
                 <table:Column width="150px">
                     <Label text="Start Process" class="paddingTopBottom"/>
                     <table:template>
