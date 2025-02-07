@@ -812,18 +812,44 @@ sap.ui.define([
 			}
 		},
 
-		onPermissionSelectionChange: function (oEvent) {
-			var aSelectedKeys = oEvent.getSource().getSelectedKeys();
-			var oModel = this.getView().getModel("dialogModel");
+		// onPermissionSelectionChange: function (oEvent) {
+		// 	var aSelectedKeys = oEvent.getSource().getSelectedKeys();
+		// 	var oModel = this.getView().getModel("dialogModel");
 		
-			if (aSelectedKeys.length === 0) {
-				// If no permission is selected, set to read-only
-				oModel.setProperty("/permissions", ["read-only"]);
-			} else {
-				oModel.setProperty("/permissions", aSelectedKeys);
-			}
+		// 	if (aSelectedKeys.length === 0) {
+		// 		// If no permission is selected, set to read-only
+		// 		oModel.setProperty("/permissions", ["read-only"]);
+		// 	} else {
+		// 		oModel.setProperty("/permissions", aSelectedKeys);
+		// 	}
+		// },
+		onPermissionSelectionChange: function (oEvent) {
+			let oDialogModel = this.getView().getModel("dialogModel");
+			let aSelectedKeys = this.byId("permissionsMultiCombo").getSelectedKeys();
+			let aModules = oDialogModel.getProperty("/modules") || [];
+		
+			// Convert selected keys into module objects
+			let aUpdatedModules = aSelectedKeys.map(moduleName => {
+				let existingModule = aModules.find(m => m.moduleName === moduleName);
+				return existingModule || { moduleName, is_write: false };
+			});
+		
+			// Update model with new modules list
+			oDialogModel.setProperty("/modules", aUpdatedModules);
 		},
 		
+		onWriteCheckboxChange: function (oEvent) {
+			let oDialogModel = this.getView().getModel("RoleDialog");
+			let oContext = oEvent.getSource().getBindingContext("dialogModel");
+			let oModule = oContext.getObject();
+			console.log("oModule:", oModule);
+		
+			// Toggle the write permission
+			oModule.is_write = oEvent.getParameter("selected");
+		
+			// Refresh the model
+			this.oDialogModel.refresh();
+		},
 
 		//#region EDIT Function
 		onEdit: function () {
@@ -885,13 +911,13 @@ sap.ui.define([
 			this.byId("RoleDialog").open();
 		},
 		
-		onPermissionSelectionChange: function (oEvent) {
-			var aSelectedKeys = oEvent.getSource().getSelectedKeys();
-			var oDialogModel = this.getView().getModel("dialogModel");
+		// onPermissionSelectionChange: function (oEvent) {
+		// 	var aSelectedKeys = oEvent.getSource().getSelectedKeys();
+		// 	var oDialogModel = this.getView().getModel("dialogModel");
 		
-			// Update the dialog model with the selected permissions
-			oDialogModel.setProperty("/permissions", aSelectedKeys);
-		},
+		// 	// Update the dialog model with the selected permissions
+		// 	oDialogModel.setProperty("/permissions", aSelectedKeys);
+		// },
 
 		_editUser: function()
 		{
@@ -1029,7 +1055,7 @@ sap.ui.define([
                 oTable = this.byId("TableUpload");
             } else if (sViewId.includes("roleManagement")) {
 				oTable = this.byId("TableRole");
-            }		
+			}
             var oBinding = oTable.getBinding("rows");
 
             // Menyaring berdasarkan kolom yang dipilih
