@@ -1027,6 +1027,8 @@ sap.ui.define([
                 oTable = this.byId("TableUser");
             } else if (sViewId.includes("detailSettings")) {
                 oTable = this.byId("TableUpload");
+            } else if (sViewId.includes("roleManagement")) {
+				oTable = this.byId("TableRole");
             }		
             var oBinding = oTable.getBinding("rows");
 
