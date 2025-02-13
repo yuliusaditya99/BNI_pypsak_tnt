@@ -35,6 +35,7 @@ sap.ui.define([
 		setModel : function (oModel, sName) {
 			return this.getView().setModel(oModel, sName);
 		},
+		
 
 		/**
 		 * Returns a promises which resolves with the resource bundle value of the given key <code>sI18nKey</code>
@@ -50,6 +51,10 @@ sap.ui.define([
 				return oBundle.getText(sI18nKey, aPlaceholderValues);
 			});
 		}
+
+	  
+
+		
 	});
 
 });

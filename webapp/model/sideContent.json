@@ -6,7 +6,7 @@
 			"titleI18nKey": "sideContentProject",
 			"icon": "sap-icon://documents",
 			"expanded": true,
-			"key": "",
+			"key": "project",
 			"items": []
 		},
 		{
@@ -20,13 +20,24 @@
 	],
 	"masterSettings": [
 		{
-			"titleI18nKey": " Content Process Definitions",
+			"titleI18nKey": "Content Process Definitions",
 			"key": "processDefinitions",
 			"selected": true
 		},
 		{
 			"titleI18nKey": "User Management",
 			"key": "userManagement",
+			"selected": false
+		},
+		{
+			"titleI18nKey": "Log Management",
+			"key": "logManagement",
+			"selected": false
+		}
+		,
+		{
+			"titleI18nKey": "Branch Office",
+			"key": "branchOffice",
 			"selected": false
 		}
 	]

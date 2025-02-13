@@ -9,6 +9,7 @@
     xmlns:table="sap.ui.table"
     xmlns:mvc="sap.ui.core.mvc">
 	<m:Page 
+        title="Project"
         id="ProjectPage"
         showHeader="false">
 		<m:landmarkInfo>
@@ -55,69 +56,65 @@
                     resizable="true"
                     stretch="{device>/system/phone}"
                     model="dialogModel">
-                    
-                    <m:VBox class="sapUiSmallMargin">
-                        <!-- Input Title -->
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                    <l:VerticalLayout class="sapUiContentPadding" width="100%">                    
+                        <m:VBox class="sapUiSmallMargin">
                             <m:Label text="Title" labelFor="titleInput" />
                             <m:Input
                                 id="titleInput"
                                 width="100%"
                                 placeholder="Enter title here..."
-                                value="{dialogModel>/title}" /> <!-- Binding title -->
-                        </m:HBox>
-                        
-                        <!-- Date Input -->
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                                value="{dialogModel>/title}" 
+                                valueState="{dialogModel>/titleState}"
+                                valueStateText="{dialogModel>/titleErrorText}"
+                                liveChange="onTitleChange"
+                                />
                             <m:Label text="As of Date" labelFor="asOfDateInput" />
-                            <m:DatePicker
-                                id="asOfDateInput"
-                                width="100%"
-                                placeholder="mm/dd/yyyy"
-                                displayFormat="MM/dd/yyyy"
-                                valueFormat="yyyy-MM-dd"
-                                value="{dialogModel>/asOfDate}" /> <!-- Binding asOfDate -->
-                        </m:HBox>
-                        
-                        <!-- Process Definition -->
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                                <m:DatePicker
+                                    id="asOfDateInput"
+                                    width="100%"
+                                    placeholder="mm/dd/yyyy"
+                                    displayFormat="MM/dd/yyyy"
+                                    valueFormat="yyyy-MM-dd"
+                                    value="{dialogModel>/asOfDate}" 
+                                    valueState="{dialogModel>/asOfDateState}"
+                                    valueStateText="{dialogModel>/asOfDateErrorText}"
+                                    change="onAsOfDateChange"
+                                    />                           
                             <m:Label text="Process Definition" labelFor="processDefCombo" />
-                            <m:ComboBox
-                                id="processDefCombo"
-                                width="100%"
-                                placeholder="Select process..."
-                                selectedKey="{dialogModel>/processDefinitionId}" 
-                                items="{
-                                    path: 'view>/filename'
-                                }">
-                                <core:Item key="{view>id}" text="{view>fileName}" />
-                            </m:ComboBox>
-                        </m:HBox>
-                        
-                        <!-- Description -->
-                        <m:HBox justifyContent="Start" alignItems="Start" class="sapUiSmallMarginBottom">
+                                <m:ComboBox
+                                    id="processDefCombo"
+                                    width="100%"
+                                    placeholder="Select process..."
+                                    selectedKey="{dialogModel>/processDefinitionId}" 
+                                    items="{
+                                        path: 'view>/filename'
+                                    }"
+                                    valueState="{dialogModel>/processState}"
+                                    valueStateText="{dialogModel>/processErrorText}"
+                                    selectionChange="onProcessChange"
+                                    >
+                                    <core:Item key="{view>id}" text="{view>fileName}" />
+                                </m:ComboBox>                           
                             <m:Label text="Description" labelFor="descriptionInput" />
-                            <m:TextArea
-                                id="descriptionInput"
-                                width="100%"
-                                placeholder="Enter description here..."
-                                value="{dialogModel>/description}" /> <!-- Binding description -->
-                        </m:HBox>
-                    </m:VBox>
-
-                    <!-- Toolbar Buttons -->
-                    <m:Toolbar>
-                        <m:ToolbarSpacer />
-                        <m:Button
-                            id="btnSave"
-                            text="Save"
-                            type="Emphasized"
-                            press=".onSaveDialogTask" />
-                        <m:Button
-                            id="btnCancel"
-                            text="Cancel"
-                            press=".onCancelDialogTask" />
-                    </m:Toolbar>
+                                <m:TextArea
+                                    id="descriptionInput"
+                                    width="100%"
+                                    placeholder="Enter description here..."
+                                    value="{dialogModel>/description}" />
+                        </m:VBox>
+                        <m:Toolbar>
+                            <m:ToolbarSpacer />
+                            <m:Button
+                                id="btnSave"
+                                text="Save"
+                                type="Emphasized"
+                                press=".onSaveDialogTask" />
+                            <m:Button
+                                id="btnCancel"
+                                text="Cancel"
+                                press=".onCancelDialogTask" />
+                        </m:Toolbar>
+                    </l:VerticalLayout>
                 </m:Dialog>
 
 
@@ -155,7 +152,7 @@
                         <table:Column width="400px" sortProperty="processDefinitionId" visible="{view>/showProcessDefinitionId}">
                             <m:Label text="Process Definition Id" />
                             <table:template>
-                                <m:Text text="{view>processDefinitionId}" class="paddingTopBottom" />
+                                <m:Text text="{view>processDefinitionId}" class="paddingTopBottom" />                                
                             </table:template>
                         </table:Column>
                         <table:Column width="400px" sortProperty="processDefinition">
@@ -217,3 +214,17 @@
         </m:Panel>
 	</m:Page>
 </mvc:View>
+
+<!-- <mvc:View
+    controllerName="sap.ui.bni.toolpageapp.controller.Project"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc">
+    
+    <Page title="Project">
+        <content>
+            <Text text="Ini adalah halaman Project"/>
+        </content>
+    </Page>
+</mvc:View> -->
+
+
