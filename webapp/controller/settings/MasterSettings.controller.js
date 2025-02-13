@@ -581,7 +581,7 @@ sap.ui.define([
             }
 			else
 			{
-				if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+				if (!this.isValidEmail(emailValue)) {
 					oDialogModel.setProperty("/emailState", "Error");
 					oDialogModel.setProperty("/emailErrorText", "Invalid email format!");
 					flagDone = 1;
@@ -1041,6 +1041,7 @@ sap.ui.define([
 				// if (oFileInput) {
 				// 	oFileInput.value = "";
 				// }
+				this._openDialogFile();
 		
 			} else if (sViewId.includes("detailSettings")) {
 				this._openDialogFile();
@@ -1198,8 +1199,6 @@ sap.ui.define([
                 sap.m.MessageToast.show("Please select only one row to edit.");
             }
 		},
-		//#endregion
-
 
 		onColumnChange: function (oEvent) {
 			var sSelectedKey = oEvent.getSource().getSelectedKey();
@@ -1257,6 +1256,20 @@ sap.ui.define([
             }
 		},
 		
+		_openNewRoleDialog: async function () {
+			await this.onGetPermissions();
+
+			console.log("Open New Role Dialog");
+			var oView = this.getView();
+			var oDialog = oView.byId("RoleDialog");
+		
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.RoleDialog", this);
+				oView.addDependent(oDialog);
+			}
+		
+			oDialog.open();
+		},
 
 		_openDialogFile: function (oData) {
 			// Dapatkan referensi ke dialog
@@ -1923,9 +1936,26 @@ sap.ui.define([
 		onClearLogs: function() {
             var oModel = this.getView().getModel("logModel");
             oModel.setProperty("/logs", []);
-        }
+        },
 		
+		isValidEmail: function (email) {
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+			const domainPart = email.split("@")[1]; 
+			if (/\d/.test(domainPart)) {
+				return false;
+			}
+			
+			return emailRegex.test(email);
+		},
 
+		formatPermission: function (permissions) {
+			// Assuming permissions is an array of objects and you want to check if any permission allows writing
+			if (permissions && permissions.length > 0) {
+				const hasWritePermission = permissions.some(perm => perm.isWrite);
+				return hasWritePermission ? "read" : "read/write";
+			}
+			return "read";
+		}
         
 
 		/**
@@ -1940,16 +1970,6 @@ sap.ui.define([
 		// 	return this.getBundleTextByModel(sI18nKey, this.getModel("i18n"), aPlaceholderValues);
 		// }
 
-		//#region formatter
-		formatPermission: function (permissions) {
-			// Assuming permissions is an array of objects and you want to check if any permission allows writing
-			if (permissions && permissions.length > 0) {
-				const hasWritePermission = permissions.some(perm => perm.isWrite);
-				return hasWritePermission ? "read" : "read/write";
-			}
-			return "read";
-		}
-		//#endregion
 	
 	});
 });

@@ -33,8 +33,7 @@
 			"titleI18nKey": "Log Management",
 			"key": "logManagement",
 			"selected": false
-		}
-		,
+		},
 		{
 			"titleI18nKey": "Branch Office",
 			"key": "branchOffice",

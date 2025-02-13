@@ -57,7 +57,7 @@ sap.ui.define([
               oRouter.navTo("project"); // Arahkan ke halaman app setelah login berhasil              
             } catch (error) {
               const message = error.response.data.detail[0].msg;
-              //console.error("Routing error:", error.response.data.detail[0].msg);
+              console.error("Routing error:", error.response.data.detail[0].msg);
               //sap.m.MessageToast.show("Terjadi kesalahan saat navigasi.");
               MessageBox.error(message);
             }

@@ -81,8 +81,7 @@
                     <Label text="As of Date" />
                     <table:template>
                         <Text text="{path: 'task/asOfDate'}" class="paddingTopBottom" />
-                    </table:template>
-                    
+                    </table:template>                    
                 </table:Column>
                 <table:Column width="100px">
                     <Label text="Code" />

@@ -150,7 +150,7 @@ sap.ui.define([
                 const response = await axios(config);
                 console.log("response:", response.data);
                 console.log("body setri : ",JSON.stringify(body))
-                
+
                 if(JSON.stringify(body) === "{}")
                 {
                     return response; 
@@ -160,16 +160,15 @@ sap.ui.define([
                     return response.data; 
                 }
                 
-            } catch (error) {
+            } 
+            catch (error) {
                 console.error("API Request Error:", error);
                 if (error.response && error.response.data.detail) {
                     console.log("error detail:", error.response.data.detail[0].msg);
-                    sap.m.MessageBox.error("Error: " + error.response.data.detail[0].msg); // Tampilkan error dari API
+                    //sap.m.MessageBox.error("Error: " + error.response.data.detail[0].msg); // Tampilkan error dari API
                 } else {
                     sap.m.MessageBox.error("Terjadi kesalahan saat menghubungi server.");
-                }
-
-                    
+                }                    
             }
         }, 
         

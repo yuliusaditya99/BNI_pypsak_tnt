@@ -212,6 +212,27 @@
 					"controlId": "appSettings",
 					"controlAggregation": "detailPages",
 					"parent": "appSettings"
+				},
+				"logManagement": {
+					"viewId": "logManagement",
+					"viewName": "settings.logManagement",
+					"controlId": "appSettings",
+					"controlAggregation": "detailPages",
+					"parent": "appSettings"
+				},
+				"branchOffice": {
+					"viewId": "branchOffice",
+					"viewName": "settings.branchOffice",
+					"controlId": "appSettings",
+					"controlAggregation": "detailPages",
+					"parent": "appSettings"
+				},
+				"roleManagement": {
+					"viewId": "roleManagement",
+					"viewName": "settings.RoleManagement",
+					"controlId": "appSettings",
+					"controlAggregation": "detailPages",
+					"parent": "appSettings"
 				}
 			}
 		},
