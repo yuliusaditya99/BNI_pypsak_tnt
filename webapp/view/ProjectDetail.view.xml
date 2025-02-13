@@ -69,150 +69,154 @@
 						class="sapUiTinyMarginEnd"/>
 				</HBox>						
 			</HBox>
-            <l:BlockLayoutCell backgroundColorSet="ColorSet11" backgroundColorShade="ShadeA" width="3">
-                <table:Table
-                id="nodesTableProjectDetail"
-                rows="{/nodes}"
-                visibleRowCount="4"
-                selectionMode="None"
-                class="highlight-row-on-hover" 
-                cellClick=".onCellClick">
-                <table:columns>
-                    <table:Column width="110px">
-                        <Label text="As of Date" />
-                        <table:template>
-                            <Text text="{path: 'task/asOfDate'}" class="paddingTopBottom" />
-                        </table:template>
-                        
-                    </table:Column>
-                    <table:Column width="100px">
-                        <Label text="Code" />
-                        <table:template>
-                            <Text text="{path: 'code'}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="150px">
-                        <Label text="Task Name" />
-                        <table:template>
-                            <Text text="{path: 'label'}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="75px">
-                        <Label text="Owner" />
-                        <table:template>
-                            <Text text="{owner}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="100px">
-                        <Label text="Status" />
-                        <table:template>
+
+			<table:Table
+            id="nodesTableProjectDetail"
+            rows="{/nodes}"
+            visibleRowCount="4"
+            selectionMode="None"
+            cellClick=".onCellClick">
+            <table:columns>
+                <table:Column width="110px">
+                    <Label text="As of Date" />
+                    <table:template>
+                        <Text text="{path: 'task/asOfDate'}" class="paddingTopBottom" />
+                    </table:template>
+                    
+                </table:Column>
+                <table:Column width="100px">
+                    <Label text="Code" />
+                    <table:template>
+                        <Text text="{path: 'code'}" class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="150px">
+                    <Label text="Task Name" />
+                    <table:template>
+                        <Text text="{path: 'label'}" class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="75px">
+                    <Label text="Owner" />
+                    <table:template>
+                        <Text text="{owner}" class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="100px">
+                    <Label text="Status" />
+                    <table:template>
+                        <HBox alignItems="Center" justifyContent="Start">
+                            <BusyIndicator visible="{= ${state} === 'Running' }" size="0.5rem" />
                             <Text text="{state}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="150px">
-                        <Label text="Start Process" class="paddingTopBottom"/>
-                        <table:template>
-                            <Text text="{path:'begin_at', 
-                            formatter:'.timeFormater'}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="150px">
-                        <Label text="Finish Process" />
-                        <table:template>
-                            <Text text="{path:'end_at', 
-                            formatter:'.timeFormater'}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="120px">
-                        <Label text="Process Time" />
-                        <table:template>
-                            <Text text="{path: 'calculate', 
-                            formatter:'.calculateProcessTime'}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="100px">
-                        <Label text="Iteration" />
-                        <table:template>
-                            <Text text="{path: 'iteration'}" class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="150px">
-                        <Label text="Result" />
-                        <table:template>
-                            <Link text="{path: 'resultsfileName'}" target="_blank" href="{path: 'resultsfilePath'}" press="onDownloadFile"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="200px">
-                        <Label text="Parameters" />
-                        <table:template>
-                            <Text text="{path: 'parameters', 
-                            formatter: '.formatParameters'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="250px">
-                        <Label text="Custom Columns" />
-                        <table:template>
-                            <Text text="{path: 'customColumns', 
-                            formatter: '.formatCustomColumns'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="100px">
-                        <Label text="is Running" />
-                        <table:template>
-                            <Text text="{path: 'isRunning'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="100px">
-                        <Label text="Description" />
-                        <table:template>
-                            <Text text="{path: 'description'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="100px">
-                        <Label text="Created By" />
-                        <table:template>
-                            <Text text="{path: 'createBy/userName'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="150px">
-                        <Label text="Created At" />
-                        <table:template>
-                            <Text text="{path: 'createdAt',
-                            formatter:'.timeFormater'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="100px">
-                        <Label text="Updated By" />
-                        <table:template>
-                            <Text text="{path: 'updatedBy/userName'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                    <table:Column width="150px">
-                        <Label text="Updated At" />
-                        <table:template>
-                            <Text text="{path: 'updatedAt',
-                            formatter:'.timeFormater'}" 
-                            wrapping="true" 
-                            class="paddingTopBottom"/>
-                        </table:template>
-                    </table:Column>
-                </table:columns>
-                </table:Table>
-            </l:BlockLayoutCell>
+                        </HBox>
+                    </table:template>
+                </table:Column>
+
+
+                <table:Column width="150px">
+                    <Label text="Start Process" class="paddingTopBottom"/>
+                    <table:template>
+                        <Text text="{path:'begin_at', 
+                        formatter:'.timeFormater'}" class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="150px">
+                    <Label text="Finish Process" />
+                    <table:template>
+                        <Text text="{path:'end_at', 
+                        formatter:'.timeFormater'}" class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="120px">
+                    <Label text="Process Time" />
+                    <table:template>
+                        <Text text="{path: 'calculate', 
+                        formatter:'.calculateProcessTime'}" class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="100px">
+                    <Label text="Iteration" />
+                    <table:template>
+                        <Text text="{path: 'iteration'}" class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="150px">
+                    <Label text="Result" />
+                    <table:template>
+                        <Link text="{path: 'resultsfileName'}" target="_blank" href="{path: 'resultsfilePath'}" press="onDownloadFile"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="200px">
+                    <Label text="Parameters" />
+                    <table:template>
+                        <Text text="{path: 'parameters', 
+                        formatter: '.formatParameters'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="250px">
+                    <Label text="Custom Columns" />
+                    <table:template>
+                        <Text text="{path: 'customColumns', 
+                        formatter: '.formatCustomColumns'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="100px">
+                    <Label text="is Running" />
+                    <table:template>
+                        <Text text="{path: 'isRunning'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="100px">
+                    <Label text="Description" />
+                    <table:template>
+                        <Text text="{path: 'description'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="100px">
+                    <Label text="Created By" />
+                    <table:template>
+                        <Text text="{path: 'createBy/userName'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="150px">
+                    <Label text="Created At" />
+                    <table:template>
+                        <Text text="{path: 'createdAt',
+                        formatter:'.timeFormater'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="100px">
+                    <Label text="Updated By" />
+                    <table:template>
+                        <Text text="{path: 'updatedBy/userName'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+                <table:Column width="150px">
+                    <Label text="Updated At" />
+                    <table:template>
+                        <Text text="{path: 'updatedAt',
+                        formatter:'.timeFormater'}" 
+                        wrapping="true" 
+                        class="paddingTopBottom"/>
+                    </table:template>
+                </table:Column>
+            </table:columns>
+        	</table:Table>
+
 			<HBox renderType="Bare" justifyContent="End" width="100%">
 				<FlexBox  id="zoomButtons">
 					<Button  text="Zoom In" justifyContent="Start" press="onZoomIn" />

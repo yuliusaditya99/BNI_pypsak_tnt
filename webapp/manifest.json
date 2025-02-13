@@ -161,6 +161,14 @@
 						"branchOffice",
 						"masterSettings"
 					]
+				},
+				{
+					"pattern": "MasterSettings/RoleManagement",
+					"name": "roleManagement",
+					"target": [
+						"roleManagement",
+						"masterSettings"
+					]
 				}
 			],
 			"targets": {
@@ -201,20 +209,6 @@
 				"userManagement": {
 					"viewId": "userManagement",
 					"viewName": "settings.UserManagement",
-					"controlId": "appSettings",
-					"controlAggregation": "detailPages",
-					"parent": "appSettings"
-				},
-				"logManagement": {
-					"viewId": "logManagement",
-					"viewName": "settings.logManagement",
-					"controlId": "appSettings",
-					"controlAggregation": "detailPages",
-					"parent": "appSettings"
-				},
-				"branchOffice": {
-					"viewId": "branchOffice",
-					"viewName": "settings.branchOffice",
 					"controlId": "appSettings",
 					"controlAggregation": "detailPages",
 					"parent": "appSettings"

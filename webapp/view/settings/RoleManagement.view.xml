@@ -1,0 +1,177 @@
+<mvc:View
+    controllerName="sap.ui.bni.toolpageapp.controller.settings.MasterSettings"
+    xmlns="sap.uxap"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:l="sap.ui.layout"
+    xmlns:m="sap.m"
+    xmlns:u="sap.ui.unified"
+    xmlns:core="sap.ui.core"
+    xmlns:table="sap.ui.table"
+    xmlns:mvc="sap.ui.core.mvc">
+    <m:Page
+        title="Role Management"
+        showHeader="{device>/system/phone}"
+        showNavButton="{device>/system/phone}"
+        navButtonPress=".onNavButtonPress"
+        >
+        <m:Panel
+            id="RoleManagement"
+            accessibleRole="Region"
+            class="sapUiNoContentPadding">
+            <m:HBox justifyContent="SpaceBetween" width="100%" >
+                <m:HBox class="sapUiSmallMargin">
+                    <m:ComboBox
+                        id="columnUserMComboBox"
+                        selectedKey="clientCode"
+                        width="150px"
+                        change=".onColumnChange">
+                        <m:items>
+                            <core:ListItem text="Name" key="clientCode" />
+                            <core:ListItem text="Persmissions" key="username" />
+                            <core:ListItem text="Created by" key="fullname" />
+                            <core:ListItem text="Created at" key="division" />
+                            <core:ListItem text="updated at" key="email" />
+                        </m:items>
+                    </m:ComboBox>
+                    <m:SearchField
+                        id="searchUserMField"
+                        placeholder="{i18n>searchPlaceholder}"
+                        liveChange=".onSearch"
+                        width="300px"
+                        tooltip="{i18n>searchTooltip}"
+                        class="sapUiTinyMarginEnd" />
+                </m:HBox>         
+
+                <m:Dialog
+                    id="RoleDialog"
+                    title="Role Management"
+                    draggable="true"
+                    resizable="true"
+                    stretch="{device>/system/phone}"
+                    model="dialogModel">
+
+                    <m:VBox class="sapUiSmallMargin">     
+
+                        <!-- including idrole to pass -->
+                        <m:Input id="idRoleInput" value="{dialogModel>/idRole}" visible="false" />
+                        
+                        <!-- Role Name Input -->
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Role Name" labelFor="roleNameInput" />
+                            <m:Input
+                                id="roleNameInput"
+                                width="100%"
+                                placeholder="Enter role name..."
+                                value="{dialogModel>/roleName}" />
+                        </m:HBox>
+
+                        <!-- Role Permissions MultiComboBox -->
+                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                            <m:Label text="Permissions" labelFor="permissionsMultiCombo" />
+                            <m:MultiComboBox
+                                id="permissionsMultiCombo"
+                                width="100%"
+                                placeholder="Select permissions..."
+                                selectedKeys="{dialogModel>/permissionskeys}"
+                                selectionChange=".onPermissionSelectionChange"
+                                items="{
+                                    path: 'view>/permissions'
+                                }">
+                                <core:Item key="{view>id}" text="{view>name}" />
+                            </m:MultiComboBox>
+
+                        </m:HBox>
+                        <m:Hbox class="sapUiSmallMarginBottom">
+                            <m:Label text="Note: All data is readable; permission grants write access."/>
+                        </m:Hbox>
+                        <m:Hbox class="sapUiSmallMarginBottom">
+                            <m:Label text="Catatan: Semua data dapat dibaca; izin memberikan akses menulis."/>
+                        </m:Hbox>
+                            
+                    </m:VBox>                   
+
+                    <!-- Toolbar Buttons -->
+                    <m:Toolbar>
+                        <m:ToolbarSpacer />
+                        <m:Button
+                            id="btnSaveRole"
+                            text="Save"
+                            type="Emphasized"
+                            press=".onSaveDialogRole" />
+                        <m:Button
+                            id="btnCancelRole"
+                            text="Cancel"
+                            press=".onCancelDialogRole" />
+                    </m:Toolbar>
+                </m:Dialog>
+
+
+                <!-- 4 button crud -->
+                <m:HBox justifyContent="End" width="auto">
+                    <m:Button id="NewDetailUN" icon="sap-icon://add-document" press=".onNew" tooltip="{i18n>newButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="EditDetailUN" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="RefreshDetailUN" icon="sap-icon://synchronize" press=".onRefresh" tooltip="{i18n>refreshButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    <m:Button id="DeleteDetailUN" icon="sap-icon://delete" press=".onDelete" tooltip="{i18n>deleteButtonTooltip}" class="sapUiTinyMarginEnd" />
+                </m:HBox>                
+            </m:HBox>
+
+           <l:BlockLayoutCell backgroundColorSet="ColorSet11" backgroundColorShade="ShadeA" width="3">
+                <table:Table
+                    id="TableRole"
+                    rows="{view>/roles}"
+                    visibleRowCount="10"
+                    selectionMode="MultiToggle"
+                    cellClick=".onCellClick">
+                    <table:columns>
+                        <table:Column width="150px">
+                            <m:Label text="Name" />
+                            <table:template>
+                                <m:Text text="{view>name}" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="300px">
+                            <m:Label text="Permissions" />
+                            <table:template>
+                                <m:HBox>
+                                <m:VBox width="150px">
+                                    <m:Text text="Module:" />
+                                    <m:Text text="{view>moduleName}" />
+                                </m:VBox>
+                                <m:VBox width="150px">
+                                    <m:Text text="Permission:" />
+                                    <m:Text text="{path: 'view>permissions', formatter: '.formatPermission'}" />
+                                </m:VBox>
+                            </m:HBox>
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="150px">
+                            <m:Label text="Created by" />
+                            <table:template>
+                                <m:Text text="{view>createdBy}" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="150px">
+                            <m:Label text="Created at" />
+                            <table:template>
+                                <m:Text text="{view>createdAt}" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="150px">
+                            <m:Label text="Updated by" />
+                            <table:template>
+                                <m:Text text="{view>updatedBy}" />
+                            </table:template>
+                        </table:Column>
+                        <table:Column width="150px">
+                            <m:Label text="Updated at" />
+                            <table:template>
+                                <m:Text text="{view>updatedAt}" />
+                            </table:template>
+                        </table:Column>
+                    </table:columns>
+                </table:Table>
+            </l:BlockLayoutCell>
+        </m:Panel>
+    </m:Page>
+</mvc:View>
+

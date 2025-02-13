@@ -39,6 +39,11 @@
 			"titleI18nKey": "Branch Office",
 			"key": "branchOffice",
 			"selected": false
+		},
+		{
+			"titleI18nKey": "Role Management",
+			"key": "roleManagement",
+			"selected": false
 		}
 	]
 }
