@@ -22,15 +22,16 @@
                 <m:HBox class="sapUiSmallMargin">
                     <m:ComboBox
                         id="columnUserMComboBox"
-                        selectedKey="clientCode"
+                        selectedKey="name"
                         width="150px"
                         change=".onColumnChange">
                         <m:items>
-                            <core:ListItem text="Name" key="clientCode" />
-                            <core:ListItem text="Persmissions" key="username" />
-                            <core:ListItem text="Created by" key="fullname" />
-                            <core:ListItem text="Created at" key="division" />
-                            <core:ListItem text="updated at" key="email" />
+                            <core:ListItem text="Name" key="name" />
+                            <core:ListItem text="Persmissions" key="moduleName" />
+                            <core:ListItem text="Created by" key="createdBy" />
+                            <core:ListItem text="Created at" key="createdAt" />
+                            <core:ListItem text="Updated by" key="updatedBy" />
+                            <core:ListItem text="updated at" key="updatedAt" />
                         </m:items>
                     </m:ComboBox>
                     <m:SearchField
@@ -45,51 +46,90 @@
                 <m:Dialog
                     id="RoleDialog"
                     title="Role Management"
-                    draggable="true"
-                    resizable="true"
+                    contentHeight="80%"
+                    contentWidth="auto"
+                    draggable="false"
+                    resizable="false"
                     stretch="{device>/system/phone}"
                     model="dialogModel">
+                    <l:VerticalLayout class="sapUiContentPadding" width="100%">       
+                        <m:VBox class="sapUiSmallMargin">     
 
-                    <m:VBox class="sapUiSmallMargin">     
+                            <!-- Hidden ID Role Input -->
+                            <m:Input id="idRoleInput" value="{dialogModel>/idRole}" visible="false" />
 
-                        <!-- including idrole to pass -->
-                        <m:Input id="idRoleInput" value="{dialogModel>/idRole}" visible="false" />
-                        
-                        <!-- Role Name Input -->
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
-                            <m:Label text="Role Name" labelFor="roleNameInput" />
-                            <m:Input
-                                id="roleNameInput"
-                                width="100%"
-                                placeholder="Enter role name..."
-                                value="{dialogModel>/roleName}" />
-                        </m:HBox>
+                            <!-- Role Name Input -->
+                            <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                                <m:Label text="Role Name" labelFor="roleNameInput" />
+                                <m:Input
+                                    id="roleNameInput"
+                                    width="100%"
+                                    placeholder="Enter role name..."
+                                    value="{dialogModel>/roleName}"
+                                    valueState="{dialogModel>/nameState}"
+                                    valueStateText="{dialogModel>/nameErrorText}"
+                                    liveChange="onNameChange"
+                                    />
+                            </m:HBox>
 
-                        <!-- Role Permissions MultiComboBox -->
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
-                            <m:Label text="Permissions" labelFor="permissionsMultiCombo" />
-                            <m:MultiComboBox
-                                id="permissionsMultiCombo"
-                                width="100%"
-                                placeholder="Select permissions..."
-                                selectedKeys="{dialogModel>/permissionskeys}"
-                                selectionChange=".onPermissionSelectionChange"
-                                items="{
-                                    path: 'view>/permissions'
-                                }">
-                                <core:Item key="{view>id}" text="{view>name}" />
-                            </m:MultiComboBox>
+                            <!-- Role Permissions MultiComboBox -->
+                            <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                                <m:Label text="Permissions" labelFor="permissionsMultiCombo" />
+                                <m:MultiComboBox
+                                    id="permissionsMultiCombo"
+                                    width="500px"
+                                    max-width="750px"
+                                    placeholder="Select permissions..."
+                                    selectedKeys="{dialogModel>/permissionskeys}"
+                                    selectionChange=".onPermissionSelectionChange"
+                                    items="{
+                                        path: 'view>/permissions'
+                                    }"
+                                    valueState="{dialogModel>/permissionsState}"
+                                    valueStateText="{dialogModel>/permissionsErrorText}"
+                                    >
+                                    <core:Item key="{view>id}" text="{view>name}" />
+                                </m:MultiComboBox>
+                            </m:HBox>
 
-                        </m:HBox>
-                        <m:Hbox class="sapUiSmallMarginBottom">
-                            <m:Label text="Note: All data is readable; permission grants write access."/>
-                        </m:Hbox>
-                        <m:Hbox class="sapUiSmallMarginBottom">
-                            <m:Label text="Catatan: Semua data dapat dibaca; izin memberikan akses menulis."/>
-                        </m:Hbox>
-                            
-                    </m:VBox>                   
+                            <!-- Permissions Table -->
+                            <m:Table 
+                            id="moduleTable" 
+                            items="{dialogModel>/permissions}" 
+                            width="500px"
+                            height="500px"
+                            max-height="500px">
+                                <m:columns>
+                                    <m:Column min-width="380px" max-width="400px">
+                                        <m:Label text="Module" />
+                                    </m:Column>
+                                    <m:Column hAlign="Left" min-width="100px" max-width="120px">
+                                        <m:header>
+                                            <m:HBox alignItems="Center" justifyContent="Start">
+                                                <m:CheckBox id="selectAllCheckbox" select=".onSelectAllPermission"/>
+                                                <m:Label text="Write Access" />
+                                            </m:HBox>
+                                        </m:header>
+                                    </m:Column>
+                                </m:columns>
+                                <m:items>
+                                    <m:ColumnListItem>
+                                        <m:cells>
+                                            <!-- Module Name -->
+                                            <m:Text text="{dialogModel>moduleName}" wrapping="false"/>
 
+                                            <!-- Write Checkbox -->
+                                            <m:HBox justifyContent="Start">
+                                                <m:CheckBox selected="{dialogModel>is_write}" select=".onWriteCheckboxChange"/>
+                                            </m:HBox>
+                                        </m:cells>
+                                    </m:ColumnListItem>
+                                </m:items>
+                            </m:Table>
+
+
+                        </m:VBox>                   
+                    </l:VerticalLayout>
                     <!-- Toolbar Buttons -->
                     <m:Toolbar>
                         <m:ToolbarSpacer />
@@ -119,50 +159,67 @@
                 <table:Table
                     id="TableRole"
                     rows="{view>/roles}"
+                    rowHeight="auto"
                     visibleRowCount="10"
                     selectionMode="MultiToggle"
                     cellClick=".onCellClick">
                     <table:columns>
-                        <table:Column width="150px">
-                            <m:Label text="Name" />
+                        <table:Column width="150px" sortProperty="view/name">
+                            <m:Label text="Name"/>
                             <table:template>
-                                <m:Text text="{view>name}" />
+                                <m:Text text="{view>name}" wrapping="false"/>
                             </table:template>
-                        </table:Column>
-                        <table:Column width="300px">
+                        </table:Column> 
+                        <table:Column width="300px" sortProperty="view>permissions">
                             <m:Label text="Permissions" />
                             <table:template>
-                                <m:HBox>
-                                <m:VBox width="150px">
-                                    <m:Text text="Module:" />
-                                    <m:Text text="{view>moduleName}" />
-                                </m:VBox>
-                                <m:VBox width="150px">
-                                    <m:Text text="Permission:" />
-                                    <m:Text text="{path: 'view>permissions', formatter: '.formatPermission'}" />
-                                </m:VBox>
-                            </m:HBox>
+                                <m:Table
+                                    id="PermissionsTable"
+                                    items="{view>permissions}" 
+                                    width="100%"
+                                    >
+                                    <m:columns>
+                                        <m:Column width="65%">
+                                            <m:header>
+                                                <m:Text text="Module Name" design="Bold"/>
+                                            </m:header>
+                                        </m:Column>
+                                        <m:Column width="35%">
+                                            <m:header>
+                                                <m:Text text="Permission" design="Bold"/>
+                                            </m:header>
+                                        </m:Column>
+                                    </m:columns>
+                                    <m:items>
+                                        <m:ColumnListItem>
+                                            <m:cells>
+                                                <m:Text text="{view>moduleName}"/>
+                                                <m:Text text="{view>permission}"/>
+                                            </m:cells>
+                                        </m:ColumnListItem>
+                                    </m:items>
+                                </m:Table>
                             </table:template>
                         </table:Column>
-                        <table:Column width="150px">
+                        <table:Column width="150px" sortProperty="view>createdBy">
                             <m:Label text="Created by" />
                             <table:template>
                                 <m:Text text="{view>createdBy}" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="150px">
+                        <table:Column width="150px" sortProperty="view>createdAt">
                             <m:Label text="Created at" />
                             <table:template>
                                 <m:Text text="{view>createdAt}" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="150px">
+                        <table:Column width="150px" sortProperty="view>updatedBy">
                             <m:Label text="Updated by" />
                             <table:template>
                                 <m:Text text="{view>updatedBy}" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="150px">
+                        <table:Column width="150px" sortProperty="view>updatedAt">
                             <m:Label text="Updated at" />
                             <table:template>
                                 <m:Text text="{view>updatedAt}" />

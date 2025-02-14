@@ -113,6 +113,7 @@ sap.ui.define([
 			console.log("masuk setup role management");
 			this._selectedColumn = "clientCode";
 			this.getView().getModel("view").setProperty("/showRolesId", false);
+			console.log("get model view:", this.getModel("view"));
 			try {
 			  console.log("Masuk Role Management");
 			  console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
@@ -210,11 +211,12 @@ sap.ui.define([
 						updatedAt: role.updated_at || "N/A",
 						permissions: role.permissions.map(perm => ({
 							moduleName: perm.pivot_permission.name,
-							permission: perm.pivot_permission.alias,
-							permissionId: perm.pivot_permission.id
+							permission: perm.is_write ? "Read/Write" : "Read",
+							permissionId: perm.pivot_permission.id,
+							is_write: perm.is_write
 						})),
 						moduleName: role.permissions.map(perm => perm.pivot_permission.name).join('\n'),
-						permission: role.permissions.map(perm => perm.is_write).join('\n')
+						permission: role.permissions.map(perm => (perm.is_write ? "Read/Write" : "Read")).join('\n')
 					}));
 				
 					
@@ -281,7 +283,7 @@ sap.ui.define([
             }
             
         },
-		
+		// const response = await axios.get(`${Config.paths.apiBaseUrl}/api/permission?start=0&length=100000000&orders=id&dirs=desc`);
 		onGetPermissions: async function () {
 			try {
 				const response = await axios.get(`${Config.paths.apiBaseUrl}/api/permission?start=0&length=100000000&orders=id&dirs=desc`);
@@ -292,7 +294,7 @@ sap.ui.define([
 						id: perm.id,
 						name: perm.name
 					}));
-		
+					console.log("Permissions on onGetPermissions:", permissions);
 					const oViewModel = this.getModel("view");
 					if (oViewModel) {
 						oViewModel.setProperty("/permissions", permissions);
@@ -531,7 +533,9 @@ sap.ui.define([
 
 		onSaveDialogRole: async function () {
 			console.log("onSaveDialogRole");
-		
+			const oDialog = this.byId("RoleDialog");
+			const oDialogModel = this.getView().getModel("dialogModel");
+
 			const roleName = this.byId("roleNameInput") ? this.byId("roleNameInput").getValue() : "";
 			const permissionsValue = this.byId("permissionsMultiCombo") 
 				? this.byId("permissionsMultiCombo").getSelectedKeys().filter(key => key !== "") 
@@ -540,20 +544,39 @@ sap.ui.define([
 			console.log("roleName:", roleName);
 			console.log("permissionsValue:", permissionsValue);
 		
+			let isValid = true;
+
+			// Validate role name
 			if (!roleName) {
-				MessageToast.show("Please enter a role name.");
-				return;
+				oDialogModel.setProperty("/nameState", "Error");
+				oDialogModel.setProperty("/nameErrorText", "Role Name is required!");
+				isValid = false;
+			} else {
+				oDialogModel.setProperty("/nameState", "None"); // Reset error state
+				oDialogModel.setProperty("/nameErrorText", "");
 			}
+		
+			// Validate permissions selection
 			if (permissionsValue.length === 0) {
-				MessageToast.show("Please select at least one permission.");
+				oDialogModel.setProperty("/permissionsState", "Error");
+				oDialogModel.setProperty("/permissionsErrorText", "Select at least one permission!");
+				isValid = false;
+			} else {
+				oDialogModel.setProperty("/permissionsState", "None"); // Reset error state
+				oDialogModel.setProperty("/permissionsErrorText", "");
+			}
+		
+			// Stop execution if validation fails
+			if (!isValid) {
+				MessageToast.show("Please fix the errors before saving.");
 				return;
 			}
 
 			let oResponse;
 			
 			try {
-				const oDialog = this.byId("RoleDialog");
-				const oDialogModel = this.getView().getModel("dialogModel");
+				// const oDialog = this.byId("RoleDialog");
+				// const oDialogModel = this.getView().getModel("dialogModel");
 				console.log("oDialogModel:", oDialogModel);
 				console.log("oDialogModel data:", oDialogModel.getData());
 		
@@ -563,12 +586,16 @@ sap.ui.define([
 				let payload;
 				sap.ui.core.BusyIndicator.show(0);
 				console.log("idRole:", idRole);
-		
-				// Construct permissions array correctly
-				const permissionsPayload = permissionsValue.map(permissionId => ({
-					id: parseInt(permissionId, 10),
-					is_write: true
-				}));
+
+				// Get permissions array from dialogModel
+				const aPermissions = oDialogModel.getProperty("/permissions") || [];
+				const permissionsPayload = permissionsValue.map((permissionId, index) => {
+					return {
+						id: parseInt(permissionId, 10), // Convert ID to integer
+						is_write: aPermissions[index]?.is_write ?? false // Default to false if undefined
+					};
+				});
+				
 		
 				if (idRole) {
 					// Update existing role
@@ -604,6 +631,7 @@ sap.ui.define([
 					    headers: { "Content-Type": "application/json" }
 					});
 				}
+		
 				console.log("oResponse:", oResponse);
 				if (oResponse?.data?.error) {
 					MessageToast.show("Failed to save role: " + oResponse.data.message);
@@ -611,6 +639,12 @@ sap.ui.define([
 					MessageToast.show("Role saved successfully.");
 					console.log("API Response:", oResponse?.data);
 				}
+				
+				// Reset all 'is_write' checkboxes to false before closing
+				aPermissions.forEach(permission => {
+					permission.is_write = false;
+				});
+				oDialogModel.setProperty("/permissions", aPermissions);
 		
 				oDialog.close();
 				this.onRefresh();
@@ -634,14 +668,27 @@ sap.ui.define([
 		},
 		
 		
-		
-		
 		onCancelDialogRole: function () {
 			console.log("Cancel Role Creation");
 			this.byId("RoleDialog").close();
 			this.onRefresh();
 		},
 		
+		onSelectAllPermission: function (oEvent) {
+			let oDialogModel = this.getView().getModel("dialogModel");
+			let aPermissions = oDialogModel.getProperty("/permissions");
+		
+			// Get the state of the "Select All" checkbox
+			let bSelected = oEvent.getParameter("selected");
+		
+			// Update the is_write property for all permissions
+			aPermissions.forEach(permission => {
+				permission.is_write = bSelected;
+			});
+		
+			// Refresh the model to update the table
+			oDialogModel.refresh();
+		},
 		
 		// onSelectAll: function (oEvent) {
 		// 	var bSelected = oEvent.getSource().getSelected();
@@ -725,7 +772,7 @@ sap.ui.define([
 
 		_openNewRoleDialog: async function () {
 			await this.onGetPermissions();
-
+		
 			console.log("Open New Role Dialog");
 			var oView = this.getView();
 			var oDialog = oView.byId("RoleDialog");
@@ -735,6 +782,22 @@ sap.ui.define([
 				oView.addDependent(oDialog);
 			}
 		
+			// Initialize dialog model with empty data
+			var oDialogModel = this.getView().getModel("dialogModel");
+			if (!oDialogModel) {
+				oDialogModel = new sap.ui.model.json.JSONModel();
+				this.getView().setModel(oDialogModel, "dialogModel");
+			}
+		
+			// Set default data for new role
+			oDialogModel.setData({
+				idRole: null,
+				roleName: "",
+				permissionskeys: [],
+				permissions: [],
+				permissionValues: this.getView().getModel("view").getProperty("/permissions") // Ensure permissionValues is set
+			});
+			
 			oDialog.open();
 		},
 
@@ -795,6 +858,14 @@ sap.ui.define([
 		},
 
 
+		onNameChange: function () {
+            console.log("rubah name");
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/nameState", "None");
+            oModel.setProperty("/nameErrorText", "");
+		},
+
+
 		//#endregion
 
 		_loadPermissions: async function () {
@@ -812,43 +883,71 @@ sap.ui.define([
 			}
 		},
 
-		// onPermissionSelectionChange: function (oEvent) {
-		// 	var aSelectedKeys = oEvent.getSource().getSelectedKeys();
-		// 	var oModel = this.getView().getModel("dialogModel");
+		onPermissionSelectionChange: async function (oEvent) {
+			await this.onGetPermissions(); // Ensure all permissions are loaded
 		
-		// 	if (aSelectedKeys.length === 0) {
-		// 		// If no permission is selected, set to read-only
-		// 		oModel.setProperty("/permissions", ["read-only"]);
-		// 	} else {
-		// 		oModel.setProperty("/permissions", aSelectedKeys);
-		// 	}
-		// },
-		onPermissionSelectionChange: function (oEvent) {
 			let oDialogModel = this.getView().getModel("dialogModel");
-			let aSelectedKeys = this.byId("permissionsMultiCombo").getSelectedKeys();
-			let aModules = oDialogModel.getProperty("/modules") || [];
+			oDialogModel.setProperty("/permissionsState", "None");
+            oDialogModel.setProperty("/permissionsErrorText", "");
+			let oData = oDialogModel.getData(); // Get full data
+			console.log("oData onPermissionSelectionChange:", oData.permissions);
 		
-			// Convert selected keys into module objects
-			let aUpdatedModules = aSelectedKeys.map(moduleName => {
-				let existingModule = aModules.find(m => m.moduleName === moduleName);
-				return existingModule || { moduleName, is_write: false };
+			// Ensure permissions array exists
+			if (!oData.permissions) {
+				oData.permissions = [];
+			}
+		
+			// Fetch the correct model before accessing it
+			let oViewModel = this.getView().getModel("view"); // 🔥 Define oViewModel properly
+			let aAllPermissions = oViewModel ? oViewModel.getProperty("/permissions") : [];
+		
+			console.log("🔹 Selected Keys:", this.byId("permissionsMultiCombo").getSelectedKeys());
+			console.log("🔹 Existing Permissions:", oData.permissions);
+			console.log("🔹 All Permissions (Reference):", aAllPermissions);
+		
+			// Convert selected keys into permission objects
+			let aUpdatedPermissions = this.byId("permissionsMultiCombo").getSelectedKeys().map(permissionId => {
+				// Find existing permission by matching permissionId
+				let existingPermission = oData.permissions.find(p => String(p.permissionId) === String(permissionId));
+		
+				// Find the module name and is_write value from the reference permissions (aAllPermissions)
+				let permissionData = aAllPermissions.find(p => String(p.id) === String(permissionId));
+				console.log("permissionData:", permissionData);
+		
+				let moduleName = permissionData ? permissionData.name : "Unknown"; // ✅ Should now work
+				let is_write = permissionData ? permissionData.is_write : false;
+		
+				console.log(`🔸 Permission ID: ${permissionId} → Module: ${moduleName}, Write: ${is_write}`);
+		
+				return existingPermission || { 
+					permissionId, 
+					moduleName, 
+					is_write 
+				};
 			});
 		
-			// Update model with new modules list
-			oDialogModel.setProperty("/modules", aUpdatedModules);
+			console.log("🔹 Updated Permissions:", aUpdatedPermissions);
+		
+			// Update model with new permissions list
+			oDialogModel.setProperty("/permissions", aUpdatedPermissions);
 		},
 		
+		
+		
+		
+		
 		onWriteCheckboxChange: function (oEvent) {
-			let oDialogModel = this.getView().getModel("RoleDialog");
+			let oDialogModel = this.getView().getModel("dialogModel");
 			let oContext = oEvent.getSource().getBindingContext("dialogModel");
-			let oModule = oContext.getObject();
-			console.log("oModule:", oModule);
+			let oPermission = oContext.getObject();
+		
+			console.log("odialogModel onwrite:", oDialogModel);
 		
 			// Toggle the write permission
-			oModule.is_write = oEvent.getParameter("selected");
+			oPermission.is_write = oEvent.getParameter("selected");
 		
 			// Refresh the model
-			this.oDialogModel.refresh();
+			oDialogModel.refresh();
 		},
 
 		//#region EDIT Function
@@ -872,52 +971,69 @@ sap.ui.define([
 		
 			let oTable = this.byId("TableRole");
 			let aSelectedIndices = oTable.getSelectedIndices();
-		
-			if (aSelectedIndices.length !== 1) {
+			if (aSelectedIndices.length == 0) {
 				sap.m.MessageToast.show("Please select one role to edit.");
 				this.onRefresh();
 				return;
+			}else if (aSelectedIndices.length !== 1) {
+				sap.m.MessageToast.show("Please select only one row to edit.");
+				this.onRefresh();
+				return;
 			}
-		
+			
 			let oContext = oTable.getContextByIndex(aSelectedIndices[0]);
 			let oSelectedRole = oContext ? oContext.getObject() : null;
-		
+			
+			console.log("oSelectedRole permissions:", oSelectedRole);
 			if (!oSelectedRole) {
 				sap.m.MessageToast.show("No role selected.");
 				this.onRefresh();
 				return;
 			}
-		
+			
 			let oDialogModel = this.getView().getModel("dialogModel");
-		
+			console.log("odiagModel on editrole:", oDialogModel);
 			if (!oDialogModel) {
 				oDialogModel = new sap.ui.model.json.JSONModel();
+				this.onRefresh();
 				this.getView().setModel(oDialogModel, "dialogModel");
 			}
+			
+		
 			console.log("oSelectedRole.permis:", oSelectedRole);
+		
 			// Extract selected permission IDs instead of names
 			let selectedKeys = oSelectedRole.permissions
 				? oSelectedRole.permissions.map(perm => perm.permissionId) // Using ID instead of moduleName
 				: [];
 		
+			// Map module IDs to human-readable names
+			var oViewModel = this.getView().getModel("view");
+			var aAllPermissions = oViewModel.getProperty("/permissions"); // Fetch all permissions from the view model
+			console.log("aAllPermissions on editrole:", aAllPermissions);
+			
+			var aPermissions = oSelectedRole.permissions.map(perm => {
+				var oPermission = aAllPermissions.find(p => p.id === perm.permissionId); // Use permissionId instead of moduleName
+				console.log("perm.is_write:", perm.is_write);
+				return {
+					permissionId: perm.permissionId, // Ensure permissionId is included
+					moduleName: oPermission ? oPermission.name : perm.moduleName, // Use human-readable name if available
+					is_write: perm.is_write // Ensure is_write is included
+				};
+			});
+		
 			// Set only necessary data in dialog model
 			oDialogModel.setData({
 				idRole: oSelectedRole.id,
 				roleName: oSelectedRole.name,
-				permissionskeys: selectedKeys
+				permissionskeys: selectedKeys,
+				permissions: aPermissions
 			});
 		
+			console.log("oDialogModel on editrole:", oDialogModel.getData());
 			this.onRefresh();
 			this.byId("RoleDialog").open();
 		},
-		
-		// onPermissionSelectionChange: function (oEvent) {
-		// 	var aSelectedKeys = oEvent.getSource().getSelectedKeys();
-		// 	var oDialogModel = this.getView().getModel("dialogModel");
-		
-		// 	// Update the dialog model with the selected permissions
-		// 	oDialogModel.setProperty("/permissions", aSelectedKeys);
-		// },
 
 		_editUser: function()
 		{
@@ -1411,13 +1527,21 @@ sap.ui.define([
 
 		//#region formatter
 		formatPermission: function (permissions) {
-			// Assuming permissions is an array of objects and you want to check if any permission allows writing
-			if (permissions && permissions.length > 0) {
-				const hasWritePermission = permissions.some(perm => perm.isWrite);
-				return hasWritePermission ? "read" : "read/write";
+			console.log("Permissions received:", permissions);
+		
+			if (!Array.isArray(permissions) || permissions.length === 0) {
+				return ""; // Return empty string if permissions are not valid
 			}
-			return "read";
+		
+			return permissions
+				.map(perm => `${perm.is_write ? "read/write" : "read"}`)
+				.join("\n"); // Convert array to a formatted string with new lines
 		}
+		
+		
+		
+
+		
 		//#endregion
 	
 	});
