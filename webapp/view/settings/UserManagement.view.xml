@@ -61,32 +61,38 @@
                     stretch="{device>/system/phone}"
                     model="dialogModel"
                     >
-                    <m:VBox class="sapUiSmallMargin">                                           
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                    <l:VerticalLayout class="sapUiContentPadding" width="100%">   
+                        <m:VBox class="sapUiSmallMargin">                            
                             <m:Label text="Username" labelFor="usernameUNInput" />
                             <m:Input
                                 id="usernameUNInput"
                                 width="100%"
                                 placeholder="Enter username here..."
-                                value="{dialogModel>/username}" />
-                        </m:HBox>
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                                value="{dialogModel>/username}"
+                                valueState="{dialogModel>/usernameState}"
+                                valueStateText="{dialogModel>/usernameErrorText}"
+                                liveChange="onUsernameChange"
+                                />                       
                             <m:Label text="Fullname" labelFor="fullNameUNInput" />
                             <m:Input
                                 id="fullnameUNInput"
                                 width="100%"
                                 placeholder="Enter fullname here..."
-                                value="{dialogModel>/fullname}" />
-                        </m:HBox>
-                         <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                                value="{dialogModel>/fullname}" 
+                                valueState="{dialogModel>/fullnameState}"
+                                valueStateText="{dialogModel>/fullnameErrorText}"
+                                liveChange="onFullnameChange"
+                                />                       
                             <m:Label text="Email" labelFor="emailUNInput" />
                             <m:Input
                                 id="emailUNInput"
                                 width="100%"
                                 placeholder="Enter email here..."
-                                value="{dialogModel>/email}" />
-                        </m:HBox>
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                                value="{dialogModel>/email}"
+                                valueState="{dialogModel>/emailState}"
+                                valueStateText="{dialogModel>/emailErrorText}"
+                                liveChange="onEmailChange"
+                                />
                             <m:Label text="Roles" labelFor="rolesUNCombo" />
                             <m:MultiComboBox
                                 id="rolesUNCombo"
@@ -95,11 +101,15 @@
                                 selectedKeys="{dialogModel>/roles}" 
                                 items="{
                                     path: 'view>/roles'
-                                }">
-                                <core:Item key="{view>idRoles}" text="{view>rolesName}" />
+                                }"
+                                valueState="{dialogModel>/rolesState}"
+                                valueStateText="{dialogModel>/rolesErrorText}"
+                                selectionChange="onRolesChange"
+                                >
+                                <core:Item key="{view>idRoles}" text="{view>rolesName}" 
+                                
+                                />
                             </m:MultiComboBox>
-                        </m:HBox>                                           
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
                             <m:Label text="Branch Code" labelFor="branchCodeUNCombo" />
                             <m:ComboBox
                                 id="branchCodeUNCombo"
@@ -108,19 +118,15 @@
                                 selectedKey="{dialogModel>/clientCode}" 
                                 items="{
                                     path: 'view>/clients'
-                                }">
+                                }"
+                                valueState="{dialogModel>/clientState}"
+                                valueStateText="{dialogModel>/clientErrorText}"
+                                selectionChange="onClientChange"
+                                >
                                 <core:Item key="{view>clientCode}" text="{view>clientCode}" />
                             </m:ComboBox>
-                        </m:HBox>
-                        <!-- <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
-                            <m:Label text="Division" labelFor="divisionUNInput" />
-                            <m:ComboBox
-                                id="divisionUNInput"
-                                width="100%"
-                                placeholder="Enter devision here..."
-                                value="{dialogModel>/devision}" />
-                        </m:HBox> -->
-                    </m:VBox>                   
+                        </m:VBox>    
+                    </l:VerticalLayout>                  
                     <!-- Toolbar Buttons -->
                     <m:Toolbar>
                         <m:ToolbarSpacer />
@@ -153,106 +159,106 @@
                     class="highlight-row-on-hover" 
                     sort=".onSortColumn">
                     <table:columns>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="clientCode">
                             <m:Label text="Branch Code" />
                             <table:template>
                                 <m:Text text="{view>clientCode}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="username">
                             <m:Label text="User Name" />
                             <table:template>
                                 <m:Text text="{view>username}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="fullname">
                             <m:Label text="Full Name" />
                             <table:template>
                                 <m:Text text="{view>fullname}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="devision">
                             <m:Label text="Devision" />
                             <table:template>
                                 <m:Text text="{view>devision}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="email">
                             <m:Label text="Email" />
                             <table:template>
                                 <m:Text text="{view>email}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="password">
                             <m:Label text="Password temp" />
                             <table:template>
                                 <m:Text text="{view>password}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="passwordStartAt">
                             <m:Label text="Password Start At" />
                             <table:template>
                                 <m:Text text="{view>passwordStartAt}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="online">
                             <m:Label text="Online" />
                             <table:template>
                                 <m:Text text="{view>online}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="status">
                             <m:Label text="Status" />
                             <table:template>
                                 <m:Text text="{view>status}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px" visible="{view>/showRolesId}">
+                        <table:Column width="400px" visible="{view>/showRolesId}" sortProperty="idRoles">
                             <m:Label text="Roles Id" />
                             <table:template>
                                 <m:Text text="{view>idRoles}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="roles">
                             <m:Label text="Roles" />
                             <table:template>
                                 <m:Text text="{view>roles}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="loginAt">
                             <m:Label text="Login at" />
                             <table:template>
                                 <m:Text text="{view>loginAt}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="logoutAt">
                             <m:Label text="Logout at" />
                             <table:template>
                                 <m:Text text="{view>logoutAt}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="resetAt">
                             <m:Label text="Reset At" />
                             <table:template>
                                 <m:Text text="{view>resetAt}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="createdBy">
                             <m:Label text="Created By" />
                             <table:template>
                                 <m:Text text="{view>createdBy}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="updatedBy">
                             <m:Label text="Updated By" />
                             <table:template>
                                 <m:Text text="{view>updatedBy}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="updatedAt">
                             <m:Label text="Updated At" />
                             <table:template>
-                                <m:Text text="{view>UpdatedAt}" class="paddingTopBottom" />
+                                <m:Text text="{view>updatedAt}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
                     </table:columns>

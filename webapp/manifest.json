@@ -28,7 +28,7 @@
 	},
 	"sap.ui5": {
 		"rootView": {
-			"viewName": "sap.ui.bni.toolpageapp.view.app",
+			"viewName": "sap.ui.bni.toolpageapp.view.App",
 			"type": "XML",
 			"id": "app",
 			"async": true
@@ -90,15 +90,25 @@
 		"routing": {
 			"config": {
 				"routerClass": "sap.m.routing.Router",
-				"controlId": "mainContents",
 				"viewType": "XML",
-				"controlAggregation": "pages",
+				"controlId": "mainApp",
+        		"controlAggregation": "pages",
 				"viewPath": "sap.ui.bni.toolpageapp.view",
 				"async": true
 			},
-			"routes": [		
+			"routes": [
 				{
 					"pattern": "",
+					"name": "login",
+					"target": "login"
+				},
+				{
+					"pattern": "app",
+					"name": "app",
+					"target": "app"
+				},
+				{
+					"pattern": "project",
 					"name": "project",
 					"target": "project"
 				},
@@ -137,6 +147,22 @@
 					]
 				},
 				{
+					"pattern": "MasterSettings/logManagement",
+					"name": "logManagement",
+					"target": [
+						"logManagement",
+						"masterSettings"
+					]
+				},
+				{
+					"pattern": "MasterSettings/branchOffice",
+					"name": "branchOffice",
+					"target": [
+						"branchOffice",
+						"masterSettings"
+					]
+				},
+				{
 					"pattern": "MasterSettings/RoleManagement",
 					"name": "roleManagement",
 					"target": [
@@ -146,16 +172,22 @@
 				}
 			],
 			"targets": {
-			
+				"login": {
+					"viewName": "Login",
+					"viewLevel": 1
+				},
+				"app": {
+					"viewName": "App",
+					"viewLevel": 2
+				},
 				"project": {
-					"viewId": "project",
-					"viewName": "Project"
+					"viewName": "Project",
+					"viewLevel": 2					
 				},
 				"TaskDetail": {
 					"viewName": "ProjectDetail",
-					"viewType": "XML",
-					"viewLevel": 2
-				},			
+					"viewType": "XML"
+				},
 				"appSettings": {
 					"viewId": "appSettings",
 					"viewName": "settings.AppSettings"
@@ -177,6 +209,20 @@
 				"userManagement": {
 					"viewId": "userManagement",
 					"viewName": "settings.UserManagement",
+					"controlId": "appSettings",
+					"controlAggregation": "detailPages",
+					"parent": "appSettings"
+				},
+				"logManagement": {
+					"viewId": "logManagement",
+					"viewName": "settings.logManagement",
+					"controlId": "appSettings",
+					"controlAggregation": "detailPages",
+					"parent": "appSettings"
+				},
+				"branchOffice": {
+					"viewId": "branchOffice",
+					"viewName": "settings.branchOffice",
 					"controlId": "appSettings",
 					"controlAggregation": "detailPages",
 					"parent": "appSettings"

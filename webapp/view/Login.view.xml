@@ -1,16 +1,27 @@
-<mvc:View controllerName="sap.ui.bni.toolpageapp.controller.login"  
+<!-- <mvc:View
+  controllerName="sap.ui.bni.toolpageapp.controller.Login"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m">
+  <VBox class="sapUiSmallMargin">
+    <Input id="username" placeholder="Username" />
+    <Input id="password" placeholder="Password" type="Password" />
+    <Button text="Login" press="onLoginPress" />
+  </VBox>
+</mvc:View> -->
+
+<mvc:View controllerName="sap.ui.bni.toolpageapp.controller.Login"  
 xmlns:mvc="sap.ui.core.mvc"  
 xmlns="sap.m"
 xmlns:tnt="sap.tnt"
 >
-    <App>
-        <tnt:ToolPage id="Login">
+    <App id="login">
+        <tnt:ToolPage id="loginPage">
             
-            <tnt:header>
+            <!-- <tnt:header>
                 <tnt:ToolHeader>
                     <Button icon="sap-icon://home" />
                 </tnt:ToolHeader>
-            </tnt:header>
+            </tnt:header> -->
             
             <tnt:mainContents>
                 <VBox class="loginContainer" alignItems="Center" justifyContent="Center" height="100%">

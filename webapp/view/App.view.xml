@@ -1,13 +1,13 @@
 <mvc:View height="100%"
-	controllerName="sap.ui.bni.toolpageapp.controller.App"
-	xmlns="sap.m"
-	xmlns:mvc="sap.ui.core.mvc"
-	xmlns:tnt="sap.tnt">
+    controllerName="sap.ui.bni.toolpageapp.controller.App"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:tnt="sap.tnt">
 	<tnt:ToolPage
 		id="app"
 		class="sapUiBniToolPage">
 		<tnt:header>
-			<tnt:ToolHeader>
+			<tnt:ToolHeader visible="{view>/isLoginPage}">
 				<Button
 					id="sideNavigationToggleButton"
 					icon="sap-icon://menu2"
@@ -23,31 +23,10 @@
 					text="{i18n>appTitle}"
 					level="H2" />
 				<ToolbarSpacer/>
-				<!-- <Button
-					id="errorButton"
-					icon="sap-icon://message-popup"
-					visible="{= ${alerts>/alerts/errors}.length === 0 ? false : true }"
-					type="Transparent"
-					press=".onMessagePopoverPress"
-					tooltip="{i18n>errorButtonTooltip}">
-					<layoutData>
-						<OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
-					</layoutData>
-				</Button>
-				<Button
-					id="notificationButton"
-					icon="sap-icon://ui-notifications"
-					visible="{= ${alerts>/alerts/notifications}.length === 0 ? false : true }"
-					type="Transparent"
-					press=".onNotificationPress"
-					tooltip="{i18n>notificationButtonTooltip}">
-					<layoutData>
-						<OverflowToolbarLayoutData closeOverflowOnInteraction="false"/>
-					</layoutData>
-				</Button> -->
+				
 				<Button
 					id="userButton"
-					text="{i18n>userName}"
+					text="{user>/username}"
 					type="Transparent"
 					press=".onUserNamePress">
 					<layoutData>
@@ -57,7 +36,7 @@
 			</tnt:ToolHeader>
 		</tnt:header>
 		<tnt:sideContent>
-			<tnt:SideNavigation
+			<tnt:SideNavigation visible="{view>/isLoginPage}"
 				expanded="true"
 				selectedKey="{side>/selectedKey}">
 				<tnt:NavigationList
@@ -67,25 +46,29 @@
 					}">
 					<tnt:NavigationListItem
 						text="{path: 'side>titleI18nKey', formatter: '.getBundleText'}"
+						key="{side>key}"
 						icon="{side>icon}"
-						expanded="{side>expanded}"
+						select="onNavItemPress"
 						items="{
 							path: 'side>items',
 							templateShareable: false
-						}"
-						key="{side>key}"
-						href="#/{side>key}">
+						}">
 						<tnt:NavigationListItem
 							text="{path: 'side>titleI18nKey', formatter: '.getBundleText'}"
 							key="{side>key}"
-							href="#/{side>key}">
-						</tnt:NavigationListItem>
-					</tnt:NavigationListItem>
+							select="onNavItemPress" />
+					</tnt:NavigationListItem>					
 				</tnt:NavigationList>
 			</tnt:SideNavigation>
-		</tnt:sideContent>	
+		</tnt:sideContent>
 		<tnt:mainContents>
-			<App id="mainContents"/>
+			<App id="mainApp">
+				<pages>
+					<mvc:XMLView
+						id="projectPage"
+						viewName="sap.ui.bni.toolpageapp.view.Project" />
+				</pages> <!-- Routing akan mengisi halaman di sini -->
+			</App>
 		</tnt:mainContents>
 	</tnt:ToolPage>
 </mvc:View>

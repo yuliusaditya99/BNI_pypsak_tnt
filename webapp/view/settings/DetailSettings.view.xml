@@ -46,8 +46,8 @@
                     draggable="true"
                     resizable="true"
                     stretch="{device>/system/phone}">
-                    <m:VBox class="sapUiSmallMargin">
-                        <m:HBox justifyContent="Start" alignItems="Center" class="sapUiSmallMarginBottom">
+                    <l:VerticalLayout class="sapUiContentPadding" width="100%">
+                        <m:VBox class="sapUiSmallMargin"> 
                             <m:Label text="Choose Excel File " labelFor="fileUploader" />
                             <u:FileUploader
                                 id="fileUploader"
@@ -55,32 +55,31 @@
                                 placeholder="Choose a file..."
                                 fileType="xlsx,xls"
                                 change=".onFileChange"
-                                tooltip="Only Excel files are allowed" />
-                        </m:HBox>
-                        <m:MessageStrip
-                            id="messageStrip"
-                            text="Please upload an Excel file in .xls or .xlsx format."
-                            type="Information"
-                            showIcon="true"
-                            visible="true"
-                            class="sapUiSmallMarginBottom" />
-                    </m:VBox>
-                    <m:Toolbar>
-                        <m:ToolbarSpacer />
-                        <m:Button
-                            id="btnUpload"
-                            text="Upload"
-                            type="Emphasized"
-                            press=".onUpload" />
-                        <m:Button
-                            id="btnClose"
-                            text="Cancel"
-                            press=".onCloseDialog" />
-                    </m:Toolbar>
+                                tooltip="Only Excel files are allowed" />                            
+                            <m:MessageStrip
+                                id="messageStrip"
+                                text="Please upload an Excel file in .xls or .xlsx format."
+                                type="Information"
+                                showIcon="true"
+                                visible="true"
+                                class="sapUiSmallMarginBottom" />
+                            <m:Toolbar>
+                            <m:ToolbarSpacer />
+                            <m:Button
+                                id="btnUpload"
+                                text="Upload"
+                                type="Emphasized"
+                                press=".onUpload" />
+                            <m:Button
+                                id="btnClose"
+                                text="Cancel"
+                                press=".onCloseDialog" />
+                            </m:Toolbar>
+                        </m:VBox>
+                    </l:VerticalLayout>
                 </m:Dialog>
                 <m:HBox justifyContent="End" width="auto">
                     <m:Button id="NewDetail" icon="sap-icon://add-document" press=".onNew" tooltip="{i18n>newButtonTooltip}" class="sapUiTinyMarginEnd" />
-                    <!--<m:Button id="EditDetail" icon="sap-icon://write-new-document" press=".onEdit" tooltip="{i18n>editButtonTooltip}" class="sapUiTinyMarginEnd" />-->
                     <m:Button id="RefreshDetail" icon="sap-icon://synchronize" press=".onRefresh" tooltip="{i18n>refreshButtonTooltip}" class="sapUiTinyMarginEnd" />
                     <m:Button id="DeleteDetail" icon="sap-icon://delete" press=".onDelete" tooltip="{i18n>deleteButtonTooltip}" class="sapUiTinyMarginEnd" />
                 </m:HBox>                
@@ -96,31 +95,32 @@
                     class="highlight-row-on-hover" 
                     >
                     <table:columns>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="fileName">
                             <m:Label text="Name" />
                             <table:template>
-                                <m:Text text="{view>fileName}" class="paddingTopBottom" />
+                                <!--<m:Text text="{view>fileName}" class="paddingTopBottom" />-->
+                                <m:Link text="{view>fileName}"  target="_blank" href="{view>filePeth}" press="onDownloadFile"/>
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="path">
                             <m:Label text="Path" />
                             <table:template>
                                 <m:Text text="{view>path}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="extension">
                             <m:Label text="Extension" />
                             <table:template>
                                 <m:Text text="{view>extension}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="createdBy">
                             <m:Label text="Created By" />
                             <table:template>
                                 <m:Text text="{view>createdBy}" class="paddingTopBottom" />
                             </table:template>
                         </table:Column>
-                        <table:Column width="400px">
+                        <table:Column width="400px" sortProperty="createdAt">
                             <m:Label text="Date Created" />
                             <table:template>
                                 <m:Text text="{view>createdAt}" class="paddingTopBottom" />

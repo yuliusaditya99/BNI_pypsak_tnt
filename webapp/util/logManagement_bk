@@ -1,0 +1,48 @@
+
+sap.ui.define(["sap/base/Log",
+     "sap/ui/core/Component"],
+     
+    function(Log, Component) {
+    "use strict";
+
+    function addToLogModel(type, message, details) {
+        console.log("masuk model log");
+        var oComponent = Component.getOwnerComponentFor(sap.ui.getCore().byId("mainApp"));
+        
+        console.log("oComponent : ",oComponent);
+        if (oComponent) {
+            var oLogModel = oComponent.getModel("logModel");
+            var oData = oLogModel.getData();
+            oData.logs.unshift({
+                type: type,
+                message: message,
+                details: details || "-",
+                timestamp: new Date().toISOString()
+            });
+            oLogModel.refresh();
+            console.log("after add model");
+        }
+    }
+
+    return {
+        logInfo: function(message, details) {
+            Log.info(message, details);
+            addToLogModel("Info", message, details);
+        },
+
+        logWarning: function(message, details) {
+            Log.warning(message, details);
+            addToLogModel("Warning", message, details);
+        },
+
+        logError: function(message, details) {
+            Log.error(message, details);
+            addToLogModel("Error", message, details);
+        },
+
+        logDebug: function(message, details) {
+            Log.debug(message, details);
+            addToLogModel("Debug", message, details);
+        }
+    };
+});
