@@ -21,7 +21,7 @@
             <m:HBox justifyContent="SpaceBetween" width="100%" >
                 <m:HBox class="sapUiSmallMargin">
                     <m:ComboBox
-                        id="columnUserMComboBox"
+                        id="columnRoleMComboBox"
                         selectedKey="name"
                         width="150px"
                         change=".onColumnChange">
@@ -164,7 +164,7 @@
                     selectionMode="MultiToggle"
                     cellClick=".onCellClick">
                     <table:columns>
-                        <table:Column width="150px" sortProperty="view/name">
+                        <table:Column width="150px" sortProperty="view>name">
                             <m:Label text="Name"/>
                             <table:template>
                                 <m:Text text="{view>name}" wrapping="false"/>

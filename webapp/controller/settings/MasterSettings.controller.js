@@ -1698,7 +1698,11 @@ sap.ui.define([
                 oTable = this.byId("TableUser");
             } else if (sViewId.includes("detailSettings")) {
                 oTable = this.byId("TableUpload");
-            }		
+            } else if (sViewId.includes("roleManagement")) {
+				oTable = this.byId("TableRole");
+			} else if (sViewId.includes("branchOffice")) {
+				oTable = this.byId("TableClient");
+			}	
             var oBinding = oTable.getBinding("rows");
 
             // Menyaring berdasarkan kolom yang dipilih
