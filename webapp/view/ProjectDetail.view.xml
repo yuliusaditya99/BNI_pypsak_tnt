@@ -61,30 +61,10 @@
 
 				<HBox justifyContent="End" width="auto">
 					<Button
-						id="NewProjectDetail"
-						icon="sap-icon://add-document"
-						press=".onNew"
-						tooltip="{i18n>newButtonTooltip}"
-						class="sapUiTinyMarginEnd"
-						/>
-					<Button
-						id="EditProjectDetail"
-						icon="sap-icon://write-new-document"
-						press=".onEdit"
-						tooltip="{i18n>editButtonTooltip}"
-						class="sapUiTinyMarginEnd"
-						/>
-					<Button
 						id="RefreshProjectDetail"
 						icon="sap-icon://synchronize"
 						press=".onRefresh"
 						tooltip="{i18n>refreshButtonTooltip}"
-						class="sapUiTinyMarginEnd"/>
-					<Button
-						id="DeleteProjectDetail"
-						icon="sap-icon://delete"
-						press=".onDelete"
-						tooltip="{i18n>deleteButtonTooltip}"
 						class="sapUiTinyMarginEnd"/>
 				</HBox>						
 			</HBox>

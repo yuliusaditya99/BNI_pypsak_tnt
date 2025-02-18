@@ -1702,7 +1702,9 @@ sap.ui.define([
 				oTable = this.byId("TableRole");
 			} else if (sViewId.includes("branchOffice")) {
 				oTable = this.byId("TableClient");
-			}	
+			} else if (sViewId.includes("logManagement")) {
+				oTable = this.byId("TableLogManagement");
+			}
             var oBinding = oTable.getBinding("rows");
 
             // Menyaring berdasarkan kolom yang dipilih
@@ -1738,8 +1740,7 @@ sap.ui.define([
                 this.onDeleteFile();
             } else if (sViewId.includes("roleManagement")) {
 				this.onDeleteRole();
-			} 
-			else if (sViewId.includes("branchOffice")) {
+			} else if (sViewId.includes("branchOffice")) {
 				this.onDeleteBranch();
 			}
 		},
