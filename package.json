@@ -5,19 +5,20 @@
   "author": "SAP SE",
   "description": "UI5 Demo App - Toolpage App",
   "devDependencies": {
-    "@ui5/cli": "^4.0.12"
+    "@ui5/cli": "^4.0.12",
+    "ui5-middleware-simpleproxy": "^3.4.0"
   },
   "scripts": {
-		"start": "ui5 serve",
-		"lint": "eslint webapp && ui5lint",
-		"test-ui5": "start-server-and-test start http://localhost:8080 test-runner-coverage",
-		"test-runner": "ui5-test-runner --port 8081 --url http://localhost:8080/test/testsuite.qunit.html",
-		"test-runner-coverage": "ui5-test-runner --port 8081 --url http://localhost:8080/test/testsuite.qunit.html --coverage -ccb 100 -ccf 100 -ccl 100 -ccs 100",
-		"test": "npm run lint && npm run test-ui5",
-		"build": "ui5 build -a --clean-dest",
-		"build-self-contained": "ui5 build self-contained -a --clean-dest",
-		"serve-dist": "ws --compress -d dist"
-	},
+    "start": "ui5 serve",
+    "lint": "eslint webapp && ui5lint",
+    "test-ui5": "start-server-and-test start http://localhost:8080 test-runner-coverage",
+    "test-runner": "ui5-test-runner --port 8081 --url http://localhost:8080/test/testsuite.qunit.html",
+    "test-runner-coverage": "ui5-test-runner --port 8081 --url http://localhost:8080/test/testsuite.qunit.html --coverage -ccb 100 -ccf 100 -ccl 100 -ccs 100",
+    "test": "npm run lint && npm run test-ui5",
+    "build": "ui5 build -a --clean-dest",
+    "build-self-contained": "ui5 build self-contained -a --clean-dest",
+    "serve-dist": "ws --compress -d dist"
+  },
   "license": "ISC",
   "keywords": [],
   "dependencies": {

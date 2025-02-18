@@ -63,8 +63,9 @@ sap.ui.define([
                     params = { start: 0, length: paramLength, orders: "id", dirs: "desc" };
                     url = Config.paths.apiBaseUrl + '/api/task';
                 }        
-                taskResponse = await this.appConfig.allAPI("get", header, params, url);        
-                if (!taskResponse) { 
+                taskResponse = await this.appConfig.allAPI("get", header, params, url);
+                
+                if (taskResponse.message == "Access denied") { 
                     MessageToast.show("Token expired.", { duration: 3000 });                   
                     const oView = this.getView();
                                 const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -72,7 +73,7 @@ sap.ui.define([
                                 console.log("Router:", oRouter);
                                 oRouter.navTo("login");
                 }        
-                //console.log("taskResponse:", taskResponse);        
+                console.log("taskResponse get :", taskResponse);        
                 const tasktableData = taskResponse.payloads.data;
                 const pageCount = taskResponse.payloads.per_page;
                 const totalRowCount = taskResponse.payloads.total;        
@@ -303,27 +304,25 @@ sap.ui.define([
 							console.log("Selected IDs: ", aIds);
                             const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/task/delete");                            
                             console.log("Response Delete: ", response);
-                            if (!response) { 
+                            if (response.message == "Access denied" ) { 
                                 MessageToast.show("Token expired.", { duration: 3000 });
                                 const oView = this.getView();
                                 const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
                                 const oRouter = oComponent.getRouter();
                                 console.log("Router:", oRouter);
                                 oRouter.navTo("login");                     
-                                //return; // Hentikan eksekusi jika token expired
                             }
 
                             this.onRefresh();		
-							// Tampilkan notifikasi
-							if (response.data.error) {
-								MessageToast.show(response.data.message, { duration: 3000 });
+							if (response.error) {
+								MessageToast.show(response.message, { duration: 3000 });
 							} else {
 								MessageToast.show("Data deleted successfully.", { duration: 3000 });
 							}
 						} catch (error) {
 							// Tangani error dari Axios
                             console.log("errror : ",error);
-							if (error.response) {
+							if (error.response.data) {
 								MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
 							} else {
 								MessageToast.show("An unexpected error occurred.", { duration: 3000 });
@@ -426,8 +425,7 @@ sap.ui.define([
 		},
 
         _loadProcessData: async function () {
-           //const fileResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
-           // const fileResponse = await this.appConfig.callAPI("get","","",Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
+
            console.log("_loadProcessData");
            const header = {  "Content-Type": "application/json" };
            const params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
@@ -440,9 +438,17 @@ sap.ui.define([
                                 const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
                                 const oRouter = oComponent.getRouter();
                                 console.log("Router:", oRouter);
-                                oRouter.navTo("login");                     
-            //return; // Hentikan eksekusi jika token expired
+                                oRouter.navTo("login"); 
             }
+
+            if (taskResponse.message == "Access denied") { 
+                MessageToast.show("Token expired.", { duration: 3000 });                   
+                const oView = this.getView();
+                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                const oRouter = oComponent.getRouter();
+                console.log("Router:", oRouter);
+                oRouter.navTo("login"); 
+            }            
            
            console.log("taskResponse 2 : ",taskResponse);        
             
@@ -453,8 +459,6 @@ sap.ui.define([
               fileName: file.file_name
             }));
             console.log("Files:", files);
-        
-            // Langkah 3: Tambahkan data ke model "view"
             const oViewModel = this.getModel("view");
             if (oViewModel) {
               oViewModel.setProperty("/filename", files);
@@ -507,8 +511,10 @@ sap.ui.define([
                     let requestData;
                     let url;
                     let headers = {  "Content-Type": "application/json" };
+                    let task;
     
                     if (idTask) {
+                        task = "Update";
                         requestData = {
                             title: titleValue,
                             as_of_date: asOfDateValue,
@@ -521,33 +527,13 @@ sap.ui.define([
                         if (requestData.description === "") {
                             delete requestData.description;
                         }
-                        console.log("requestData : ",requestData);
-       
-                        sap.ui.core.BusyIndicator.show(0);
+                        console.log("requestData : ",requestData);                        
                         oResponse = await this.appConfig.allAPI("put", headers, requestData, url);
-                        if (!oResponse) { 
-                            MessageToast.show("Token expired.", { duration: 3000 });                   
-                            const oView = this.getView();
-                            const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                            const oRouter = oComponent.getRouter();
-                            console.log("Router:", oRouter);
-                            oRouter.navTo("login");                     
-                           
-                        }
-    
-                        console.log("oResponse.error : ",oResponse.error);
-                        if(oResponse.error==true)
-                        {
-                            MessageToast.show("Failed Update Data : ",oResponse.message);
-                        }
-                        else
-                        {
-                            MessageToast.show("Update data successfully.");
-                        }
+                       
+                        
                         
                     } else {
-                        // Create data
-                        
+                        task = "Add";                        
                         url = Config.paths.apiBaseUrl +'/api/task'
                         requestData = {
                             title: titleValue,
@@ -559,44 +545,71 @@ sap.ui.define([
                         if (requestData.description === "") {
                             delete requestData.description;
                         }
-                        // console.log("requestData.description : ",requestData.description);
-                        // oRequestBody =  JSON.stringify(requestData); 
-                        // sap.ui.core.BusyIndicator.show(0);
-                        // console.log("Creating new data");
-    
-                        sap.ui.core.BusyIndicator.show(0);
+
+                       
                         oResponse = await this.appConfig.allAPI("post", headers, requestData, url);
                         if (!oResponse) { 
                             MessageToast.show("Token expired.", { duration: 3000 });                   
                             const oView = this.getView();
-                                    const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                    const oRouter = oComponent.getRouter();
-                                    console.log("Router:", oRouter);
-                                    oRouter.navTo("login");                     
+                            const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                            const oRouter = oComponent.getRouter();
+                            console.log("Router:", oRouter);
+                            oRouter.navTo("login");                     
                             //return; // Hentikan eksekusi jika token expired
                         }
                         
                       
-                        console.log("oResponse Save :",oResponse)
-                        console.log("oResponse.error : ",oResponse.error);
-                        if(oResponse.error==true)
-                        {
-                            //oError.response.data.detail[0].msg
-                            MessageToast.show("Failed Add Data : ",oResponse.message);
-                        }
-                        else
-                        {
-                            MessageToast.show("Add data successfully.");
-                        }
+                        // console.log("oResponse Save :",oResponse)
+                        // console.log("oResponse.error : ",oResponse.error);
+                        // if(oResponse.error==true)
+                        // {
+                        //     //oError.response.data.detail[0].msg
+                        //     MessageToast.show("Failed Add Data : ",oResponse.message);
+                        // }
+                        // else
+                        // {
+                        //     MessageToast.show("Add data successfully.");
+                        //     console.log("Response:", oResponse.data);
+                        //     oDialog.close();
+                        //     this.onRefresh(); 
+                        // }
     
-                        sap.ui.core.BusyIndicator.hide();
+                        // sap.ui.core.BusyIndicator.hide();
                     
                     }
                     
-                    
-                    console.log("Response:", oResponse.data);
-                    oDialog.close();
-                    this.onRefresh();                
+                    if(oResponse.error==true)
+                    {
+                        if(oResponse.message == "Access denied")
+                        {
+                            MessageToast.show("Token expired.", { duration: 3000 });                   
+                            const oView = this.getView();
+                            const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                            const oRouter = oComponent.getRouter();
+                            console.log("Router:", oRouter);
+                            oRouter.navTo("login");     
+                        }
+                        else
+                        {
+                            oDialogModel.setProperty("/processState", "Error");
+                            oDialogModel.setProperty("/processErrorText", oResponse.message);
+                        }                  
+                        
+                        
+                    }
+                    else if(oResponse.type=="value_error")
+                    {
+                        oDialogModel.setProperty("/processState", "Error");
+                        oDialogModel.setProperty("/processErrorText", oResponse.msg);
+                    }
+                    else
+                    {
+                        MessageToast.show("Update data successfully.");
+                        console.log("Response:", oResponse.data);
+                        oDialog.close();
+                        this.onRefresh(); 
+                    }
+                                   
     
                 } 
                 catch (oError) {
@@ -626,9 +639,6 @@ sap.ui.define([
                         console.error("Unexpected error:", oError);
                         MessageToast.show("An unexpected error occurred.", { duration: 3000 });
                     }
-                }
-                finally {
-                    sap.ui.core.BusyIndicator.hide();
                 }
             }
             else

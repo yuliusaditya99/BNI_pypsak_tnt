@@ -17,27 +17,10 @@ sap.ui.define([
         hideLoading: function () {
             this.busyDialog.close();
         },
-
-        // // Load App Config
-        // loadConfig: async function () {
-        //     try {
-        //         this.showLoading();
-        //         const response = await axios.get("/config_ui");
-        //         const config = response.data;
-
-        //         this.appName = config.app_name;
-        //         this.token = config.token;
-        //         localStorage.setItem("authToken", this.token);
-        //     } catch (error) {
-        //         MessageBox.error("Failed to load configuration.");
-        //     } finally {
-        //         this.hideLoading();
-        //     }
-        // },
-
         
         login: async function (credentials) {
             axios.defaults.headers.common["Authorization"] = "Bearer " + localStorage.getItem("authToken");
+            axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
             try {
                 this.showLoading();
                 console.log("Starting login process with credentials:", credentials);
@@ -50,6 +33,7 @@ sap.ui.define([
                 const id = user.id;
                 const webSocket = response.data.payloads.ws + "/ws/" + id;
                 const userNameLogin  = JSON.parse(JSON.stringify(user));
+                
 
                 console.log("Token:", token);
                 console.log("WebSocket URL:", webSocket);
@@ -62,6 +46,10 @@ sap.ui.define([
                 }
         
                 axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+                axios.defaults.headers.common["Access-Control-Allow-Origin"] = "*";
+                axios.defaults.headers.common["msi-content-access"] = true;                
+                axios.defaults.headers.common["X-CSRF-TOKEN"] = $("meta[name='csrf-token']").attr("content");
+                //axios.defaults.withCredentials = true;
                 return response.data;
             } catch (error) {
                 console.error("Login error:", error);
@@ -71,44 +59,92 @@ sap.ui.define([
             }
         },
         
-        // allAPI: async function (type, header, body, url) {
+        // putAPI: async function (type, header, url) {
         //     if (!type) {
-        //         //MessageToast.show("Error: API request type is missing.");
+        //         console.error("Error: API request type is missing.");
         //         return null;
-        //     }            
+        //     }
+        //     console.log("masuk put api");
+        
         //     try {
-        //         console.log("body API : ",body);
-        //         console.log("header API : ",header);
-        //         console.log("header url : ",url);
-        //         // Gunakan axios dengan method dinamis
+        //         const body = {
+        //             title: "test9",
+        //             as_of_date: "2025-02-14",
+        //             process_definition: 2,
+        //             id: 62,
+        //             created_by: 1,
+        //             updated_by: 1,
+        //             created_at: "2025-02-14T16:15:03",
+        //             updated_at: "2025-02-15T23:39:30",
+        //             createdBy: {
+        //                 user_name: "admin",
+        //                 full_name: null,
+        //                 email: null,
+        //                 client_code: null,
+        //                 id: 1
+        //             },
+        //             updatedBy: {
+        //                 user_name: "admin",
+        //                 full_name: null,
+        //                 email: null,
+        //                 client_code: null,
+        //                 id: 1
+        //             },
+        //             file: {
+        //                 path: "main/src/storages/text",
+        //                 file_name: "BNI_Template_1_1739441554.573675.xlsx",
+        //                 content_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        //                 extension: "xlsx",
+        //                 size_bytes: 12809,
+        //                 id: 34
+        //             }
+        //         };
+        
+        //         console.log("body API:", body);
+        //         console.log("header API:", header);
+        //         console.log("url API:", url);
+                
+        //         const token = localStorage.getItem("authToken");
+        
+        //         if (this.isJWTExpired(token)) {
+        //             console.error("Token expired. Please log in again.");
+        //             return null;
+        //         }
+        
+        //         if (!header) {
+        //             header = {};
+        //         }
+        //         if (!header.Authorization && token) {
+        //             header.Authorization = "Bearer " + token;
+        //         }
+        
         //         const config = {
         //             method: type.toLowerCase(),
         //             url,
-        //             headers: header
+        //             headers: header,
+        //             data: type.toLowerCase() === "get" ? null : body
         //         };
         
-        //         // GET menggunakan `params`, lainnya pakai `data`
-        //         if (type.toLowerCase() === "get") {
-        //             config.params = body;
-        //         } else {
-        //             config.data = body;
-        //         }
-        //         console.log("config : ",config);
+        //         console.log("config:", config);
         //         const response = await axios(config);
-        //         console.log("response : ",response.data);
-        //         return response.data; // Langsung kembalikan data dari API
-
-        //     } catch (error) {
-        //         console.log("error :",);
-        //         console.error("API Request Error:", error);
-        //         console.log("error :",error.response.data.detail[0].msg);
-        //         //MessageBox.error(`API Error: ${error.message}`);
-        //         return null;
+        //         console.log("response:", response.data);
+        
+        //         return response.data;
+        //     } 
+        //     catch (error) {
+        //         if (error.response) {
+        //             console.log("Response Error:", error.response.status);
+        //             console.log("Response Data:", error.response.data);
+        //             sap.m.MessageToast.show(error.response.data[0]?.msg || "Terjadi kesalahan.");
+        //         } else if (error.request) {
+        //             console.log("No response received:", error.request);
+        //             sap.m.MessageToast.show("Tidak ada respons dari server.");
+        //         } else {
+        //             console.log("Error:", error.message);
+        //             sap.m.MessageToast.show("Terjadi kesalahan jaringan.");
+        //         }
         //     }
-            
-
-                   
-        // }, 
+        // },        
 
         allAPI: async function (type, header, body, url) {
             if (!type) {
@@ -145,11 +181,12 @@ sap.ui.define([
                 } else {
                     config.data = body;
                 }
-        
+                sap.ui.core.BusyIndicator.show(0);
                 console.log("config:", config);
                 const response = await axios(config);
                 console.log("response:", response.data);
                 console.log("body setri : ",JSON.stringify(body))
+                sap.ui.core.BusyIndicator.hide();
 
                 if(JSON.stringify(body) === "{}")
                 {
@@ -162,18 +199,100 @@ sap.ui.define([
                 
             } 
             catch (error) {
-                console.error("API Request Error:", error);
-                if (error.response && error.response.data.detail) {
-                    console.log("error detail:", error.response.data.detail[0].msg);
-                    //sap.m.MessageBox.error("Error: " + error.response.data.detail[0].msg); // Tampilkan error dari API
+                // console.log("API Request Error:", error);
+                // console.log("API Request Error response:", error.response);
+                // console.log("API Request Error request:", error.request);
+                // console.log("API Request Error message:", error.message);
+                // if (error.response && error.response.data.detail) {
+                //     console.log("error detail:", error.response.data.detail[0].msg);
+                //     //sap.m.MessageBox.error("Error: " + error.response.data.detail[0].msg); // Tampilkan error dari API
+                // } else {
+                //     sap.m.MessageBox.error("Terjadi kesalahan saat menghubungi server.");
+                // }
+                if (error.response) {
+                    // Server merespons dengan status error (4xx, 5xx)
+                    console.log("Response Error:", error.response.status);
+                    console.log("Response Data:", error.response.data);
+                    //return error.response.data;
+                    if (Array.isArray(error.response.data)) {
+                        return error.response.data[0]; 
+                    } else {
+                        return error.response.data;
+                    }
+                    
+                    // Menampilkan pesan error ke UI
+                    //sap.m.MessageToast.show(error.response.data[0]?.msg || "Terjadi kesalahan.");
+                } else if (error.request) {
+                    // Request dikirim tapi tidak ada respons dari server
+                    console.log("No response received:", error.request);
+                    return error.request;                    
+                    //sap.m.MessageToast.show("Tidak ada respons dari server.");
                 } else {
-                    sap.m.MessageBox.error("Terjadi kesalahan saat menghubungi server.");
-                }                    
+                    // Kesalahan lainnya
+                    console.log("Error:", error.message);
+                    return error.message;
+                    //sap.m.MessageToast.show("Terjadi kesalahan jaringan.");
+                }
             }
         }, 
+
+        // allAPI: async function (type, header, body, url) {
+        //     if (!type) {
+        //         console.error("Error: API request type is missing.");
+        //         return null;
+        //     }        
+
+      
+        //     console.log("body API:", body);
+        //     console.log("header API:", header);
+        //     console.log("Set Header 2:", axios.defaults.headers.common["Access-Control-Allow-Origin"]);
+        //     console.log("url API:", url);
+        //     const token = localStorage.getItem("authToken");
+            
+    
+        //     if (this.isJWTExpired(token)) {
+        //         console.error("Token expired. Please log in again.");
+        //         //sap.m.MessageBox.error("Token expired. Please log in again."); // Menampilkan error di UI
+        //         return null;
+        //     }
+    
+        //     if (!header) {
+        //         header = {};
+        //     }
+        //     if (!header.Authorization && token) {
+        //         header.Authorization = "Bearer " + token;
+        //     }
+        //     const config = {
+        //         method: type.toLowerCase(),
+        //         url,
+        //         headers: header
+        //     };
+
+        //     if (type.toLowerCase() === "get") {
+        //         config.params = body;
+        //     } else {
+        //         config.data = body;
+        //     }
+    
+        //     console.log("config:", config);
+        //     const response = await axios(config);
+        //     console.log("response:", response.data);
+        //     console.log("response ori:", response);
+        //     console.log("body setri : ",JSON.stringify(body))
+
+        //     if(JSON.stringify(body) === "{}")
+        //     {
+        //         return response; 
+        //     }
+        //     else
+        //     {
+        //         return response.data; 
+        //     }           
+        // }, 
         
 		downloadFile: async function (url, header, filename = 'downloaded_file') {
             try {
+                sap.ui.core.BusyIndicator.show(0);
                 console.log("url API:", url);
                 console.log("header API:", header);
     
@@ -206,6 +325,7 @@ sap.ui.define([
                 };
     
                 const response = await axios(config);
+                console.log("response download axio :",response);
     
                 // Buat URL blob
                 const blob = new Blob([response.data], { type: response.headers['content-type'] });
@@ -219,12 +339,46 @@ sap.ui.define([
                 link.click();
                 document.body.removeChild(link);
     
-                console.log(`File berhasil diunduh dengan nama "${filename}".`);
+                console.log(`File "${filename}" successfully download`);
+                sap.ui.core.BusyIndicator.hide();
                 return downloadUrl+"/"+filename;
-    
-            } catch (error) {
-                return error;
-            }
+               
+                }
+                catch (error) {
+                    sap.ui.core.BusyIndicator.hide();
+                    if (error.response) {
+                        // Server merespons dengan status error (4xx, 5xx)
+                        console.log("Response Error:", error.response.status);
+                        console.log("Response Data:", error.response.data);
+                        //return error.response.data;
+                        if(error.response.status = "400")
+                        {
+                            return error.response.status;
+                        }
+                        else
+                        {
+                            if (Array.isArray(error.response.data)) {
+                                return error.response.data[0]; 
+                            } else {
+                                return error.response.data;
+                            }
+                        }
+                        
+                        
+                        // Menampilkan pesan error ke UI
+                        //sap.m.MessageToast.show(error.response.data[0]?.msg || "Terjadi kesalahan.");
+                    } else if (error.request) {
+                        // Request dikirim tapi tidak ada respons dari server
+                        console.log("No response received:", error.request);
+                        return error.request;                    
+                        //sap.m.MessageToast.show("Tidak ada respons dari server.");
+                    } else {
+                        // Kesalahan lainnya
+                        console.log("Error:", error.message);
+                        return error.message;
+                        //sap.m.MessageToast.show("Terjadi kesalahan jaringan.");
+                    }
+                }
         },
 
         // Logout
