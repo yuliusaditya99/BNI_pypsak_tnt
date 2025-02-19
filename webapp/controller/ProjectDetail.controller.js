@@ -255,7 +255,7 @@ sap.ui.define([
                     search: "",  
                     columns: "", 
                     start: 0, 
-                    length: 10,
+                    length: 1000,
                     orders: "task_code",
                     dirs: "asc",
                     id: taskId
@@ -439,8 +439,7 @@ sap.ui.define([
                 sap.ui.core.BusyIndicator.hide();
                 console.log("Node execution response:", data);
                 sap.m.MessageToast.show(data.message);
-                // Show success message
-                sap.m.MessageToast.show(`Process ${nodeTitle} is running`);
+                
                 
         
             } catch (error) {
@@ -568,7 +567,62 @@ sap.ui.define([
                     sap.m.MessageToast.show(errorMessage);
                 });
         },
+
+        onColumnChange: function (oEvent) {
+			var sSelectedKey = oEvent.getSource().getSelectedKey();
+			this._selectedColumn = sSelectedKey;
+		},
+
+        onSearch: function (oEvent) {
+            var sQuery = oEvent.getSource().getValue();
+            var oTable = this.byId("nodesTableProjectDetail");
+            var oBinding = oTable.getBinding("rows");
+
+            // Menyaring berdasarkan kolom yang dipilih
+            console.log("this._selectedColumn : ", this._selectedColumn);
+            if (this._selectedColumn === "asOfDate" || this._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt") {
+                // Jika sQuery berisi tanggal, ubah ke objek Date
+                console.log("sQuery : ", sQuery);
+                if (sQuery) {
+                    // Menggunakan FilterOperator.Contains untuk pencarian yang lebih fleksibel
+                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+                    oBinding.filter([oFilter]);
+                } else {
+                    oBinding.filter([]);
+                }
+            } else {
+                // Jika kolom adalah string, gunakan FilterOperator.Contains
+                if (sQuery) {
+                    var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
+                    oBinding.filter([oFilter]);
+                } else {
+                    oBinding.filter([]);
+                }
+            }
+        },
         
+        onSortColumn: function (oEvent) {
+            console.log("masuk SortColumn");
+            const oTable = oEvent.getSource(); 
+            const oBinding = oTable.getBinding("rows"); 
+            const oColumn = oEvent.getParameter("column");
+            const sSortProperty = oColumn.getSortProperty(); 
+            const sSortOrder = oColumn.getSortOrder(); 
+        
+            if (!sSortProperty) {
+                return;
+            }
+        
+            // Toggle Sort Order
+            const bDescending = sSortOrder === "Descending";
+            const oSorter = new sap.ui.model.Sorter(sSortProperty, bDescending);
+        
+            // Terapkan Sorting
+            oBinding.sort(oSorter);
+        
+            // Perbarui tampilan arah sort di header
+            oColumn.setSortOrder(bDescending ? "Ascending" : "Descending");
+        },
           
         
         

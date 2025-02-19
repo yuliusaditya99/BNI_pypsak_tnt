@@ -8,6 +8,9 @@ sap.ui.define([
     'sap/m/MessageBox',
     "./Config.API"    
 ], function (BaseController, JSONModel, Device, formatter, Config, MessageToast, MessageBox, ConfigAPI) {
+    'sap/m/MessageBox',
+    "./Config.API"    
+], function (BaseController, JSONModel, Device, formatter, Config, MessageToast, MessageBox, ConfigAPI) {
 	"use strict";
 	return BaseController.extend("sap.ui.bni.toolpageapp.controller.Project", {
 		formatter: formatter,
@@ -16,16 +19,22 @@ sap.ui.define([
             //console.log("masuk project controller");
             this.appConfig = new ConfigAPI();
             var oViewModel = new JSONModel({
+            //console.log("masuk project controller");
+            this.appConfig = new ConfigAPI();
+            var oViewModel = new JSONModel({
                 isPhone: sap.ui.Device.system.phone
             });
             this.setModel(oViewModel, "view");
             var oDialogModel = new JSONModel({});
+            var oDialogModel = new JSONModel({});
             this.setModel(oDialogModel, "dialogModel");
         
+            //console.log("onInit executed successfully."); 
             //console.log("onInit executed successfully."); 
             this._initializeAsyncData();
             var oTable = this.byId("TableTask");
             if (oTable) {
+                //console.log("TableTask found, attaching row selection event.");
                 //console.log("TableTask found, attaching row selection event.");
                 oTable.attachRowSelectionChange(this.onRowSelect.bind(this));
             } else {
@@ -42,6 +51,11 @@ sap.ui.define([
             });
 			
 		},
+
+        // onAfterRendering: function () {
+        //     console.log("masuk project controller 2");
+
+        // },
 
         // onAfterRendering: function () {
         //     console.log("masuk project controller 2");
@@ -90,34 +104,43 @@ sap.ui.define([
                     updatedAt: task.updated_at,
                 }));
                 //console.log("tasks:", tasks);        
+                //console.log("tasks:", tasks);        
                 const oViewModel = this.getModel("view");
                 if (oViewModel) {
                     oViewModel.setProperty("/tasks", tasks);
                 } else {
                     console.error("View model not found.");
                 }        
+                }        
                 return {
+                    perpage: pageCount,
                     perpage: pageCount,
                     totalrow: totalRowCount
                 };
+        
         
             } catch (error) {
                 if (error.response) {
                     console.error("Error Response:", error.response.data);
                     console.error("Status:", error.response.status);
                     MessageToast.error("Error : " + error.response.data.message);
+                    MessageToast.error("Error : " + error.response.data.message);
                 } else if (error.request) {
                     console.error("Error Request:", error.request);
+                    MessageToast.error("Can not connect the server.");
                     MessageToast.error("Can not connect the server.");
                 } else {
                     console.error("Error Message:", error.message);
                     MessageToast.error("Error Undifine");
+                    MessageToast.error("Error Undifine");
                 }
             }
+        },        
         },        
 
         onNew: function () {
             const dialogModel = this.getView().getModel("dialogModel");
+            console.log("Masuk New");
             console.log("Masuk New");
             this._loadProcessData();
             // Reset data model
@@ -131,6 +154,7 @@ sap.ui.define([
 		},
 
        
+       
         
         onEdit: function () {
             this._loadProcessData();
@@ -140,15 +164,18 @@ sap.ui.define([
             console.log("aSelectedIndices: ", aSelectedIndices);
             if (!aSelectedIndices || aSelectedIndices.length === 0) {
                 MessageToast.show("No selected data to edit."); 
+                MessageToast.show("No selected data to edit."); 
                 return;
             }
 
             if (aSelectedIndices.length > 1) {
                 MessageToast.show("Please select only one row to edit.");
+                MessageToast.show("Please select only one row to edit.");
                 return;
             }
         
             var oModel = this.getView().getModel("view");
+            //var aTasks = oModel.getProperty("/tasks"); 
             //var aTasks = oModel.getProperty("/tasks"); 
         
             var aSelectedTasks = aSelectedIndices.map(function (iIndex) {
@@ -166,14 +193,18 @@ sap.ui.define([
                 var oDialogModel = this.getView().getModel("dialogModel");
                 oDialogModel.setData(oSelectedData);                
                 oDialogModel.setProperty("/processDefinitionId", oSelectedData.processDefinitionId);                
+                oDialogModel.setData(oSelectedData);                
+                oDialogModel.setProperty("/processDefinitionId", oSelectedData.processDefinitionId);                
                 this.byId("ProjectTaskDialog").open();
             } else {
+                MessageToast.show("Please select only one row to edit."); 
                 MessageToast.show("Please select only one row to edit."); 
             }
         },
         
         
         onRefresh: function () {
+            console.log("masuk refresh");
             console.log("masuk refresh");
 			this._initializeAsyncData().then(() => {
                 console.log("after _initializeAsyncData");
@@ -294,7 +325,10 @@ sap.ui.define([
             console.log("Selected tasks: ", aSelectedTasks);
 			MessageBox.confirm("Are you sure you want to delete the selected data?", {
 				actions: [MessageBox.Action.YES, MessageBox.Action.NO],
+			MessageBox.confirm("Are you sure you want to delete the selected data?", {
+				actions: [MessageBox.Action.YES, MessageBox.Action.NO],
 				onClose: async function (sAction) {
+					if (sAction === MessageBox.Action.YES) {
 					if (sAction === MessageBox.Action.YES) {
 						try {
 							var aIds = aSelectedTasks.map(function (item) {
@@ -318,6 +352,7 @@ sap.ui.define([
 								MessageToast.show(response.message, { duration: 3000 });
 							} else {
 								MessageToast.show("Data deleted successfully.", { duration: 3000 });
+								MessageToast.show("Data deleted successfully.", { duration: 3000 });
 							}
 						} catch (error) {
 							// Tangani error dari Axios
@@ -325,6 +360,7 @@ sap.ui.define([
 							if (error.response.data) {
 								MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
 							} else {
+								MessageToast.show("An unexpected error occurred.", { duration: 3000 });
 								MessageToast.show("An unexpected error occurred.", { duration: 3000 });
 							}
 						}
@@ -388,10 +424,12 @@ sap.ui.define([
         _navigateToTaskDetail: function (sTaskId) {
             if (!sTaskId) {
                 MessageToast.show("Task ID is missing.");
+                MessageToast.show("Task ID is missing.");
                 return;
             }
         
             // Simulate navigation (replace with real routing logic)
+            MessageToast.show("Navigating to Task Detail for Task ID: " + sTaskId);
             MessageToast.show("Navigating to Task Detail for Task ID: " + sTaskId);
             localStorage.setItem("taskId", sTaskId);
             // Example: Use router to navigate to a task detail page
@@ -468,6 +506,7 @@ sap.ui.define([
         },
 
             
+            
         onSaveDialogTask: async function () {
             let idTask;
             console.log("onSaveDialogTask");
@@ -478,8 +517,14 @@ sap.ui.define([
             const descriptionInputValue = this.byId("descriptionInput") ? this.byId("descriptionInput").getValue() : "";
             const oDialogModel = this.getView().getModel("dialogModel");
             const oDialogData = oDialogModel.getData()
+            const oDialogModel = this.getView().getModel("dialogModel");
+            const oDialogData = oDialogModel.getData()
 
             const processDefComboValueInt = parseInt(processDefComboValue,10);
+            // console.log("titleValue :", titleValue);
+            // console.log("asOfDateValue :", asOfDateValue);
+            // console.log("processDefComboValueInt :", processDefComboValueInt);
+            // console.log("descriptionInputValue :", descriptionInputValue);
             // console.log("titleValue :", titleValue);
             // console.log("asOfDateValue :", asOfDateValue);
             // console.log("processDefComboValueInt :", processDefComboValueInt);
@@ -488,12 +533,18 @@ sap.ui.define([
             if (!titleValue) {
                 oDialogModel.setProperty("/titleState", "Error");
                 oDialogModel.setProperty("/titleErrorText", "Title is required!");
+                oDialogModel.setProperty("/titleState", "Error");
+                oDialogModel.setProperty("/titleErrorText", "Title is required!");
             }
             if (!asOfDateValue) {
                 oDialogModel.setProperty("/asOfDateState", "Error");
                 oDialogModel.setProperty("/asOfDateErrorText", "Date is required!");
+                oDialogModel.setProperty("/asOfDateState", "Error");
+                oDialogModel.setProperty("/asOfDateErrorText", "Date is required!");
             }
             if (!processDefComboValue) {
+                oDialogModel.setProperty("/processState", "Error");
+                oDialogModel.setProperty("/processErrorText", "Process Definition is required!");
                 oDialogModel.setProperty("/processState", "Error");
                 oDialogModel.setProperty("/processErrorText", "Process Definition is required!");
             }

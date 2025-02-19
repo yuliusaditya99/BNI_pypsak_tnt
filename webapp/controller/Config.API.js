@@ -1,6 +1,7 @@
 sap.ui.define([
     "sap/ui/base/Object",
     "sap/m/BusyDialog",    
+    "sap/m/BusyDialog",    
     "../util/Config"
 ], function (UI5Object, BusyDialog, Config) {
     "use strict";
@@ -38,9 +39,11 @@ sap.ui.define([
                 console.log("Token:", token);
                 console.log("WebSocket URL:", webSocket);
                 
+                
                 if (typeof Storage !== "undefined") {
                     localStorage.setItem("authToken", token);
                     localStorage.setItem("user", JSON.stringify(user));
+                    localStorage.setItem("userNameLogin", userNameLogin.user_name);
                     localStorage.setItem("userNameLogin", userNameLogin.user_name);
                     localStorage.setItem("websocet", webSocket);
                 }

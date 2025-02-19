@@ -4,10 +4,15 @@ sap.ui.define([
     'sap/m/MessageToast',
     'sap/m/MessageBox'
 ], function (Controller, Config, MessageToast, MessageBox) {
+    "./Config.API",
+    'sap/m/MessageToast',
+    'sap/m/MessageBox'
+], function (Controller, Config, MessageToast, MessageBox) {
     "use strict";
 
     return Controller.extend("sap.ui.bni.toolpageapp.controller.Login", {
         onInit: function () {
+            console.log("Login controller initialized");
             console.log("Login controller initialized");
             this.appConfig = new Config();
         },
@@ -16,11 +21,16 @@ sap.ui.define([
             const sUsername = this.byId("username").getValue();
             const sPassword = this.byId("password").getValue();
           
+          
             if (!sUsername || !sPassword) {
               //sap.m.MessageToast.show("Username and password are required.");
               MessageBox.error("Username and password are required.");
               return;
+              //sap.m.MessageToast.show("Username and password are required.");
+              MessageBox.error("Username and password are required.");
+              return;
             }
+          
           
             try {
                 
@@ -60,7 +70,12 @@ sap.ui.define([
               console.error("Routing error:", error.response.data.detail[0].msg);
               //sap.m.MessageToast.show("Terjadi kesalahan saat navigasi.");
               MessageBox.error(message);
+              const message = error.response.data.detail[0].msg;
+              console.error("Routing error:", error.response.data.detail[0].msg);
+              //sap.m.MessageToast.show("Terjadi kesalahan saat navigasi.");
+              MessageBox.error(message);
             }
+          }
           }
     });
 });

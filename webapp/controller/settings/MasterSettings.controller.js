@@ -7,6 +7,9 @@ sap.ui.define([
 	"sap/ui/bni/toolpageapp/util/Config",
 	"../Config.API"
 ], function (BaseController, MessageToast, JSONModel, formatter, UI5Date, Config, ConfigAPI) {
+	"sap/ui/bni/toolpageapp/util/Config",
+	"../Config.API"
+], function (BaseController, MessageToast, JSONModel, formatter, UI5Date, Config, ConfigAPI) {
 	"use strict";
 	return BaseController.extend("sap.ui.bni.toolpageapp.controller.settings.MasterSettings", {
 		
@@ -24,9 +27,12 @@ sap.ui.define([
 
 			this.appConfig = new ConfigAPI();
 
+			this.appConfig = new ConfigAPI();
+
 			this.setModel(oViewModel, "view");
 			console.log("masuk");
 			var sViewId = this.getView().getId();
+			console.log("key view : ",sViewId);
 			console.log("key view : ",sViewId);
             if (sViewId.includes("userManagement")) {
                 this._setupUserManagement();
@@ -41,7 +47,19 @@ sap.ui.define([
 				this._setupBranchOffice();
 			}
 			else if (sViewId.includes("roleManagement")) {
+            } 
+			else if (sViewId.includes("detailSettings")) {
+                this._initializeAsyncData();            
+			} 
+			else if (sViewId.includes("logManagement")) {
+				this._setupLogManagement();
+			}
+			else if (sViewId.includes("branchOffice")){
+				this._setupBranchOffice();
+			}
+			else if (sViewId.includes("roleManagement")) {
 				this._setupRoleManagement();
+			}
 			}
 			
 		},
@@ -182,6 +200,7 @@ sap.ui.define([
 			console.log("masuk setup role management");
 			this._selectedColumn = "clientCode";
 			this.getView().getModel("view").setProperty("/showRolesId", false);
+			console.log("get model view:", this.getModel("view"));
 			try {
 			  console.log("Masuk Role Management");
 			  console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
@@ -210,14 +229,21 @@ sap.ui.define([
 				let dataResponse;
 
 				const header = {  "Content-Type": "application/json" };				
+				let params;
+				let dataResponse;
+
+				const header = {  "Content-Type": "application/json" };				
 
                 console.log("paramLength : ",paramLength);
+				console.log("navactive : ",navactive);
 				console.log("navactive : ",navactive);
 				if(navactive == "User")
 				{
 					if(paramLength == "-1")
 					{
 						console.log("masuk -1");
+						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length=10&orders=id&dirs=desc');
+						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length=10&orders=id&dirs=desc');
 						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 					}
@@ -242,6 +268,10 @@ sap.ui.define([
 					const usertableData = dataResponse.payloads.data;
 					pageCount = dataResponse.payloads.per_page;
 					totalRowCount = dataResponse.payloads.total;
+			
+					const usertableData = dataResponse.payloads.data;
+					pageCount = dataResponse.payloads.per_page;
+					totalRowCount = dataResponse.payloads.total;
 					const users = usertableData.map(user => ({
 						id: user.id,
 						clientCode: user.client_code,
@@ -257,6 +287,13 @@ sap.ui.define([
 							? user.roles.map(role => role.pivot_role.name).join(", ") : "N/A", 
 						idRoles: Array.isArray(user.roles) 
 							? user.roles.map(role => role.role_id).join(", ") : "N/A",
+						loginAt: user.login_at,
+						logoutAt: user.logout_at,
+						resetAt: user.reset_at,
+						createdBy: user.createdBy?.user_name || "N/A",
+						createdAt: user.created_at,
+						updatedBy: user.updated_by,
+						updatedAt: user.updated_at
 						loginAt: user.login_at,
 						logoutAt: user.logout_at,
 						resetAt: user.reset_at,
@@ -344,11 +381,12 @@ sap.ui.define([
 						updatedAt: role.updated_at || "N/A",
 						permissions: role.permissions.map(perm => ({
 							moduleName: perm.pivot_permission.name,
-							permission: perm.pivot_permission.alias,
-							permissionId: perm.pivot_permission.id
+							permission: perm.is_write ? "Read/Write" : "Read",
+							permissionId: perm.pivot_permission.id,
+							is_write: perm.is_write
 						})),
 						moduleName: role.permissions.map(perm => perm.pivot_permission.name).join('\n'),
-						permission: role.permissions.map(perm => perm.is_write).join('\n')
+						permission: role.permissions.map(perm => (perm.is_write ? "Read/Write" : "Read")).join('\n')
 					}));
 				
 					
@@ -363,9 +401,12 @@ sap.ui.define([
 				else
 				{
 					console.log("masuk file");
+					console.log("masuk file");
 					if(paramLength == "-1")
 					{
 						console.log("masuk -1");
+						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
+						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
 						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 					}
@@ -429,7 +470,7 @@ sap.ui.define([
             }
             
         },
-		
+		// const response = await axios.get(`${Config.paths.apiBaseUrl}/api/permission?start=0&length=100000000&orders=id&dirs=desc`);
 		onGetPermissions: async function () {
 			try {
 				const response = await axios.get(`${Config.paths.apiBaseUrl}/api/permission?start=0&length=100000000&orders=id&dirs=desc`);
@@ -440,7 +481,7 @@ sap.ui.define([
 						id: perm.id,
 						name: perm.name
 					}));
-		
+					console.log("Permissions on onGetPermissions:", permissions);
 					const oViewModel = this.getModel("view");
 					if (oViewModel) {
 						oViewModel.setProperty("/permissions", permissions);
@@ -467,6 +508,14 @@ sap.ui.define([
 					break;
 				}
 				case "userManagement": {
+					this.getRouter().navTo(sKey);
+					break;
+				}
+				case "logManagement": {
+					this.getRouter().navTo(sKey);
+					break;
+				}
+				case "branchOffice": {
 					this.getRouter().navTo(sKey);
 					break;
 				}
@@ -535,11 +584,15 @@ sap.ui.define([
 			const emailValue = this.byId("emailUNInput") ? this.byId("emailUNInput").getValue() : "";
 			const clientCodeValue = this.byId("branchCodeUNCombo") ? this.byId("branchCodeUNCombo").getValue() : "";
 			const rolesValue = this.byId("rolesUNCombo") ? this.byId("rolesUNCombo").getSelectedKeys().filter(key => key !== "") : [];
+			const rolesValue = this.byId("rolesUNCombo") ? this.byId("rolesUNCombo").getSelectedKeys().filter(key => key !== "") : [];
 			console.log("usernameValue :", usernameValue);
 			console.log("fullnameValue :", fullnameValue);
 			console.log("emailValue :", emailValue);
 			console.log("clientCodeValue :", clientCodeValue);
 			console.log("rolesValue :", rolesValue);
+			let flagDone = 0;
+			const oDialog = this.byId("UserDialog");
+			const oDialogModel = this.getView().getModel("dialogModel");
 			let flagDone = 0;
 			const oDialog = this.byId("UserDialog");
 			const oDialogModel = this.getView().getModel("dialogModel");
@@ -556,7 +609,30 @@ sap.ui.define([
 					oDialogModel.setProperty("/usernameErrorText", "Ensure this value has at least 5 characters");
 					flagDone = 1;
 				}
+                oDialogModel.setProperty("/usernameState", "Error");
+                oDialogModel.setProperty("/usernameErrorText", "Username is required!");
+				flagDone = 1;
+            }
+			else
+			{
+				if(usernameValue.length < 5){					
+					oDialogModel.setProperty("/usernameState", "Error");
+					oDialogModel.setProperty("/usernameErrorText", "Ensure this value has at least 5 characters");
+					flagDone = 1;
+				}
 			}
+            if (!fullnameValue) {
+                oDialogModel.setProperty("/fullnameState", "Error");
+                oDialogModel.setProperty("/fullnameErrorText", "Fullname is required!");
+				flagDone = 1;
+            }
+			else
+			{
+				if(fullnameValue.length < 5){					
+					oDialogModel.setProperty("/fullnameState", "Error");
+					oDialogModel.setProperty("/fullnameErrorText", "Ensure this value has at least 5 characters");
+					flagDone = 1;
+				}
             if (!fullnameValue) {
                 oDialogModel.setProperty("/fullnameState", "Error");
                 oDialogModel.setProperty("/fullnameErrorText", "Fullname is required!");
@@ -582,8 +658,24 @@ sap.ui.define([
 					oDialogModel.setProperty("/emailErrorText", "Invalid email format!");
 					flagDone = 1;
 				}
+            if (!emailValue) {
+                oDialogModel.setProperty("/emailState", "Error");
+                oDialogModel.setProperty("/emailErrorText", "Email is required!");
+				flagDone = 1;
+            }
+			else
+			{
+				if (!this.isValidEmail(emailValue)) {
+					oDialogModel.setProperty("/emailState", "Error");
+					oDialogModel.setProperty("/emailErrorText", "Invalid email format!");
+					flagDone = 1;
+				}
 			}
 			if (!clientCodeValue) {
+                oDialogModel.setProperty("/clientState", "Error");
+                oDialogModel.setProperty("/clientErrorText", "Client is required!");
+				flagDone = 1;
+            }
                 oDialogModel.setProperty("/clientState", "Error");
                 oDialogModel.setProperty("/clientErrorText", "Client is required!");
 				flagDone = 1;
@@ -802,6 +894,10 @@ sap.ui.define([
 			this.getView().byId("BranchDialog").close();
         },
 
+		onCancelDialogBranch: function () {
+			this.getView().byId("BranchDialog").close();
+        },
+
 		onNavButtonPress: function  () {
 			this.getOwnerComponent().myNavBack();
 		},
@@ -839,6 +935,20 @@ sap.ui.define([
 				countTotal = result.tasks;
 				console.log("countTotal : ", countTotal);
 				console.log("countPerPage : ", countPerPage);
+			} else if (sViewId.includes("logManagement")) {
+				const oTable = this.byId("TableLogManagement");
+				const result = await this.onGetData(sSelectedKey,"Log");
+				countPerPage = result.perpage;
+				countTotal = result.tasks;
+				console.log("countTotal : ", countTotal);
+				console.log("countPerPage : ", countPerPage);
+            } else if (sViewId.includes("branchOffice")) {
+				const oTable = this.byId("TableClient");
+				const result = await this.onGetData(sSelectedKey,"Branch");
+				countPerPage = result.perpage;
+				countTotal = result.tasks;
+				console.log("countTotal : ", countTotal);
+				console.log("countPerPage : ", countPerPage);
             } else if (sViewId.includes("roleManagement")) {
 				const oTable = this.byId("TableRole");
 				const result = await this.onGetData(sSelectedKey,"Role");
@@ -851,7 +961,9 @@ sap.ui.define([
 
 		onSaveDialogRole: async function () {
 			console.log("onSaveDialogRole");
-		
+			const oDialog = this.byId("RoleDialog");
+			const oDialogModel = this.getView().getModel("dialogModel");
+
 			const roleName = this.byId("roleNameInput") ? this.byId("roleNameInput").getValue() : "";
 			const permissionsValue = this.byId("permissionsMultiCombo") 
 				? this.byId("permissionsMultiCombo").getSelectedKeys().filter(key => key !== "") 
@@ -860,20 +972,39 @@ sap.ui.define([
 			console.log("roleName:", roleName);
 			console.log("permissionsValue:", permissionsValue);
 		
+			let isValid = true;
+
+			// Validate role name
 			if (!roleName) {
-				MessageToast.show("Please enter a role name.");
-				return;
+				oDialogModel.setProperty("/nameState", "Error");
+				oDialogModel.setProperty("/nameErrorText", "Role Name is required!");
+				isValid = false;
+			} else {
+				oDialogModel.setProperty("/nameState", "None"); // Reset error state
+				oDialogModel.setProperty("/nameErrorText", "");
 			}
+		
+			// Validate permissions selection
 			if (permissionsValue.length === 0) {
-				MessageToast.show("Please select at least one permission.");
+				oDialogModel.setProperty("/permissionsState", "Error");
+				oDialogModel.setProperty("/permissionsErrorText", "Select at least one permission!");
+				isValid = false;
+			} else {
+				oDialogModel.setProperty("/permissionsState", "None"); // Reset error state
+				oDialogModel.setProperty("/permissionsErrorText", "");
+			}
+		
+			// Stop execution if validation fails
+			if (!isValid) {
+				MessageToast.show("Please fix the errors before saving.");
 				return;
 			}
 
 			let oResponse;
 			
 			try {
-				const oDialog = this.byId("RoleDialog");
-				const oDialogModel = this.getView().getModel("dialogModel");
+				// const oDialog = this.byId("RoleDialog");
+				// const oDialogModel = this.getView().getModel("dialogModel");
 				console.log("oDialogModel:", oDialogModel);
 				console.log("oDialogModel data:", oDialogModel.getData());
 		
@@ -883,12 +1014,16 @@ sap.ui.define([
 				let payload;
 				//sap.ui.core.BusyIndicator.show(0);
 				console.log("idRole:", idRole);
-		
-				// Construct permissions array correctly
-				const permissionsPayload = permissionsValue.map(permissionId => ({
-					id: parseInt(permissionId, 10),
-					is_write: true
-				}));
+
+				// Get permissions array from dialogModel
+				const aPermissions = oDialogModel.getProperty("/permissions") || [];
+				const permissionsPayload = permissionsValue.map((permissionId, index) => {
+					return {
+						id: parseInt(permissionId, 10), // Convert ID to integer
+						is_write: aPermissions[index]?.is_write ?? false // Default to false if undefined
+					};
+				});
+				
 		
 				if (idRole) {
 					// Update existing role
@@ -924,6 +1059,7 @@ sap.ui.define([
 					    headers: { "Content-Type": "application/json" }
 					});
 				}
+		
 				console.log("oResponse:", oResponse);
 				if (oResponse?.data?.error) {
 					MessageToast.show("Failed to save role: " + oResponse.data.message);
@@ -931,6 +1067,12 @@ sap.ui.define([
 					MessageToast.show("Role saved successfully.");
 					console.log("API Response:", oResponse?.data);
 				}
+				
+				// Reset all 'is_write' checkboxes to false before closing
+				aPermissions.forEach(permission => {
+					permission.is_write = false;
+				});
+				oDialogModel.setProperty("/permissions", aPermissions);
 		
 				oDialog.close();
 				this.onRefresh();
@@ -952,14 +1094,27 @@ sap.ui.define([
 		},
 		
 		
-		
-		
 		onCancelDialogRole: function () {
 			console.log("Cancel Role Creation");
 			this.byId("RoleDialog").close();
 			this.onRefresh();
 		},
 		
+		onSelectAllPermission: function (oEvent) {
+			let oDialogModel = this.getView().getModel("dialogModel");
+			let aPermissions = oDialogModel.getProperty("/permissions");
+		
+			// Get the state of the "Select All" checkbox
+			let bSelected = oEvent.getParameter("selected");
+		
+			// Update the is_write property for all permissions
+			aPermissions.forEach(permission => {
+				permission.is_write = bSelected;
+			});
+		
+			// Refresh the model to update the table
+			oDialogModel.refresh();
+		},
 		
 		// onSelectAll: function (oEvent) {
 		// 	var bSelected = oEvent.getSource().getSelected();
@@ -1031,8 +1186,29 @@ sap.ui.define([
 				// if (oFileInput) {
 				// 	oFileInput.value = "";
 				// }
+            } else if (sViewId.includes("detailSettings")) {
+				// var oFileUploader = this.byId("fileUploader");	
+				// const oDomRef = oFileUploader.getDomRef();
+				// const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");		
+				// if (oFileUploader) {
+				// 	oFileUploader.clear();
+				// }
+				// if (oFileInput) {
+				// 	oFileInput.value = "";
+				// }
 				this._openDialogFile();
 		
+			} else if (sViewId.includes("detailSettings")) {
+				this._openDialogFile();
+            } else if (sViewId.includes("branchOffice")){
+				const dialogModel = this.getView().getModel("dialogModel");
+				dialogModel.setData({
+					code: "",
+					name: ""
+				});
+				this._openDialogBranch();
+			}
+			else if (sViewId.includes("roleManagement")) {
 			} else if (sViewId.includes("detailSettings")) {
 				this._openDialogFile();
             } else if (sViewId.includes("branchOffice")){
@@ -1056,6 +1232,7 @@ sap.ui.define([
 				console.log("onNew functions");
 				this._openNewRoleDialog();
 			}			
+			}			
 		},
 
 		onEdit: function () {
@@ -1064,6 +1241,8 @@ sap.ui.define([
             if (sViewId.includes("userManagement")) {	
 				this._loadProcessData();			
 				this._editUser();
+            } else if (sViewId.includes("branchOffice")) {
+				this._editBranch();
             } else if (sViewId.includes("branchOffice")) {
 				this._editBranch();
             } else if (sViewId.includes("roleManagement")) {
@@ -1078,51 +1257,68 @@ sap.ui.define([
 		
 			let oTable = this.byId("TableRole");
 			let aSelectedIndices = oTable.getSelectedIndices();
-		
-			if (aSelectedIndices.length !== 1) {
+			if (aSelectedIndices.length == 0) {
 				sap.m.MessageToast.show("Please select one role to edit.");
 				this.onRefresh();
 				return;
+			}else if (aSelectedIndices.length !== 1) {
+				sap.m.MessageToast.show("Please select only one row to edit.");
+				this.onRefresh();
+				return;
 			}
-		
+			
 			let oContext = oTable.getContextByIndex(aSelectedIndices[0]);
 			let oSelectedRole = oContext ? oContext.getObject() : null;
-		
+			
+			console.log("oSelectedRole permissions:", oSelectedRole);
 			if (!oSelectedRole) {
 				sap.m.MessageToast.show("No role selected.");
 				this.onRefresh();
 				return;
 			}
-		
+			
 			let oDialogModel = this.getView().getModel("dialogModel");
-		
+			console.log("odiagModel on editrole:", oDialogModel);
 			if (!oDialogModel) {
 				oDialogModel = new sap.ui.model.json.JSONModel();
+				this.onRefresh();
 				this.getView().setModel(oDialogModel, "dialogModel");
 			}
+			
+		
 			console.log("oSelectedRole.permis:", oSelectedRole);
+		
 			// Extract selected permission IDs instead of names
 			let selectedKeys = oSelectedRole.permissions
 				? oSelectedRole.permissions.map(perm => perm.permissionId) // Using ID instead of moduleName
 				: [];
 		
+			// Map module IDs to human-readable names
+			var oViewModel = this.getView().getModel("view");
+			var aAllPermissions = oViewModel.getProperty("/permissions"); // Fetch all permissions from the view model
+			console.log("aAllPermissions on editrole:", aAllPermissions);
+			
+			var aPermissions = oSelectedRole.permissions.map(perm => {
+				var oPermission = aAllPermissions.find(p => p.id === perm.permissionId); // Use permissionId instead of moduleName
+				console.log("perm.is_write:", perm.is_write);
+				return {
+					permissionId: perm.permissionId, // Ensure permissionId is included
+					moduleName: oPermission ? oPermission.name : perm.moduleName, // Use human-readable name if available
+					is_write: perm.is_write // Ensure is_write is included
+				};
+			});
+		
 			// Set only necessary data in dialog model
 			oDialogModel.setData({
 				idRole: oSelectedRole.id,
 				roleName: oSelectedRole.name,
-				permissionskeys: selectedKeys
+				permissionskeys: selectedKeys,
+				permissions: aPermissions
 			});
 		
+			console.log("oDialogModel on editrole:", oDialogModel.getData());
 			this.onRefresh();
 			this.byId("RoleDialog").open();
-		},
-		
-		onPermissionSelectionChange: function (oEvent) {
-			var aSelectedKeys = oEvent.getSource().getSelectedKeys();
-			var oDialogModel = this.getView().getModel("dialogModel");
-		
-			// Update the dialog model with the selected permissions
-			oDialogModel.setProperty("/permissions", aSelectedKeys);
 		},
 
 		_editUser: function()
@@ -1349,9 +1545,164 @@ sap.ui.define([
 			oDialog.open();
 		},
 
+		_editBranch: function()
+		{
+			var oTable = this.byId("TableClient"); 
+            var aSelectedIndices = oTable.getSelectedIndices(); 
+        
+            console.log("aSelectedIndices: ", aSelectedIndices);
+            if (!aSelectedIndices || aSelectedIndices.length === 0) {
+                sap.m.MessageToast.show("No selected data to edit."); 
+                return;
+            }
+
+            if (aSelectedIndices.length > 1) {
+                sap.m.MessageToast.show("Please select only one row to edit.");
+                return;
+            }
+			        
+            var oModel = this.getView().getModel("view");
+            var aBranch = oModel.getProperty("/branch"); 
+        
+            var aSelectedFiles = aSelectedIndices.map(function (iIndex) {
+                var oContext = oTable.getContextByIndex(iIndex); 
+                return oContext ? oContext.getObject() : null; 
+            }).filter(function (oBranch) {
+                return oBranch !== null;
+            });
+        
+            console.log("Selected Files: ", aSelectedFiles);
+        
+            if (aSelectedFiles.length === 1) {
+             
+                var oSelectedData = aSelectedFiles[0];
+                console.log("oSelectedData:", oSelectedData);
+        
+          
+                var oDialogModel = this.getView().getModel("dialogModel");
+                oDialogModel.setData(oSelectedData);  
+        
+               
+                console.log("oSelectedData.code:", oSelectedData.code);
+				console.log("oSelectedData.name:", oSelectedData.name);
+			
+                
+                oDialogModel.setProperty("/code", oSelectedData.code);
+				oDialogModel.setProperty("/name", oSelectedData.name);              
+      
+                this.byId("BranchDialog").open();
+            } else {
+                sap.m.MessageToast.show("Please select only one row to edit.");
+            }
+		},
+		
+		_openNewRoleDialog: async function () {
+			await this.onGetPermissions();
+
+			console.log("Open New Role Dialog");
+			var oView = this.getView();
+			var oDialog = oView.byId("RoleDialog");
+		
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.RoleDialog", this);
+				oView.addDependent(oDialog);
+			}
+		
+			oDialog.open();
+		},
+
+		_openDialogFile: function (oData) {
+			// Dapatkan referensi ke dialog
+			console.log("oData : ",oData);
+			var oView = this.getView();
+			var oDialog = oView.byId("excelUploadDialog");
+		
+			// Jika dialog belum ada, buat dialog baru
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.excelUploadDialog", this);
+				oView.addDependent(oDialog);
+			}
+
+			var oDialogModel = new sap.ui.model.json.JSONModel();
+			oDialog.setModel(oDialogModel, "dialog");
+		
+			if (oData) {
+
+				console.log("masuk odata");
+				oDialog.setBindingContext(new sap.ui.model.Context(this.getView().getModel("view"), "/files/" + oData.id));
+			} else {
+				oDialog.setBindingContext(null);// var oFileUploader = this.byId("fileUploader");	
+				var oFileUploader = this.byId("fileUploader");
+				if (oFileUploader) {
+					oFileUploader.setValue("");
+					oFileUploader.clear();
+				}
+			}
+		
+			// Buka dialog
+			oDialog.open();
+		},
+
+		_openDialogUser: function (oData) {
+			// Dapatkan referensi ke dialog
+			console.log("oData : ",oData);
+			var oView = this.getView();
+			var oDialog = oView.byId("UserDialog");
+		
+			// Jika dialog belum ada, buat dialog baru
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.UserDialog", this);
+				oView.addDependent(oDialog);
+			}
+
+			var oDialogModel = new sap.ui.model.json.JSONModel();
+			oDialog.setModel(oDialogModel, "dialog");
+		
+			// Tentukan apakah ini mode Edit atau New
+			if (oData) {
+				// Mode Edit: Set data ke dalam dialog
+				oDialog.setBindingContext(new sap.ui.model.Context(this.getView().getModel("view"), "/users/" + oData.id));
+			} else {
+				// Mode New: Kosongkan dialog (atau set default)
+				oDialog.setBindingContext(null);
+			}
+		
+			// Buka dialog
+			oDialog.open();
+		},
+
+		_openDialogBranch: function (oData) {
+			// Dapatkan referensi ke dialog
+			console.log("oData : ",oData);
+			var oView = this.getView();
+			var oDialog = oView.byId("BranchDialog");
+		
+			// Jika dialog belum ada, buat dialog baru
+			if (!oDialog) {
+				oDialog = sap.ui.xmlfragment(oView.getId(), "sap.ui.bni.toolpageapp.view.fragments.BranchDialog", this);
+				oView.addDependent(oDialog);
+			}
+
+			var oDialogModel = new sap.ui.model.json.JSONModel();
+			oDialog.setModel(oDialogModel, "dialog");
+		
+			// Tentukan apakah ini mode Edit atau New
+			if (oData) {
+				// Mode Edit: Set data ke dalam dialog
+				oDialog.setBindingContext(new sap.ui.model.Context(this.getView().getModel("view"), "/branch/" + oData.id));
+			} else {
+				// Mode New: Kosongkan dialog (atau set default)
+				oDialog.setBindingContext(null);
+			}
+		
+			// Buka dialog
+			oDialog.open();
+		},
+
 		onRefresh: function () {
 			let oBinding;
 			var sViewId = this.getView().getId();
+			console.log("refresh : ",sViewId);
 			console.log("refresh : ",sViewId);
             if (sViewId.includes("userManagement")) {                
 				this._setupUserManagement().then(() => {
@@ -1395,6 +1746,37 @@ sap.ui.define([
 					}
 					oBinding = oTable.getBinding("rows");
                 	oBinding.filter([]);
+                	oBinding.filter([]);
+				}).catch((error) => {
+					console.error("Error during refresh:", error);
+				});
+            } else if (sViewId.includes("roleManagement")) {
+				this._setupRoleManagement().then(() => {
+					var oViewModel = this.getModel("view");
+					if (oViewModel) {
+						oViewModel.refresh(true); 
+					}
+					var oTable = this.byId("TableRole");  
+					if (oTable) {
+						oTable.clearSelection();
+					}
+					oBinding = oTable.getBinding("rows");
+					oBinding.filter([]);
+				}).catch((error) => {
+					console.error("Error during refresh:", error);
+				});
+            } else if (sViewId.includes("branchOffice")) {
+				this._setupBranchOffice().then(() => {
+					var oViewModel = this.getModel("view");
+					if (oViewModel) {
+						oViewModel.refresh(true); 
+					}
+					var oTable = this.byId("TableClient");  
+					if (oTable) {
+						oTable.clearSelection();
+					}
+					oBinding = oTable.getBinding("rows");
+                	oBinding.filter([]);
 				}).catch((error) => {
 					console.error("Error during refresh:", error);
 				});
@@ -1429,6 +1811,7 @@ sap.ui.define([
 					console.error("Error during refresh:", error);
 				});
             }  
+            }  
 
 			
 		},
@@ -1451,6 +1834,7 @@ sap.ui.define([
 
             // Menyaring berdasarkan kolom yang dipilih
             console.log("this._selectedColumn : ", this._selectedColumn);
+            if (this._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt" || this._selectedColumn === "LoginAt" || this._selectedColumn === "LogoutAt" || this._selectedColumn === "ResetAt" || this._selectedColumn === "Timestamp") {
             if (this._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt" || this._selectedColumn === "LoginAt" || this._selectedColumn === "LogoutAt" || this._selectedColumn === "ResetAt" || this._selectedColumn === "Timestamp") {
                 // Jika sQuery berisi tanggal, ubah ke objek Date
                 console.log("sQuery : ", sQuery);
@@ -1534,9 +1918,12 @@ sap.ui.define([
 			});
 
 
+
+
 		},
 
 		onDeleteFile: function () {
+			const header = {  "Content-Type": "application/json" };
 			const header = {  "Content-Type": "application/json" };
 
             var oTable = this.byId("TableUpload");
@@ -1601,8 +1988,14 @@ sap.ui.define([
 							// });
                             // console.log("aRemainingFiles: ", aRemainingFiles);
 							// this.getView().getModel("view").setProperty("/files", aRemainingFiles);							
+							// var aRemainingFiles = aFiles.filter(function (file) {
+							// 	return !aIds.includes(file.id);
+							// });
+                            // console.log("aRemainingFiles: ", aRemainingFiles);
+							// this.getView().getModel("view").setProperty("/files", aRemainingFiles);							
                             this.onRefresh();		
 							// Tampilkan notifikasi
+						if (response.data.error) {
 						if (response.data.error) {
 								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
 							} else {
@@ -1623,6 +2016,7 @@ sap.ui.define([
 
 		onDeleteUser: function () {
 
+			const header = {  "Content-Type": "application/json" };
 			const header = {  "Content-Type": "application/json" };
 
             var oTable = this.byId("TableUser");
@@ -1832,12 +2226,59 @@ sap.ui.define([
             oModel.setProperty("/nameState", "None");
             oModel.setProperty("/nameErrorText", "");
 		},
+        },
+
+		onUsernameChange: function () {
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/usernameState", "None");
+            oModel.setProperty("/usernameErrorText", "");
+		},
+
+		onFullnameChange: function () {
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/fullnameState", "None");
+            oModel.setProperty("/fullnameErrorText", "");
+		},
+
+		onEmailChange: function () {
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/emailState", "None");
+            oModel.setProperty("/emailErrorText", "");
+		},
+
+		onClientChange: function () {
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/clientState", "None");
+            oModel.setProperty("/clientErrorText", "");
+		},
+
+		onRolesChange: function () {
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/rolesState", "None");
+            oModel.setProperty("/rolesErrorText", "");
+		},
+
+		onCodeChange: function () {
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/codeState", "None");
+            oModel.setProperty("/codeErrorText", "");
+		},
+
+		onNameChange: function () {
+            var oModel = this.getView().getModel("dialogModel");
+            oModel.setProperty("/nameState", "None");
+            oModel.setProperty("/nameErrorText", "");
+		},
 
 		onUpload: async function () {
 			const oDialog = this.byId("excelUploadDialog");
 			const oFileUploader = this.byId("fileUploader");
 			const oDomRef = oFileUploader.getDomRef();
 			const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");
+
+			console.log("oFileInput : ",oFileInput);
+			console.log("oFileInput.files : ",oFileInput.files);
+			console.log("oFileInput.files.length : ",oFileInput.files.length);
 
 			console.log("oFileInput : ",oFileInput);
 			console.log("oFileInput.files : ",oFileInput.files);
@@ -1874,6 +2315,8 @@ sap.ui.define([
 		
 				sap.m.MessageToast.show("File uploaded successfully.");
 				console.log("Upload response:", oResponse.data);
+				oFileUploader.clear();
+				oFileInput.value = "";
 				oFileUploader.clear();
 				oFileInput.value = "";
 				oDialog.close();
