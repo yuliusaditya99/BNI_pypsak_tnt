@@ -3,7 +3,8 @@ sap.ui.define([], function () {
 
     return {
         paths: {
-            apiBaseUrl: "http://nexia-main.pypsak.cloud",  // Path API global
+            //apiBaseUrl: "http://nexia-main.pypsak.cloud",  // Path API global
+            apiBaseUrl: "/api", 
             imagePath: "/resources/images/",        // Path untuk gambar
             logPath: "/logs/"                       // Path untuk log
         },

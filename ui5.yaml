@@ -14,3 +14,10 @@ framework:
     - name: sap.ui.table
     - name: sap.uxap
     - name: themelib_sap_horizon
+server:
+  customMiddleware:
+    - name: ui5-middleware-simpleproxy
+      afterMiddleware: compression
+      mountPath: /api
+      configuration:
+        baseUri: "http://nexia-main.pypsak.cloud"

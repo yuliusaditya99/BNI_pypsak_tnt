@@ -75,27 +75,24 @@ sap.ui.define([
 			const params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 
 			const clientResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/client');
-			if (!clientResponse) { 
-				MessageToast.show("Token expired.", { duration: 3000 });                   
-				const oView = this.getView();
-                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                const oRouter = oComponent.getRouter();
-                                console.log("Router:", oRouter);
-                                oRouter.navTo("login");                     
-				//return; // Hentikan eksekusi jika token expired
+			if (clientResponse.message == "Access denied" ) { 
+					MessageToast.show("Token expired.", { duration: 3000 });                   
+					const oView = this.getView();
+					const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+					const oRouter = oComponent.getRouter();
+					console.log("Router:", oRouter);
+					oRouter.navTo("login");
 				}
 			const roleResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/role');
-			if (!roleResponse) { 
-				MessageToast.show("Token expired.", { duration: 3000 });                   
-				const oView = this.getView();
-                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                const oRouter = oComponent.getRouter();
-                                console.log("Router:", oRouter);
-                                oRouter.navTo("login");
-				//return; // Hentikan eksekusi jika token expired
+			if (roleResponse.message == "Access denied" ) { 
+					MessageToast.show("Token expired.", { duration: 3000 });                   
+					const oView = this.getView();
+					const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+					const oRouter = oComponent.getRouter();
+					console.log("Router:", oRouter);
+					oRouter.navTo("login");
 				}
 			console.log("clientResponse : ",clientResponse);
-			//console.log("clientResponse:", clientResponse);
  
             const cleintTableData = clientResponse.payloads.data;
 			//
@@ -113,7 +110,6 @@ sap.ui.define([
 			  }));
 			console.log("Roles loda proces data:", roles);
         
-            // Langkah 3: Tambahkan data ke model "view"
             const oViewModel = this.getModel("view");
             if (oViewModel) {
               oViewModel.setProperty("/clients", clients);
@@ -126,8 +122,8 @@ sap.ui.define([
 		_setupLogManagement: async function () {
 			this._selectedColumn = "Timestamp";
 			try {
-				console.log("Masuk Cont Log Management");
-				console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
+				//console.log("Masuk Cont Log Management");
+				//console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
 				var oLogModel = this.getOwnerComponent().getModel("logModel");
 			} catch (error) {
 				if (error.response) {
@@ -382,7 +378,7 @@ sap.ui.define([
 					}
 
 					dataResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/file');
-					if (!dataResponse) { 
+					if (dataResponse.message == "Access denied" ) { 
 						MessageToast.show("Token expired.", { duration: 3000 });                   
 						const oView = this.getView();
 						const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -608,7 +604,7 @@ sap.ui.define([
 						const idUser = oDialogData.id || null;
 						let payload;	
 						const headers = {  "Content-Type": "application/json" };						
-						sap.ui.core.BusyIndicator.show(0);
+						//sap.ui.core.BusyIndicator.show(0);
 						console.log("idUser:", idUser);	
 						let oResponse;
 						if (idUser) {
@@ -629,7 +625,7 @@ sap.ui.define([
 							console.log("Editing user with ID:", idUser);
 		
 							oResponse = await this.appConfig.allAPI("put", headers, payload, `${Config.paths.apiBaseUrl}/api/user/${idUser}`);
-							if (!oResponse) { 
+							if (oResponse.message == "Access denied" ) { 
 								MessageToast.show("Token expired.", { duration: 3000 });                   
 								const oView = this.getView();
 										const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -654,7 +650,7 @@ sap.ui.define([
 								};			
 
 						oResponse = await this.appConfig.allAPI("post", headers, payload, `${Config.paths.apiBaseUrl}/api/user`);
-						if (!oResponse) { 
+						if (oResponse.message == "Access denied" ) { 
 							MessageToast.show("Token expired.", { duration: 3000 });                   
 							const oView = this.getView();
 									const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -687,15 +683,13 @@ sap.ui.define([
 						console.error("Unexpected error:", oError);
 						MessageToast.show("An unexpected error occurred.", { duration: 3000 });
 					}
-				} finally {
-					sap.ui.core.BusyIndicator.hide();
-				}
+				} 
 			}
 			else
 			{
 				return;
 			}
-			sap.ui.core.BusyIndicator.hide();
+			//sap.ui.core.BusyIndicator.hide();
 		},
 
 		onSaveDialogBranch: async function () {
@@ -730,7 +724,7 @@ sap.ui.define([
 					const headers = {  "Content-Type": "application/json" };
 			
 						
-					sap.ui.core.BusyIndicator.show(0);
+					//sap.ui.core.BusyIndicator.show(0);
 					console.log("idBranch:", idBranch);	
 					let oResponse;
 					if (idBranch) {
@@ -743,7 +737,7 @@ sap.ui.define([
 						console.log("Payload to send:", payload);	
 		
 						oResponse = await this.appConfig.allAPI("put", headers, payload, `${Config.paths.apiBaseUrl}/api/client/${idBranch}`);
-						if (!oResponse) { 
+						if (oResponse.message == "Access denied" ) { 
 							MessageToast.show("Token expired.", { duration: 3000 });                   
 							const oView = this.getView();
 									const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -760,7 +754,7 @@ sap.ui.define([
 									};
 	
 						oResponse = await this.appConfig.allAPI("post", headers, payload, `${Config.paths.apiBaseUrl}/api/client`);
-						if (!oResponse) { 
+						if (oResponse.message == "Access denied" ) { 
 							MessageToast.show("Token expired.", { duration: 3000 });                   
 							const oView = this.getView();
 									const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -793,15 +787,13 @@ sap.ui.define([
 						console.error("Unexpected error:", oError);
 						MessageToast.show("An unexpected error occurred.", { duration: 3000 });
 					}
-				} finally {
-					sap.ui.core.BusyIndicator.hide();
-				}
+				} 
 			}
 			else
 			{
 				return;
 			}
-			sap.ui.core.BusyIndicator.hide();			
+			//sap.ui.core.BusyIndicator.hide();			
 		},
 
         onCancelDialogUser: function () {
@@ -912,7 +904,7 @@ sap.ui.define([
 				const idRole = oDialogData.idRole || null;
 		
 				let payload;
-				sap.ui.core.BusyIndicator.show(0);
+				//sap.ui.core.BusyIndicator.show(0);
 				console.log("idRole:", idRole);
 
 				// Get permissions array from dialogModel
@@ -990,9 +982,7 @@ sap.ui.define([
 					console.error("Unexpected error (no response from server):", Error);
 					MessageToast.show("An unexpected error occurred. Please check the console.", { duration: 3000 });
 				}
-			} finally {
-				sap.ui.core.BusyIndicator.hide();
-			}
+			} 
 		},
 		
 		
@@ -1078,6 +1068,16 @@ sap.ui.define([
 		
 				this._loadProcessData();
 				this._openDialogUser();
+            } else if (sViewId.includes("detailSettings")) {
+				// var oFileUploader = this.byId("fileUploader");	
+				// const oDomRef = oFileUploader.getDomRef();
+				// const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");		
+				// if (oFileUploader) {
+				// 	oFileUploader.clear();
+				// }
+				// if (oFileInput) {
+				// 	oFileInput.value = "";
+				// }
             } else if (sViewId.includes("detailSettings")) {
 				// var oFileUploader = this.byId("fileUploader");	
 				// const oDomRef = oFileUploader.getDomRef();
@@ -1740,7 +1740,8 @@ sap.ui.define([
                 this.onDeleteFile();
             } else if (sViewId.includes("roleManagement")) {
 				this.onDeleteRole();
-			} else if (sViewId.includes("branchOffice")) {
+			} 
+			else if (sViewId.includes("branchOffice")) {
 				this.onDeleteBranch();
 			}
 		},
@@ -1789,8 +1790,6 @@ sap.ui.define([
 					}
 				}.bind(this)
 			});
-
-
 		},
 
 		onDeleteFile: function () {
@@ -1840,7 +1839,7 @@ sap.ui.define([
 
 							const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/file/delete");                            
                             console.log("Response Delete: ", response);	
-							if (!response) { 
+							if (response.message == "Access denied" ) { 
 								MessageToast.show("Token expired.", { duration: 3000 });                   
 								const oView = this.getView();
                                 const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -1926,7 +1925,7 @@ sap.ui.define([
 
 							const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/user/delete");                            
                             console.log("Response Delete: ", response);	
-							if (!response) { 
+							if (response.message == "Access denied" ) { 
 								MessageToast.show("Token expired.", { duration: 3000 });                   
 								const oView = this.getView();
                                 const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -2002,7 +2001,7 @@ sap.ui.define([
 							console.log("Selected IDs: ", aIds);
 							const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/client/delete");                            
                             console.log("Response Delete: ", response);	
-							if (!response) { 
+							if (response.message == "Access denied" ) { 
 								MessageToast.show("Token expired.", { duration: 3000 });                   
 								const oView = this.getView();
                                 const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
@@ -2014,8 +2013,8 @@ sap.ui.define([
 						
                             this.onRefresh();		
 							// Tampilkan notifikasi
-							if (response.data.error) {
-								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
+							if (response.error) {
+								sap.m.MessageToast.show(response.message, { duration: 3000 });
 							} else {
 								sap.m.MessageToast.show("Data deleted successfully.", { duration: 3000 });
 							}
@@ -2116,7 +2115,7 @@ sap.ui.define([
 			}
 		
 			try {
-				sap.ui.core.BusyIndicator.show(0);
+				//sap.ui.core.BusyIndicator.show(0);
 		
 				const oFormData = new FormData();
 				oFormData.append("payload", JSON.stringify({ path: "text" }));
@@ -2208,16 +2207,6 @@ sap.ui.define([
 		// 	return this.getBundleTextByModel(sI18nKey, this.getModel("i18n"), aPlaceholderValues);
 		// }
 
-		//#region formatter
-		formatPermission: function (permissions) {
-			// Assuming permissions is an array of objects and you want to check if any permission allows writing
-			if (permissions && permissions.length > 0) {
-				const hasWritePermission = permissions.some(perm => perm.isWrite);
-				return hasWritePermission ? "read" : "read/write";
-			}
-			return "read";
-		}
-		//#endregion
 	
 	});
 });

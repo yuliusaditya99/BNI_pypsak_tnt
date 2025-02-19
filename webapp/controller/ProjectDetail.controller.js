@@ -436,17 +436,17 @@ sap.ui.define([
                 }
             
                 const data = await response.json();
+                sap.ui.core.BusyIndicator.hide();
                 console.log("Node execution response:", data);
                 sap.m.MessageToast.show(data.message);
                 
                 
         
             } catch (error) {
+                sap.ui.core.BusyIndicator.hide();
                 console.error("Error executing node:", error);
                 sap.m.MessageToast.show("Failed to execute node.");
-            } finally{
-                sap.ui.core.BusyIndicator.hide();
-            }
+            } 
         },
 
         onRefresh: async function () {

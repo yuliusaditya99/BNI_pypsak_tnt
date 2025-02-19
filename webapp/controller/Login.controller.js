@@ -31,12 +31,12 @@ sap.ui.define([
               const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
               console.log("Owner Component:", oComponent);
               if (!oComponent) {
-              throw new Error("Owner component tidak ditemukan.");
+                throw new Error("Owner component tidak ditemukan.");
               }
               const oRouter = oComponent.getRouter();
               console.log("Router:", oRouter);
               if (!oRouter || typeof oRouter.navTo !== "function") {
-              throw new Error("Router tidak valid.");
+                throw new Error("Router tidak valid.");
               }
               console.log("Set Header X:", axios.defaults.headers.common["Authorization"]);
               const oViewModel = this.getView().getModel("user");

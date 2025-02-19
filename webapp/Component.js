@@ -20,8 +20,14 @@ sap.ui.define([
 			// Buat model untuk perangkat
 			this.setModel(models.createDeviceModel(), "device");
 
-			this.setModel(models.createLogModel(), "logModel");
+			this.setModel(models.createLogModel(), "logModel");			
 
+			// var oLogModel = models.createLogModel();
+			// this.setModel(oLogModel, "logModel");
+
+			// console.log("✅ logModel berhasil didaftarkan:", oLogModel.getData());
+		  
+			// Inisialisasi router
 			// var oLogModel = models.createLogModel();
 			// this.setModel(oLogModel, "logModel");
 
