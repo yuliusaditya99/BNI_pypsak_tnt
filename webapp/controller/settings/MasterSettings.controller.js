@@ -265,9 +265,9 @@ sap.ui.define([
 
 					console.log("dataResponse User : ",dataResponse);
 			
-					const usertableData = dataResponse.payloads.data;
-					pageCount = dataResponse.payloads.per_page;
-					totalRowCount = dataResponse.payloads.total;
+					// const usertableData = dataResponse.payloads.data;
+					// pageCount = dataResponse.payloads.per_page;
+					// totalRowCount = dataResponse.payloads.total;
 			
 					const usertableData = dataResponse.payloads.data;
 					pageCount = dataResponse.payloads.per_page;

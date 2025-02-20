@@ -66,8 +66,7 @@ sap.ui.define([
 		// 	  this.getRouter().initialize();
 			
 		// },
-			this.getRouter().attachBeforeRouteMatched(this._onBeforeRouteMatched, this);
-		},
+	
 
 		// init: function () {
 		// 	// call the init function of the parent
@@ -128,10 +127,8 @@ sap.ui.define([
                 oRouter.navTo("login");
 				location.reload();
             }
-        }
-
-		
-		},
+        },		
+	
 
 		_onBeforeRouteMatched: function(oEvent) {
             var oRouter = this.getRouter();

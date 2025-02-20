@@ -385,7 +385,7 @@ sap.ui.define([
         },
 
         // Logout
-        logout: async function () {
+        logout: async function (oRoute) {
             console.log("masuk logout");
             try {
                 const token = localStorage.getItem("authToken");
@@ -408,8 +408,7 @@ sap.ui.define([
                 localStorage.removeItem("authToken");
                 localStorage.removeItem("userNameLogin");
                 localStorage.removeItem("user");
-                //MessageToast.show("Logged out successfully.");
-                //window.location.href = "/login";
+                
                 sap.ui.core.BusyIndicator.hide();
                 return oResponse;
             } catch (error) {

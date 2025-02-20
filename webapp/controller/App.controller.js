@@ -94,7 +94,6 @@ sap.ui.define([
 			this.captureConsoleLogs();
 		},
 		
-
 		onExit: function() {
 			Device.media.detachHandler(this._handleWindowResize, this);
 		},
@@ -323,9 +322,9 @@ sap.ui.define([
 
 		onLogoutPress: async function () {
 			console.log("masuk logout");
-			const oauthResponse = await this.appConfig.logout();
-            console.log("oauthResponse logout : ", oauthResponse);
 			var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+			const oauthResponse = await this.appConfig.logout(oRouter);
+            console.log("oauthResponse logout : ", oauthResponse);			
 			oRouter.navTo("login");
 			location.reload();
 		},
