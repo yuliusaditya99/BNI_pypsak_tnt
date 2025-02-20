@@ -321,42 +321,28 @@ sap.ui.define([
 							});
 		
 							console.log("Selected IDs: ", aIds);
-		
-							// Kirim request DELETE dengan Axios
-							const response = await axios.delete(Config.paths.apiBaseUrl + "/api/task/delete",  {
-								data: aIds,
-								headers: {
-									"Content-Type": "application/json"
-								}
-							});
-		
-							console.log("Response: ", response);
-		
-							// Hapus data yang dihapus dari model
-							var aRemainingTasks = aTasks.filter(function (task) {
-								return !aIds.includes(task.id);
-							});
-                            console.log("aRemainingTasks: ", aRemainingTasks);
-							this.getView().getModel("view").setProperty("/tasks", aRemainingTasks);
-		
-							// Refresh tabel
-							// var oTable = this.byId("detailedTable");
-							// if (oTable) {
-							// 	oTable.getBinding("items").refresh();
-							// }	
-							
-                            this.onRefresh();
-		
-							// Tampilkan notifikasi
-							if (response.data.error) {
-								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
+                            const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/task/delete");                            
+                            console.log("Response Delete: ", response);
+                            if (response.message == "Access denied" ) { 
+                                MessageToast.show("Token expired.", { duration: 3000 });
+                                const oView = this.getView();
+                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                                const oRouter = oComponent.getRouter();
+                                console.log("Router:", oRouter);
+                                oRouter.navTo("login");                     
+                            }
+
+                            this.onRefresh();		
+							if (response.error) {
+								MessageToast.show(response.message, { duration: 3000 });
 							} else {
 								MessageToast.show("Data deleted successfully.", { duration: 3000 });
 							}
 						} catch (error) {
 							// Tangani error dari Axios
-							if (error.response) {
-								sap.m.MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
+                            console.log("errror : ",error);
+							if (error.response.data) {
+								MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
 							} else {
 								MessageToast.show("An unexpected error occurred.", { duration: 3000 });
 							}
@@ -458,10 +444,34 @@ sap.ui.define([
 		},
 
         _loadProcessData: async function () {
-            const fileResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
-		  
-            const fileData = fileResponse.data;
-            const filetableData = fileData.payloads.data;
+
+           console.log("_loadProcessData");
+           const header = {  "Content-Type": "application/json" };
+           const params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
+           const url = Config.paths.apiBaseUrl +'/api/file';
+
+           const taskResponse = await this.appConfig.allAPI("get", header, params, url);
+           if (!taskResponse) { 
+            MessageToast.show("Token expired.", { duration: 3000 });                   
+            const oView = this.getView();
+                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                                const oRouter = oComponent.getRouter();
+                                console.log("Router:", oRouter);
+                                oRouter.navTo("login"); 
+            }
+
+            if (taskResponse.message == "Access denied") { 
+                MessageToast.show("Token expired.", { duration: 3000 });                   
+                const oView = this.getView();
+                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                const oRouter = oComponent.getRouter();
+                console.log("Router:", oRouter);
+                oRouter.navTo("login"); 
+            }            
+           
+           console.log("taskResponse 2 : ",taskResponse);        
+            
+            const filetableData = taskResponse.payloads.data;
         
             const files = filetableData.map(file => ({
               id: file.id,
