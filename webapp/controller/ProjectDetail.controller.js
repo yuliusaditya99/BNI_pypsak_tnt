@@ -13,6 +13,7 @@ sap.ui.define([
         onInit: async function () {
             try{
             console.log("Project controller initialized.");
+            this._selectedColumn = "label"; // Default column for search
 
             
 
