@@ -38,7 +38,10 @@
                         width="300px"
                         tooltip="{i18n>searchTooltip}"
                         class="sapUiTinyMarginEnd" />
-                </m:HBox>  
+                    <m:HBox justifyContent="End" width="auto">
+                        <m:Button id="ExportLog" icon="sap-icon://action" press=".onExport" tooltip="{i18n>exportButtonTooltip}" class="sapUiTinyMarginEnd" />
+                    </m:HBox> 
+                </m:HBox>
             </m:HBox>     
             <l:BlockLayoutCell backgroundColorSet="ColorSet11" backgroundColorShade="ShadeA" width="3">
                 <table:Table

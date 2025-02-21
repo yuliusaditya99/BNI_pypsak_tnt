@@ -13,131 +13,122 @@ sap.ui.define([
 		formatter: formatter,
 
 		onInit: function () {
+            console.log("Initialization Project");
             this.appConfig = new ConfigAPI();
             var oViewModel = new JSONModel({
                 isPhone: sap.ui.Device.system.phone
             });
             this.setModel(oViewModel, "view");
             var oDialogModel = new JSONModel({});
-            var oDialogModel = new JSONModel({});
             this.setModel(oDialogModel, "dialogModel");
-        
-            //console.log("onInit executed successfully."); 
-            //console.log("onInit executed successfully."); 
+            //console.log("onInit executed successfully.");
             this._initializeAsyncData();
             var oTable = this.byId("TableTask");
             if (oTable) {
                 //console.log("TableTask found, attaching row selection event.");
-                //console.log("TableTask found, attaching row selection event.");
                 oTable.attachRowSelectionChange(this.onRowSelect.bind(this));
             } else {
                 console.error("TableTask not found in the view.");
-            }
+            }            
         },
 
 		_initializeAsyncData: async function () {
             this._selectedColumn = "title";
             this.getView().getModel("view").setProperty("/showProcessDefinitionId", false); 
 			this.onGetTask(10).then((result) => {
-                console.log("perpage:", result.perpage);
-                console.log("Total Rows:", result.totalrow);
+                // console.log("perpage:", result.perpage);
+                // console.log("Total Rows:", result.totalrow);
+                console.log("Get data project successfully");
             });
 			
 		},
 
-        // onAfterRendering: function () {
-        //     console.log("masuk project controller 2");
-
-        // },
-
-        // onAfterRendering: function () {
-        //     console.log("masuk project controller 2");
-
-        // },
-
         onGetTask: async function(paramLength) {
-            try {
-                let taskResponse;
-                let params;
-                let url;
-                const header = { "Content-Type": "application/json" };                      
-                if (paramLength == "-1") {
-                    //console.log("masuk -1");
-                    params = { start: 0, length: 100000000, orders: "id", dirs: "desc" };
-                    url = Config.paths.apiBaseUrl + '/api/task';
-                } else {
-                    //console.log("masuk 10");
-                    params = { start: 0, length: paramLength, orders: "id", dirs: "desc" };
-                    url = Config.paths.apiBaseUrl + '/api/task';
-                }        
-                taskResponse = await this.appConfig.allAPI("get", header, params, url);
-                
-                if (!taskResponse){
+            const usernameExist = localStorage.getItem("userNameLogin");
+            //console.log("this.usernameExist :", usernameExist); 
+            if(usernameExist)
+            {
+                try {
+                    let taskResponse;
+                    let params;
+                    let url;
+                    const header = { "Content-Type": "application/json" };                      
+                    if (paramLength == "-1") {
+                        //console.log("masuk -1");
+                        params = { start: 0, length: 100000000, orders: "id", dirs: "desc" };
+                        url = Config.paths.apiBaseUrl + '/api/task';
+                    } else {
+                        //console.log("masuk 10");
+                        params = { start: 0, length: paramLength, orders: "id", dirs: "desc" };
+                        url = Config.paths.apiBaseUrl + '/api/task';
+                    }        
+                    taskResponse = await this.appConfig.allAPI("get", header, params, url);
+                    console.log("taskResponse get :", taskResponse); 
                     
-                }
-                else
-                {
-                    if (taskResponse.message == "Access denied") { 
-                        MessageToast.show("Token expired.", { duration: 3000 });                   
-                        const oView = this.getView();
-                                    const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                    const oRouter = oComponent.getRouter();
-                                    console.log("Router:", oRouter);
-                                    oRouter.navTo("login");
-                    }   
-                }                     
-                console.log("taskResponse get :", taskResponse);        
-                const tasktableData = taskResponse.payloads.data;
-                const pageCount = taskResponse.payloads.per_page;
-                const totalRowCount = taskResponse.payloads.total;        
-                const tasks = tasktableData.map(task => ({
-                    id: task.id,
-                    title: task.title,
-                    asOfDate: task.as_of_date,
-                    processDefinitionId: task.process_definition,
-                    processDefinition: task.file.file_name || "N/A",
-                    description: task.description,
-                    createdBy: task.createdBy?.user_name || "N/A",
-                    createdAt: task.created_at,
-                    updatedBy: task.updatedBy?.user_name || "N/A",
-                    updatedAt: task.updated_at,
-                }));
-                //console.log("tasks:", tasks);        
-                //console.log("tasks:", tasks);        
-                const oViewModel = this.getModel("view");
-                if (oViewModel) {
-                    oViewModel.setProperty("/tasks", tasks);
-                } else {
-                    console.error("View model not found.");
-                }        
-                       
-                return {
-                    perpage: pageCount,
-                    perpage: pageCount,
-                    totalrow: totalRowCount
-                };        
-        
-            } catch (error) {
-                if (error.response) {
-                    console.error("Error Response:", error.response.data);
-                    console.error("Status:", error.response.status);
-                    MessageToast.error("Error : " + error.response.data.message);
-                    MessageToast.error("Error : " + error.response.data.message);
-                } else if (error.request) {
-                    console.error("Error Request:", error.request);
-                    MessageToast.error("Can not connect the server.");
-                    MessageToast.error("Can not connect the server.");
-                } else {
-                    console.error("Error Message:", error.message);
-                    MessageToast.error("Error Undifine");
-                    MessageToast.error("Error Undifine");
+                    if (taskResponse == "Token expired") {
+                        MessageToast.show("Token expired.", { duration: 3000 });
+                        var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+                        this.appConfig.logout(oRouter);
+                    }
+                                
+                           
+                    const tasktableData = taskResponse.payloads.data;
+                    const pageCount = taskResponse.payloads.per_page;
+                    const totalRowCount = taskResponse.payloads.total;        
+                    const tasks = tasktableData.map(task => ({
+                        id: task.id,
+                        title: task.title,
+                        asOfDate: task.as_of_date,
+                        processDefinitionId: task.process_definition,
+                        processDefinition: task.file.file_name || "N/A",
+                        description: task.description,
+                        createdBy: task.createdBy?.user_name || "N/A",
+                        createdAt: task.created_at,
+                        updatedBy: task.updatedBy?.user_name || "N/A",
+                        updatedAt: task.updated_at,
+                    }));
+                    //console.log("tasks:", tasks);        
+                    //console.log("tasks:", tasks);        
+                    const oViewModel = this.getModel("view");
+                    if (oViewModel) {
+                        oViewModel.setProperty("/tasks", tasks);
+                    } else {
+                        console.error("View model not found.");
+                    }        
+                           
+                    return {
+                        perpage: pageCount,
+                        perpage: pageCount,
+                        totalrow: totalRowCount
+                    };        
+            
+                } catch (error) {
+                    if (error.response) {
+                        console.error("Error Response Get:", error.response.data);
+                        MessageToast.error("Error : " + error.response.data.message);
+                       } else if (error.request) {
+                        console.error("Error Request Get:", error.request);
+                        MessageToast.error("Can not connect the server.");
+                    } else {
+                        console.error("Error Message Get:", error.message);
+                        MessageToast.error("Error Undifine");
+                    }
                 }
             }
+            else
+            {
+                return {
+                    perpage: 0,
+                    perpage: 0,
+                    totalrow: 0
+                };     
+            }
+            
         },        
 
         onNew: function () {
-            const dialogModel = this.getView().getModel("dialogModel");
-            console.log("Masuk New");
+            console.log("New Dialog Project");
+            const dialogModel = this.getView().getModel("dialogModel");            
             this._loadProcessData();
             // Reset data model
             dialogModel.setData({
@@ -152,11 +143,10 @@ sap.ui.define([
        
         
         onEdit: function () {
+            console.log("Edit Dialog Project");
             this._loadProcessData();
             var oTable = this.byId("TableTask"); 
-            var aSelectedIndices = oTable.getSelectedIndices(); 
-        
-            console.log("aSelectedIndices: ", aSelectedIndices);
+            var aSelectedIndices = oTable.getSelectedIndices();            
             if (!aSelectedIndices || aSelectedIndices.length === 0) {
                 MessageToast.show("No selected data to edit."); 
                 return;
@@ -177,11 +167,11 @@ sap.ui.define([
                 return oTask !== null;
             });
         
-            console.log("Selected tasks: ", aSelectedTasks);
+            //console.log("Selected tasks: ", aSelectedTasks);
         
             if (aSelectedTasks.length === 1) {
                 var oSelectedData = aSelectedTasks[0];
-                console.log("oSelectedData:", oSelectedData);
+                //console.log("oSelectedData:", oSelectedData);
                 var oDialogModel = this.getView().getModel("dialogModel");
                 oDialogModel.setData(oSelectedData);                
                 oDialogModel.setProperty("/processDefinitionId", oSelectedData.processDefinitionId);                
@@ -193,9 +183,9 @@ sap.ui.define([
         
         
         onRefresh: function () {
-            console.log("masuk refresh");
+            //console.log("masuk refresh");
 			this._initializeAsyncData().then(() => {
-                console.log("after _initializeAsyncData");
+                //console.log("after _initializeAsyncData");
 				var oViewModel = this.getModel("view");
 				if (oViewModel) {
 					oViewModel.refresh(true); 
@@ -217,21 +207,21 @@ sap.ui.define([
 		},
 
         onTitleChange: function () {
-            console.log("rubah tittle");
+            console.log("change tittle");
             var oModel = this.getView().getModel("dialogModel");
             oModel.setProperty("/titleState", "None");
             oModel.setProperty("/titleErrorText", "");
 		},
 
         onProcessChange: function () {
-            console.log("rubah Process");
+            console.log("change Process");
             var oModel = this.getView().getModel("dialogModel");
             oModel.setProperty("/processState", "None");
             oModel.setProperty("/processErrorText", "");
 		},
 
         onAsOfDateChange: function () {
-            console.log("rubah As Of Date");
+            console.log("change As Of Date");
             var oModel = this.getView().getModel("dialogModel");
             oModel.setProperty("/asOfDateState", "None");
             oModel.setProperty("/asOfDateErrorText", "");
@@ -241,18 +231,18 @@ sap.ui.define([
             let countPerPage;
             let countTotal;
         
-            console.log("Masuk onRowCountChange");
+            //console.log("Masuk onRowCountChange");
             const sSelectedKey = oEvent.getSource().getSelectedKey();
             const oTable = this.byId("TableTask");
-            console.log("oTable 1 : ", oTable);
-            console.log("sSelectedKey : ", sSelectedKey);
+            //console.log("oTable 1 : ", oTable);
+            //console.log("sSelectedKey : ", sSelectedKey);
         
             // Tunggu hasil dari onGetTask
             const result = await this.onGetTask(sSelectedKey);
             countPerPage = result.perpage;
             countTotal = result.tasks;
-            console.log("countTotal : ", countTotal);
-            console.log("countPerPage : ", countPerPage);
+            //console.log("countTotal : ", countTotal);
+            //console.log("countPerPage : ", countPerPage);
         },
         
         onSearch: function (oEvent) {
@@ -260,9 +250,9 @@ sap.ui.define([
             var oTable = this.byId("TableTask");
             var oBinding = oTable.getBinding("rows");
 
-            console.log("this._selectedColumn : ", this._selectedColumn);
+            //console.log("this._selectedColumn : ", this._selectedColumn);
             if (this._selectedColumn === "asOfDate" || this._selectedColumn === "createdAt" || this._selectedColumn === "updatedAt") {
-                console.log("sQuery : ", sQuery);
+                //console.log("sQuery : ", sQuery);
                 if (sQuery) {
                     var oFilter = new sap.ui.model.Filter(this._selectedColumn, sap.ui.model.FilterOperator.Contains, sQuery);
                     oBinding.filter([oFilter]);
@@ -294,7 +284,7 @@ sap.ui.define([
             const header = {  "Content-Type": "application/json" };
             var oTable = this.byId("TableTask"); 
             var aSelectedIndices = oTable.getSelectedIndices(); 
-            console.log("aSelectedIndices: ", aSelectedIndices);
+            //console.log("aSelectedIndices: ", aSelectedIndices);
             if (!aSelectedIndices || aSelectedIndices.length === 0) {
                 MessageToast.show("No selected data to delete."); 
                 return;
@@ -310,7 +300,7 @@ sap.ui.define([
                 return oTask !== null; 
             });
 
-            console.log("Selected tasks: ", aSelectedTasks);
+            //console.log("Selected tasks: ", aSelectedTasks);
 			MessageBox.confirm("Are you sure you want to delete the selected data?", {
 				actions: [MessageBox.Action.YES, MessageBox.Action.NO],
 				onClose: async function (sAction) {
@@ -320,31 +310,32 @@ sap.ui.define([
 								return item.id;
 							});
 		
-							console.log("Selected IDs: ", aIds);
+							//console.log("Selected IDs: ", aIds);
                             const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/task/delete");                            
-                            console.log("Response Delete: ", response);
-                            if (response.message == "Access denied" ) { 
+                            //console.log("Response Delete: ", response);
+                            
+                            if (response == "Token expired" ) { 
                                 MessageToast.show("Token expired.", { duration: 3000 });
-                                const oView = this.getView();
-                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                const oRouter = oComponent.getRouter();
-                                console.log("Router:", oRouter);
-                                oRouter.navTo("login");                     
+                                var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+                                this.appConfig.logout(oRouter);                 
                             }
 
                             this.onRefresh();		
-							if (response.error) {
-								MessageToast.show(response.message, { duration: 3000 });
-							} else {
-								MessageToast.show("Data deleted successfully.", { duration: 3000 });
-							}
+                            if (response.error) {
+                                MessageToast.show(response.message, { duration: 3000 });
+                            } else {
+                                MessageToast.show("Data deleted successfully.", { duration: 3000 });
+                            }
+                            
+                            
 						} catch (error) {
-							// Tangani error dari Axios
-                            console.log("errror : ",error);
+							                          
 							if (error.response.data) {
 								MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
+                                console.log("Error delete data project: ",error.response.data.message);
 							} else {
 								MessageToast.show("An unexpected error occurred.", { duration: 3000 });
+                                console.log("An unexpected error occurred on data project");
 							}
 						}
 					}
@@ -355,12 +346,12 @@ sap.ui.define([
 
         onCellClick: function (oEvent) {
             // Log the full event parameters to inspect available data
-            console.log("Event Parameters:", oEvent.getParameters());
+            //console.log("Event Parameters:", oEvent.getParameters());
         
             var oTable = this.byId("TableTask");
             var iRowIndex = oEvent.getParameter("rowIndex"); // Get row index
         
-            console.log("Row Index:", iRowIndex);
+            //console.log("Row Index:", iRowIndex);
         
             if (iRowIndex !== undefined) {
                 var oModel = this.getView().getModel("view");
@@ -370,14 +361,14 @@ sap.ui.define([
                 // Navigate using router
                 this._navigateToTaskDetail(oRowData.id);
                 localStorage.setItem("taskId", oRowData.id);
-                console.log("Navigating to ProjectDetail with ID:", oRowData.id);
+                //console.log("Navigating to ProjectDetail with ID:", oRowData.id);
             } else {
                 MessageToast.show("No valid row index found!");
             }
         },
 
         onRowSelect: function (oEvent) {
-            console.log("masuk select row");
+            //console.log("masuk select row");
             var oSelectedRowContext = oEvent.getParameter("rowContext");
             var aTask = this.getView().getModel("view").getProperty("/tasks");
             var aSelectedTasks = aTask.filter(function (task) {
@@ -388,8 +379,8 @@ sap.ui.define([
                 return item.id;
             });
         
-            console.log("Selected IDs: ", aIds);
-            console.log("aSelectedTasks: ", aSelectedTasks);
+            //console.log("Selected IDs: ", aIds);
+            //console.log("aSelectedTasks: ", aSelectedTasks);
             if (oSelectedRowContext) {
                 var oModel = this.getView().getModel("view");
                 var oRowData = oModel.getProperty(oSelectedRowContext.getPath());
@@ -419,7 +410,7 @@ sap.ui.define([
           
         _openDialog: function (oData) {
 			// Dapatkan referensi ke dialog
-			console.log("oData : ",oData);
+			//console.log("oData : ",oData);
 			var oView = this.getView();
 			var oDialog = oView.byId("ProjectTaskDialog");
 		
@@ -445,51 +436,38 @@ sap.ui.define([
 
         _loadProcessData: async function () {
 
-           console.log("_loadProcessData");
+           //console.log("_loadProcessData");
            const header = {  "Content-Type": "application/json" };
            const params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
            const url = Config.paths.apiBaseUrl +'/api/file';
 
            const taskResponse = await this.appConfig.allAPI("get", header, params, url);
-           if (!taskResponse) { 
-            MessageToast.show("Token expired.", { duration: 3000 });                   
-            const oView = this.getView();
-                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                const oRouter = oComponent.getRouter();
-                                console.log("Router:", oRouter);
-                                oRouter.navTo("login"); 
-            }
-
-            if (taskResponse.message == "Access denied") { 
-                MessageToast.show("Token expired.", { duration: 3000 });                   
-                const oView = this.getView();
-                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                const oRouter = oComponent.getRouter();
-                console.log("Router:", oRouter);
-                oRouter.navTo("login"); 
-            }            
+           //console.log("taskResponse reload :", taskResponse); 
            
-           console.log("taskResponse 2 : ",taskResponse);        
-            
-            const filetableData = taskResponse.payloads.data;
-        
+            if (taskResponse == "Token expired") { 
+  
+                MessageToast.show("Token expired.", { duration: 3000 });
+                var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+                this.appConfig.logout(oRouter);
+            }            
+                             
+           
+            //console.log("taskResponse 2 : ",taskResponse);           
+            const filetableData = taskResponse.payloads.data;        
             const files = filetableData.map(file => ({
               id: file.id,
               fileName: file.file_name
             }));
-            console.log("Files:", files);
-            const oViewModel = this.getModel("view");
-            if (oViewModel) {
-              oViewModel.setProperty("/filename", files);
-            } else {
-              console.error("View model not found.");
-            }
+            //console.log("Files:", files);
+            const oViewModel = this.getModel("view");            
+            oViewModel.setProperty("/filename", files);
+            
         },
 
             
         onSaveDialogTask: async function () {
-            let idTask;
-            console.log("onSaveDialogTask");
+            console.log("Save Dialog Project");
+            let idTask;            
             const oDialog = this.byId("ProjectTaskDialog");
             const titleValue = this.byId("titleInput") ? this.byId("titleInput").getValue() : "";
             const asOfDateValue = this.byId("asOfDateInput") ? this.byId("asOfDateInput").getValue() : "";
@@ -520,7 +498,7 @@ sap.ui.define([
             if (oDialogData && oDialogData.id) {
                 idTask = oDialogData.id;
             }
-            console.log("idTask : ",idTask);
+            //console.log("idTask : ",idTask);
 
             try {
  
@@ -542,24 +520,26 @@ sap.ui.define([
                     if (requestData.description === "") {
                         delete requestData.description;
                     }
-                    console.log("requestData : ",requestData);
+                    //console.log("requestData : ",requestData);
                     oRequestBody =  JSON.stringify(requestData); 
                     sap.ui.core.BusyIndicator.show(0);
-                    console.log("Editing data with ID:", idTask);
+                    //console.log("Editing data with ID:", idTask);
                     oResponse = await axios.put(Config.paths.apiBaseUrl + `/api/task/${requestData.id}`, oRequestBody, {
                         headers: {
                             "Content-Type": "application/json"
                         }
                     });
 
-                    console.log("oResponse.error : ",oResponse.data.error);
+                    //console.log("oResponse.error : ",oResponse.data.error);
                     if(oResponse.data.error==true)
                     {
-                        MessageToast.show("Failed Update Data : ",oResponse.data.message);
+                        MessageToast.show("Failed update data project : ",oResponse.data.message);
+                        console.error("Failed update data project : ",oResponse.data.message);
                     }
                     else
                     {
-                        MessageToast.show("Update data successfully.");
+                        MessageToast.show("Update data project successfully.");
+                        console.log("Update data project successfully.");
                     }
                     
                 } else {
@@ -575,68 +555,61 @@ sap.ui.define([
                     if (requestData.description === "") {
                         delete requestData.description;
                     }
-                    console.log("requestData.description : ",requestData.description);
+                    //console.log("requestData.description : ",requestData.description);
                     oRequestBody =  JSON.stringify(requestData); 
                     sap.ui.core.BusyIndicator.show(0);
-                    console.log("Creating new data");
+                    //console.log("Creating new data");
                     oResponse = await axios.post(`${Config.paths.apiBaseUrl}/api/task`, oRequestBody, {
                         headers: {
                             "Content-Type": "application/json"
                         }
-                    });
+                    });                 
 
-                    // oResponse = await axios.post(`${Config.paths.apiBaseUrl}/api/user`, payload, {
-					// 	headers: {
-					// 		"Content-Type": "application/json"
-					// 	}
-					// });
-                    
-                  
-
-                    console.log("oResponse.error : ",oResponse.data.error);
+                    //console.log("oResponse.error : ",oResponse.data.error);
                     if(oResponse.data.error==true)
                     {
-                        //oError.response.data.detail[0].msg
-                        MessageToast.show("Failed Add Data : ",oResponse.data.message);
+                        MessageToast.show("Failed add data project : ",oResponse.data.message);
+                        console.error("Failed add data project : ",oResponse.data.message);
                     }
                     else
                     {
                         MessageToast.show("Add data successfully.");
+                        console.log("Add data project successfully.");
                     }
                 
                 }
                 
                 
-                console.log("Response:", oResponse.data);
+                //console.log("Response:", oResponse.data);
                 oDialog.close();
                 this.onRefresh();                
 
             } 
             catch (oError) {
-                console.error("oError :", oError);
-                console.error("oError.response :", oError.response);
+                //console.error("oError :", oError);
+                //console.error("oError.response :", oError.response);
             
                 if (oError.response) {
                     // Akses status dan pesan error dari response
-                    console.error("Error status:", oError.response.status);
+                    //console.error("Error status:", oError.response.status);
             
                     if (oError.response.data && Array.isArray(oError.response.data)) {
                         // Jika respons adalah array JSON (seperti yang Anda tunjukkan)
                         const errorMessage = oError.response.data.map(err => err.msg).join(", ");
-                        console.error("Error messages:", errorMessage);
-                        sap.m.MessageToast.show("Error: " + errorMessage, { duration: 3000 });
+                        console.error("Error save data project : ", errorMessage);
+                        sap.m.MessageToast.show("Error save data project: " + errorMessage, { duration: 3000 });
                     } else if (oError.response.data.message) {
                         // Jika ada pesan error langsung
-                        console.error("Error message:", oError.response.data.message);
-                        sap.m.MessageToast.show("Error: " + oError.response.data.message, { duration: 3000 });
+                        console.error("Error save data project : ", oError.response.data.message);
+                        sap.m.MessageToast.show("Error save data project: " + oError.response.data.message, { duration: 3000 });
                     } else {
                         // Default jika format data tidak diketahui
-                        console.error("Error response data:", oError.response.data);
+                        console.error("Error save data project : ", oError.response.data);
                         sap.m.MessageToast.show("An error occurred.", { duration: 3000 });
                     }
                 } else {
                     // Error lain seperti masalah jaringan
-                    console.error("Unexpected error:", oError);
+                    console.error("Unexpected Error save data project:", oError);
                     sap.m.MessageToast.show("An unexpected error occurred.", { duration: 3000 });
                 }
             }
@@ -645,56 +618,7 @@ sap.ui.define([
             }
         },
 
-        // onSaveDialogTask: async function () {
-		// 	const oDialog = this.byId("ProjectTaskDialog");
-		// 	const oFileUploader = this.byId("fileUploader");
-		
-		// 	// Ambil elemen input file
-		// 	const oDomRef = oFileUploader.getDomRef();
-		// 	const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");
-		
-		// 	if (!oFileInput || !oFileInput.files || oFileInput.files.length === 0) {
-		// 		sap.m.MessageToast.show("Please select a file to upload.");
-		// 		return;
-		// 	}
-		
-		// 	const oFile = oFileInput.files[0];
-		// 	console.log("Selected file:", oFile);
-		
-		// 	// Validasi jenis file
-		// 	const sFileName = oFile.name.toLowerCase();
-		// 	if (!sFileName.endsWith(".xls") && !sFileName.endsWith(".xlsx")) {
-		// 		sap.m.MessageToast.show("Invalid file type. Please upload an Excel file.");
-		// 		return;
-		// 	}
-		
-		// 	try {
-		// 		sap.ui.core.BusyIndicator.show(0);
-		
-		// 		const oFormData = new FormData();
-		// 		oFormData.append("payload", JSON.stringify({ path: "text" }));
-		// 		oFormData.append("files", oFile);
-		
-		// 		const sApiUrl = "http://nexia-main.pypsak.cloud/api/file";
-		// 		const oResponse = await axios.post(sApiUrl, oFormData, {
-		// 			headers: {
-		// 				"Content-Type": "multipart/form-data",
-		// 			},
-		// 		});
-		
-		// 		sap.m.MessageToast.show("File uploaded successfully.");
-		// 		console.log("Upload response:", oResponse.data);
-		
-		// 		oDialog.close();
-		// 		//console.log("event : ",oEvent.data)
-		// 		this._initializeAsyncData();
-		// 	} catch (oError) {
-		// 		console.error("Error uploading file:", oError);
-		// 		sap.m.MessageToast.show("Failed to upload file.");
-		// 	} finally {
-		// 		sap.ui.core.BusyIndicator.hide();
-		// 	}
-		// },
+        
 		
         onCancelDialogTask: function () {
             // Tutup dialog

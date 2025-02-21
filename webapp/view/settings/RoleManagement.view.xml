@@ -35,7 +35,7 @@
                         </m:items>
                     </m:ComboBox>
                     <m:SearchField
-                        id="searchUserMField"
+                        id="searcRoleField"
                         placeholder="{i18n>searchPlaceholder}"
                         liveChange=".onSearch"
                         width="300px"

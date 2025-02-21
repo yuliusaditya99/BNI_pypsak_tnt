@@ -1,7 +1,6 @@
 sap.ui.define([
     "sap/ui/base/Object",
-    "sap/m/BusyDialog",    
-    "sap/m/BusyDialog",    
+    "sap/m/BusyDialog",      
     "../util/Config"
 ], function (UI5Object, BusyDialog, Config) {
     "use strict";
@@ -43,7 +42,6 @@ sap.ui.define([
                 if (typeof Storage !== "undefined") {
                     localStorage.setItem("authToken", token);
                     localStorage.setItem("user", JSON.stringify(user));
-                    localStorage.setItem("userNameLogin", userNameLogin.user_name);
                     localStorage.setItem("userNameLogin", userNameLogin.user_name);
                     localStorage.setItem("websocet", webSocket);
                 }
@@ -160,45 +158,53 @@ sap.ui.define([
                 console.log("header API:", header);
                 console.log("url API:", url);
                 const token = localStorage.getItem("authToken");
-        
-                if (this.isJWTExpired(token)) {
-                    console.error("Token expired. Please log in again.");
-                    //sap.m.MessageBox.error("Token expired. Please log in again."); // Menampilkan error di UI
-                    return null;
-                }
-        
-                if (!header) {
-                    header = {};
-                }
-                if (!header.Authorization && token) {
-                    header.Authorization = "Bearer " + token;
-                }
-                const config = {
-                    method: type.toLowerCase(),
-                    url,
-                    headers: header
-                };
-
-                if (type.toLowerCase() === "get") {
-                    config.params = body;
-                } else {
-                    config.data = body;
-                }
-                sap.ui.core.BusyIndicator.show(0);
-                console.log("config:", config);
-                const response = await axios(config);
-                console.log("response:", response.data);
-                console.log("body setri : ",JSON.stringify(body))
-                sap.ui.core.BusyIndicator.hide();
-
-                if(JSON.stringify(body) === "{}")
+                
+                if(token)
                 {
-                    return response; 
+                    if (this.isJWTExpired(token)) {
+                        console.error("Token expired. Please log in again.");
+                         //sap.m.MessageBox.error("Token expired. Please log in again."); // Menampilkan error di UI
+                        return "Token expired";
+                    }
+                    else
+                    {
+                        if (!header) {
+                            header = {};
+                        }
+                        if (!header.Authorization && token) {
+                            header.Authorization = "Bearer " + token;
+                        }
+                        const config = {
+                            method: type.toLowerCase(),
+                            url,
+                            headers: header
+                        };
+        
+                        if (type.toLowerCase() === "get") {
+                            config.params = body;
+                        } else {
+                            config.data = body;
+                        }
+                        sap.ui.core.BusyIndicator.show(0);
+                        console.log("config:", config);
+                        const response = await axios(config);
+                        console.log("response:", response.data);
+                        console.log("body setri : ",JSON.stringify(body))
+                        sap.ui.core.BusyIndicator.hide();
+        
+                        if(JSON.stringify(body) === "{}")
+                        {
+                            return response; 
+                        }
+                        else
+                        {
+                            return response.data; 
+                        }
+                    }
                 }
-                else
-                {
-                    return response.data; 
-                }
+                
+        
+                
                 
             } 
             catch (error) {
@@ -385,11 +391,12 @@ sap.ui.define([
         },
 
         // Logout
-        logout: async function (oRoute) {
-            console.log("masuk logout");
-            try {
-                const token = localStorage.getItem("authToken");
-                //const response = await axios.post(Config.paths.apiBaseUrl + "/api/auth/logout");
+        logout: async function (oRoute) {      
+            //console.log("masuk fungsi logout");               
+            const token = localStorage.getItem("authToken");
+            console.log("token : ",token);
+            if(token)
+            {
                 const requestData = {
                     token: token
                 };              
@@ -403,18 +410,20 @@ sap.ui.define([
                     }
                 });
 
-               // console.log("oResponse.error : ",oResponse.data.error);
                 console.log("response Logout :", oResponse);
                 localStorage.removeItem("authToken");
                 localStorage.removeItem("userNameLogin");
                 localStorage.removeItem("user");
                 
                 sap.ui.core.BusyIndicator.hide();
-                return oResponse;
-            } catch (error) {
-                sap.ui.core.BusyIndicator.hide();
-                //MessageBox.error("Error logging out.");
+                oRoute.navTo("login");
+                location.reload();
             }
+            else{
+                console.log("nav to login");
+                oRoute.navTo("login");
+                location.reload();
+            }         
         },
 
         isJWTExpired: function (token) {

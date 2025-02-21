@@ -86,14 +86,15 @@ sap.ui.define([
             this.getView().setModel(oLogModel, "logModel");
 
 			if (!oLogModel) {
-				console.error("logModel tidak ditemukan!");
+				console.error("logModel not found!");
 			} else {
-				this.logInfo("Aplikasi Start","-");
+				this.logInfo("Application Start");
 			}			
 			
 			this.captureConsoleLogs();
 		},
 		
+
 		onExit: function() {
 			Device.media.detachHandler(this._handleWindowResize, this);
 		},
@@ -323,10 +324,9 @@ sap.ui.define([
 		onLogoutPress: async function () {
 			console.log("masuk logout");
 			var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-			const oauthResponse = await this.appConfig.logout(oRouter);
-            console.log("oauthResponse logout : ", oauthResponse);			
-			oRouter.navTo("login");
-			location.reload();
+			console.log("mau logout");
+			this.appConfig.logout(oRouter);
+			
 		},
 
 		addLog: function (type, message, details) {
@@ -377,49 +377,125 @@ sap.ui.define([
             this.addLog("Error",message,detail);
         },
 
-		captureConsoleLogs: function() {
-            var oLogModel = this.getView().getModel("logModel");
-            var originalLog = console.log;
-            var originalWarn = console.warn;
-            var originalError = console.error;
-            var originalInfo = console.info;
-            console.log = this.createConsoleMethod(oLogModel, 'Log', originalLog);
-            console.warn = this.createConsoleMethod(oLogModel, 'Warning', originalWarn);
-            console.error = this.createConsoleMethod(oLogModel, 'Error', originalError);
-            console.info = this.createConsoleMethod(oLogModel, 'Info', originalInfo);
-        },
+		captureConsoleLogs: function () {
+			var oLogModel = this.getView().getModel("logModel");
+			var originalLog = console.log;
+			var originalWarn = console.warn;
+			var originalError = console.error;
+			var originalInfo = console.info;
+		
+			console.log = this.createConsoleMethod(oLogModel, "Log", originalLog);
+			console.warn = this.createConsoleMethod(oLogModel, "Warning", originalWarn);
+			console.error = this.createConsoleMethod(oLogModel, "Error", originalError);
+			console.info = this.createConsoleMethod(oLogModel, "Info", originalInfo);
+		
+			this.loadLogsFromLocalStorage();
+			this.cleanupOldLogs();
+		},
+		
+		createConsoleMethod: function (oLogModel, type, originalMethod) {
+			return function (message, details) {
+				var oLogEntry = {
+					type: type,
+					message: message,
+					details: details || "-",
+					timestamp: new Date().toISOString(),
+				};
+		
+				var aLogs = oLogModel.getProperty("/logs") || [];
+				aLogs.push(oLogEntry);
+				oLogModel.setProperty("/logs", aLogs);
+		
+				try {
+					localStorage.setItem("consoleLogs", JSON.stringify(aLogs, this.removeCircularReferences()));
+				} catch (e) {
+					console.warn("Failed to save logs to localStorage:", e);
+				}
+		
+				originalMethod.apply(console, arguments);
+			}.bind(this);
+		},
+		
+		removeCircularReferences: function () {
+			var seen = new WeakSet();
+			return function (key, value) {
+				if (typeof value === "object" && value !== null) {
+					if (seen.has(value)) return;
+					seen.add(value);
+				}
+				return value;
+			};
+		},
+		
+		loadLogsFromLocalStorage: function () {
+			var logs = localStorage.getItem("consoleLogs");
+			if (logs) {
+				try {
+					this.getView().getModel("logModel").setProperty("/logs", JSON.parse(logs));
+				} catch (e) {
+					console.warn("Failed to load logs from localStorage:", e);
+				}
+			}
+		},
+		
+		cleanupOldLogs: function () {
+			var oLogModel = this.getView().getModel("logModel");
+			var aLogs = oLogModel.getProperty("/logs") || [];
+			var now = new Date();
+		
+			// Hapus log yang lebih dari 1 bulan
+			aLogs = aLogs.filter((log) => {
+				var logDate = new Date(log.timestamp);
+				return (now - logDate) < 30 * 24 * 60 * 60 * 1000; // 30 hari
+			});
+		
+			oLogModel.setProperty("/logs", aLogs);
+			localStorage.setItem("consoleLogs", JSON.stringify(aLogs, this.removeCircularReferences()));
+		},		
 
-        createConsoleMethod: function(oLogModel, type, originalMethod) {
-            return function(message, details) {
-                // Struktur log baru
-                var oLogEntry = {
-                    type: type,
-                    message: message,
-                    details: details || "-",
-                    timestamp: new Date().toISOString()
-                };
-                var aLogs = oLogModel.getProperty("/logs");
-                aLogs.push(oLogEntry);
-                oLogModel.setProperty("/logs", aLogs);
-                originalMethod.apply(console, arguments);
-            }.bind(this);
-        },
+		// captureConsoleLogs: function() {
+        //     var oLogModel = this.getView().getModel("logModel");
+        //     var originalLog = console.log;
+        //     var originalWarn = console.warn;
+        //     var originalError = console.error;
+        //     var originalInfo = console.info;
+        //     console.log = this.createConsoleMethod(oLogModel, 'Log', originalLog);
+        //     console.warn = this.createConsoleMethod(oLogModel, 'Warning', originalWarn);
+        //     console.error = this.createConsoleMethod(oLogModel, 'Error', originalError);
+        //     console.info = this.createConsoleMethod(oLogModel, 'Info', originalInfo);
+        // },
 
-		saveLogToServer: function (logEntry) {
-            fetch("/api/saveLog", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(logEntry)
-            }).then(function(response) {
-                if (!response.ok) {
-                    console.error("Error saving log to server");
-                }
-            }).catch(function(error) {
-                console.error("Request failed", error);
-            });
-        }
+        // createConsoleMethod: function(oLogModel, type, originalMethod) {
+        //     return function(message, details) {
+        //         // Struktur log baru
+        //         var oLogEntry = {
+        //             type: type,
+        //             message: message,
+        //             details: details || "-",
+        //             timestamp: new Date().toISOString()
+        //         };
+        //         var aLogs = oLogModel.getProperty("/logs");
+        //         aLogs.push(oLogEntry);
+        //         oLogModel.setProperty("/logs", aLogs);
+        //         originalMethod.apply(console, arguments);
+        //     }.bind(this);
+        // },
+
+		// saveLogToServer: function (logEntry) {
+        //     fetch("/api/saveLog", {
+        //         method: "POST",
+        //         headers: {
+        //             "Content-Type": "application/json"
+        //         },
+        //         body: JSON.stringify(logEntry)
+        //     }).then(function(response) {
+        //         if (!response.ok) {
+        //             console.error("Error saving log to server");
+        //         }
+        //     }).catch(function(error) {
+        //         console.error("Request failed", error);
+        //     });
+        // }
 
 	});
 });

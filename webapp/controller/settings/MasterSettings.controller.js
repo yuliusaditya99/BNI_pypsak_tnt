@@ -30,7 +30,6 @@ sap.ui.define([
 			console.log("masuk");
 			var sViewId = this.getView().getId();
 			console.log("key view : ",sViewId);
-			console.log("key view : ",sViewId);
             if (sViewId.includes("userManagement")) {
                 this._setupUserManagement();
             } 
@@ -44,6 +43,7 @@ sap.ui.define([
 				this._setupBranchOffice();
 			}
 			else if (sViewId.includes("roleManagement")) {
+				console.log("Masuk role management");
 				this._setupRoleManagement();
 			}
 			
@@ -79,22 +79,29 @@ sap.ui.define([
 			const params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 
 			const clientResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/client');
-			if (clientResponse.message == "Access denied" ) { 
-					MessageToast.show("Token expired.", { duration: 3000 });                   
-					const oView = this.getView();
-					const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-					const oRouter = oComponent.getRouter();
-					console.log("Router:", oRouter);
-					oRouter.navTo("login");
+			if (clientResponse == "Token expired" ) { 
+					// MessageToast.show("Token expired.", { duration: 3000 });                   
+					// const oView = this.getView();
+					// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+					// const oRouter = oComponent.getRouter();
+					// console.log("Router:", oRouter);
+					// oRouter.navTo("login");		
+					MessageToast.show("Token expired.", { duration: 3000 });			
+					var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+					this.appConfig.logout(oRouter);
+					
 				}
 			const roleResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/role');
-			if (roleResponse.message == "Access denied" ) { 
-					MessageToast.show("Token expired.", { duration: 3000 });                   
-					const oView = this.getView();
-					const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-					const oRouter = oComponent.getRouter();
-					console.log("Router:", oRouter);
-					oRouter.navTo("login");
+			if (roleResponse == "Token expired" ) { 
+					// MessageToast.show("Token expired.", { duration: 3000 });                   
+					// const oView = this.getView();
+					// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+					// const oRouter = oComponent.getRouter();
+					// console.log("Router:", oRouter);
+					// oRouter.navTo("login");
+					MessageToast.show("Token expired.", { duration: 3000 });			
+					var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+					this.appConfig.logout(oRouter);
 				}
 			console.log("clientResponse : ",clientResponse);
  
@@ -184,7 +191,7 @@ sap.ui.define([
 
 		_setupRoleManagement: async function () {
 			console.log("masuk setup role management");
-			this._selectedColumn = "clientCode";
+			this._selectedColumn = "name";
 			this.getView().getModel("view").setProperty("/showRolesId", false);
 			console.log("get model view:", this.getModel("view"));
 			try {
@@ -232,14 +239,17 @@ sap.ui.define([
 						params = { start: 0, length: paramLength, orders:"id", dirs:"desc" };						
 					}
 					dataResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/user');
-					if (dataResponse.message == "Access denied" ) {
-						MessageToast.show("Token expired.", { duration: 3000 });                   
-						const oView = this.getView();
-						const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-						const oRouter = oComponent.getRouter();
-						console.log("Router:", oRouter);
-						oRouter.navTo("login");                     
+					if (dataResponse == "Token expired" ) {
+						// MessageToast.show("Token expired.", { duration: 3000 });                   
+						// const oView = this.getView();
+						// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+						// const oRouter = oComponent.getRouter();
+						// console.log("Router:", oRouter);
+						// oRouter.navTo("login");                     
 						//return; // Hentikan eksekusi jika token expired
+						MessageToast.show("Token expired.", { duration: 3000 });			
+						var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+						this.appConfig.logout(oRouter);
 						}
 
 					console.log("dataResponse User : ",dataResponse);
@@ -286,63 +296,92 @@ sap.ui.define([
 				else if (navactive == "Branch")
 				{
 					if(paramLength == "-1")
-						{
-							console.log("masuk -1");
-							//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length=10&orders=id&dirs=desc');
-							params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
-						}
-						else
-						{
-							//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length='+paramLength+'&orders=id&dirs=desc');
-							params = { start: 0, length: paramLength, orders:"id", dirs:"desc" };						
-						}
-						dataResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/client');
-						if (dataResponse.message == "Access denied" ) { 
-							MessageToast.show("Token expired.", { duration: 3000 });                   
-							const oView = this.getView();
-							const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-							const oRouter = oComponent.getRouter();
-							console.log("Router:", oRouter);
-							oRouter.navTo("login");
-						}
-	
-						console.log("dataResponse Branch : ",dataResponse);
+					{
+						console.log("masuk -1");
+						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length=10&orders=id&dirs=desc');
+						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
+					}
+					else
+					{
+						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length='+paramLength+'&orders=id&dirs=desc');
+						params = { start: 0, length: paramLength, orders:"id", dirs:"desc" };						
+					}
+					dataResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/client');
+					if (dataResponse == "Token expired" ) { 
+						// MessageToast.show("Token expired.", { duration: 3000 });                   
+						// const oView = this.getView();
+						// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+						// const oRouter = oComponent.getRouter();
+						// console.log("Router:", oRouter);
+						// oRouter.navTo("login");
+						MessageToast.show("Token expired.", { duration: 3000 });			
+						var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+						this.appConfig.logout(oRouter);
+					}
+
+					console.log("dataResponse Branch : ",dataResponse);
+			
+					const branchtableData = dataResponse.payloads.data;
+					pageCount = dataResponse.payloads.per_page;
+					totalRowCount = dataResponse.payloads.total;
+					const branch = branchtableData.map(branch => ({
+						id: branch.id,
+						code: branch.code,
+						name: branch.name,
+						createdBy: branch.createdBy?.user_name || "N/A",
+						createdAt: branch.created_at,
+						updatedBy: branch.updated_by,
+						updatedAt: branch.updated_at,
+						deletedAt: branch.deleted_at	
+						
+					}));
+					console.log("branch:", branch);
 				
-						const branchtableData = dataResponse.payloads.data;
-						pageCount = dataResponse.payloads.per_page;
-						totalRowCount = dataResponse.payloads.total;
-						const branch = branchtableData.map(branch => ({
-							id: branch.id,
-							code: branch.code,
-							name: branch.name,
-							createdBy: branch.createdBy?.user_name || "N/A",
-							createdAt: branch.created_at,
-							updatedBy: branch.updated_by,
-							updatedAt: branch.updated_at,
-							deletedAt: branch.deleted_at	
-							
-						}));
-						console.log("branch:", branch);
-					
-						const oViewModel = this.getModel("view");
-						if (oViewModel) {
-							oViewModel.setProperty("/branch", branch);
-						} else {
-							console.error("View model not found.");
-						}
+					const oViewModel = this.getModel("view");
+					if (oViewModel) {
+						oViewModel.setProperty("/branch", branch);
+					} else {
+						console.error("View model not found.");
+					}
 				}
 				else if (navactive == "Role") {
-					if (paramLength == "-1") {
-						console.log("masuk -1 role");
-						dataResponse = await axios.get(Config.paths.apiBaseUrl + '/api/role?start=0&length=100000000&orders=id&dirs=desc');
-					} else {
-						dataResponse = await axios.get(Config.paths.apiBaseUrl + '/api/role?start=0&length=' + paramLength + '&orders=id&dirs=desc');
+
+					// if (paramLength == "-1") {
+					// 	console.log("masuk -1 role");
+					// 	dataResponse = await axios.get(Config.paths.apiBaseUrl + '/api/role?start=0&length=100000000&orders=id&dirs=desc');
+					// } else {
+					// 	dataResponse = await axios.get(Config.paths.apiBaseUrl + '/api/role?start=0&length=' + paramLength + '&orders=id&dirs=desc');
+					// }
+					if(paramLength == "-1")
+					{
+						console.log("masuk -1");
+						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length=10&orders=id&dirs=desc');
+						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
+					}
+					else
+					{
+						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/user?start=0&length='+paramLength+'&orders=id&dirs=desc');
+						params = { start: 0, length: paramLength, orders:"id", dirs:"desc" };						
+					}
+					dataResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/role');
+					console.log("dataResponse 1:", dataResponse);
+					if (dataResponse == "Token expired" ) { 
+						// MessageToast.show("Token expired.", { duration: 3000 });                   
+						// const oView = this.getView();
+						// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+						// const oRouter = oComponent.getRouter();
+						// console.log("Router:", oRouter);
+						// oRouter.navTo("login");
+						console.log("dataResponse 2:", dataResponse);
+						MessageToast.show("Token expired.", { duration: 3000 });			
+						var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+						this.appConfig.logout(oRouter);
 					}
 					
 					console.log("dataResponse Role:", dataResponse);
-					console.log("Roles:", dataResponse.data.payloads.data);
+					console.log("Roles:", dataResponse.payloads.data);
 
-					const roleData = dataResponse.data.payloads.data;
+					const roleData = dataResponse.payloads.data;
 					console.log("Role Data:", roleData);
 					const roles = roleData.map(role => ({
 						id: role.id,
@@ -373,12 +412,9 @@ sap.ui.define([
 				else
 				{
 					console.log("masuk file");
-					console.log("masuk file");
 					if(paramLength == "-1")
 					{
 						console.log("masuk -1");
-						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
-						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 						//dataResponse = await axios.get(Config.paths.apiBaseUrl +'/api/file?start=0&length=100000000&orders=id&dirs=desc');
 						params = { start: 0, length: 100000000, orders:"id", dirs:"desc" };
 					}
@@ -389,15 +425,18 @@ sap.ui.define([
 					}
 
 					dataResponse = await this.appConfig.allAPI("get", header, params, Config.paths.apiBaseUrl +'/api/file');
-					if (dataResponse.message == "Access denied" ) { 
-						MessageToast.show("Token expired.", { duration: 3000 });                   
-						const oView = this.getView();
-						const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-						const oRouter = oComponent.getRouter();
-						console.log("Router:", oRouter);
-						oRouter.navTo("login");                     
+					if (dataResponse == "Token expired" ) { 
+						// MessageToast.show("Token expired.", { duration: 3000 });                   
+						// const oView = this.getView();
+						// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+						// const oRouter = oComponent.getRouter();
+						// console.log("Router:", oRouter);
+						// oRouter.navTo("login");                     
 						//return; // Hentikan eksekusi jika token expired
-						}
+						MessageToast.show("Token expired.", { duration: 3000 });			
+						var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+						this.appConfig.logout(oRouter);
+					}
 					console.log("dataResponse :",dataResponse);
 
 					const filetableData = dataResponse.payloads.data;
@@ -570,9 +609,6 @@ sap.ui.define([
 					oDialogModel.setProperty("/usernameErrorText", "Ensure this value has at least 5 characters");
 					flagDone = 1;
 				}
-                oDialogModel.setProperty("/usernameState", "Error");
-                oDialogModel.setProperty("/usernameErrorText", "Username is required!");
-				flagDone = 1;
             }
 
             if (!fullnameValue) {
@@ -641,13 +677,16 @@ sap.ui.define([
 							console.log("Editing user with ID:", idUser);
 		
 							oResponse = await this.appConfig.allAPI("put", headers, payload, `${Config.paths.apiBaseUrl}/api/user/${idUser}`);
-							if (oResponse.message == "Access denied" ) { 
-								MessageToast.show("Token expired.", { duration: 3000 });                   
-								const oView = this.getView();
-										const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-										const oRouter = oComponent.getRouter();
-										console.log("Router:", oRouter);
-										oRouter.navTo("login");                     
+							if (oResponse == "Token expired" ) { 
+								// MessageToast.show("Token expired.", { duration: 3000 });                   
+								// const oView = this.getView();
+								// 		const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+								// 		const oRouter = oComponent.getRouter();
+								// 		console.log("Router:", oRouter);
+								// 		oRouter.navTo("login"); 
+									MessageToast.show("Token expired.", { duration: 3000 });			
+									var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+									this.appConfig.logout(oRouter);                    
 								}
 					} 
 					else {
@@ -666,13 +705,16 @@ sap.ui.define([
 								};			
 
 						oResponse = await this.appConfig.allAPI("post", headers, payload, `${Config.paths.apiBaseUrl}/api/user`);
-						if (oResponse.message == "Access denied" ) { 
-							MessageToast.show("Token expired.", { duration: 3000 });                   
-							const oView = this.getView();
-									const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-									const oRouter = oComponent.getRouter();
-									console.log("Router:", oRouter);
-									oRouter.navTo("login");                     
+						if (oResponse == "Token expired" ) { 
+								// MessageToast.show("Token expired.", { duration: 3000 });                   
+								// const oView = this.getView();
+								// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+								// const oRouter = oComponent.getRouter();
+								// console.log("Router:", oRouter);
+								// oRouter.navTo("login");
+								MessageToast.show("Token expired.", { duration: 3000 });			
+								var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+								this.appConfig.logout(oRouter);
 							}
 					}
 					console.log("oResponse Edit: ",oResponse);
@@ -752,13 +794,16 @@ sap.ui.define([
 						console.log("Payload to send:", payload);	
 		
 						oResponse = await this.appConfig.allAPI("put", headers, payload, `${Config.paths.apiBaseUrl}/api/client/${idBranch}`);
-						if (oResponse.message == "Access denied" ) { 
-							MessageToast.show("Token expired.", { duration: 3000 });                   
-							const oView = this.getView();
-									const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-									const oRouter = oComponent.getRouter();
-									console.log("Router:", oRouter);
-									oRouter.navTo("login");
+						if (oResponse == "Token expired" ) { 
+								// MessageToast.show("Token expired.", { duration: 3000 });                   
+								// const oView = this.getView();
+								// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+								// const oRouter = oComponent.getRouter();
+								// console.log("Router:", oRouter);
+								// oRouter.navTo("login");
+								MessageToast.show("Token expired.", { duration: 3000 });			
+								var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+								this.appConfig.logout(oRouter);
 							}
 					} else {
 						// Create new data
@@ -769,13 +814,16 @@ sap.ui.define([
 									};
 	
 						oResponse = await this.appConfig.allAPI("post", headers, payload, `${Config.paths.apiBaseUrl}/api/client`);
-						if (oResponse.message == "Access denied" ) { 
-							MessageToast.show("Token expired.", { duration: 3000 });                   
-							const oView = this.getView();
-									const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-									const oRouter = oComponent.getRouter();
-									console.log("Router:", oRouter);
-									oRouter.navTo("login");                     
+						if (oResponse == "Token expired" ) { 
+								// MessageToast.show("Token expired.", { duration: 3000 });                   
+								// const oView = this.getView();
+								// 		const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+								// 		const oRouter = oComponent.getRouter();
+								// 		console.log("Router:", oRouter);
+								// 		oRouter.navTo("login");
+								MessageToast.show("Token expired.", { duration: 3000 });			
+								var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+								this.appConfig.logout(oRouter);
 							}
 					}
 					console.log("oResponse Edit: ",oResponse);
@@ -1100,53 +1148,10 @@ sap.ui.define([
 				});
 		
 				this._loadProcessData();
-				this._openDialogUser();
+				this._openDialogUser(); 
             } else if (sViewId.includes("detailSettings")) {
-				// var oFileUploader = this.byId("fileUploader");	
-				// const oDomRef = oFileUploader.getDomRef();
-				// const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");		
-				// if (oFileUploader) {
-				// 	oFileUploader.clear();
-				// }
-				// if (oFileInput) {
-				// 	oFileInput.value = "";
-				// }
-            } else if (sViewId.includes("detailSettings")) {
-				// var oFileUploader = this.byId("fileUploader");	
-				// const oDomRef = oFileUploader.getDomRef();
-				// const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");		
-				// if (oFileUploader) {
-				// 	oFileUploader.clear();
-				// }
-				// if (oFileInput) {
-				// 	oFileInput.value = "";
-				// }
-            } else if (sViewId.includes("detailSettings")) {
-				// var oFileUploader = this.byId("fileUploader");	
-				// const oDomRef = oFileUploader.getDomRef();
-				// const oFileInput = oDomRef && oDomRef.querySelector("input[type='file']");		
-				// if (oFileUploader) {
-				// 	oFileUploader.clear();
-				// }
-				// if (oFileInput) {
-				// 	oFileInput.value = "";
-				// }
-				this._openDialogFile();
-		
-			} else if (sViewId.includes("detailSettings")) {
-				this._openDialogFile();
-            } else if (sViewId.includes("branchOffice")){
-				const dialogModel = this.getView().getModel("dialogModel");
-				dialogModel.setData({
-					code: "",
-					name: ""
-				});
-				this._openDialogBranch();
-			}
-			else if (sViewId.includes("roleManagement")) {
-			} else if (sViewId.includes("detailSettings")) {
-				this._openDialogFile();
-            } else if (sViewId.includes("branchOffice")){
+				this._openDialogFile();		
+			} else if (sViewId.includes("branchOffice")){
 				const dialogModel = this.getView().getModel("dialogModel");
 				dialogModel.setData({
 					code: "",
@@ -1359,9 +1364,7 @@ sap.ui.define([
 				this._editUser();
             } else if (sViewId.includes("branchOffice")) {
 				this._editBranch();
-            } else if (sViewId.includes("branchOffice")) {
-				this._editBranch();
-            } else if (sViewId.includes("roleManagement")) {
+			} else if (sViewId.includes("roleManagement")) {
 				this._loadProcessData();
 				this._editRole();
 			}      
@@ -2064,62 +2067,45 @@ sap.ui.define([
 				actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
 				onClose: async function (sAction) {
 					if (sAction === sap.m.MessageBox.Action.YES) {
-						try {
-							// Ambil ID dari data terpilih
-							var aIds = aSelectedFiles.map(function (item) {
-								return item.id;
-							});
-		
-							console.log("Selected IDs: ", aIds);
-		
-							// Kirim request DELETE dengan Axios
-							// const response = await axios.delete(Config.paths.apiBaseUrl + "/api/file/delete",  {
-							// 	data: aIds,
-							// 	headers: {
-							// 		"Content-Type": "application/json"
-							// 	}
-							// });
-
-							const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/file/delete");                            
-                            console.log("Response Delete: ", response);	
-							if (response.message == "Access denied" ) { 
-								MessageToast.show("Token expired.", { duration: 3000 });                   
-								const oView = this.getView();
-                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                const oRouter = oComponent.getRouter();
-                                console.log("Router:", oRouter);
-                                oRouter.navTo("login");                     
-								//return; // Hentikan eksekusi jika token expired
-								}
-		
-							// console.log("Response: ", response);
-		
-							// Hapus data yang dihapus dari model
-							// var aRemainingFiles = aFiles.filter(function (file) {
-							// 	return !aIds.includes(file.id);
-							// });
-                            // console.log("aRemainingFiles: ", aRemainingFiles);
-							// this.getView().getModel("view").setProperty("/files", aRemainingFiles);							
-							// var aRemainingFiles = aFiles.filter(function (file) {
-							// 	return !aIds.includes(file.id);
-							// });
-                            // console.log("aRemainingFiles: ", aRemainingFiles);
-							// this.getView().getModel("view").setProperty("/files", aRemainingFiles);							
-                            this.onRefresh();		
-							// Tampilkan notifikasi
-						if (response.data.error) {
+						
+						var aIds = aSelectedFiles.map(function (item) {
+							return item.id;
+						});
+	
+						console.log("Selected IDs: ", aIds);
+						const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/file/delete");                            
+						console.log("Response Delete: ", response);
+						if(!response)
+						{
+							MessageToast.show("Token expired.", { duration: 3000 });                   
+							const oView = this.getView();
+							const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+							const oRouter = oComponent.getRouter();
+							console.log("Router:", oRouter);
+							oRouter.navTo("login");
+						}
+						else
+						{
+							if (response == "Token expired" ) { 
+								// MessageToast.show("Token expired.", { duration: 3000 });                   
+								// const oView = this.getView();
+								// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+								// const oRouter = oComponent.getRouter();
+								// console.log("Router:", oRouter);
+								// oRouter.navTo("login");
+								MessageToast.show("Token expired.", { duration: 3000 });			
+								var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+								this.appConfig.logout(oRouter);
+							}
+							if (response.data.error) {
 								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
 							} else {
 								sap.m.MessageToast.show("Data deleted successfully.", { duration: 3000 });
 							}
-						} catch (error) {
-							// Tangani error dari Axios
-							if (error.response) {
-								sap.m.MessageToast.show("Error: " + error.response.data.message, { duration: 3000 });
-							} else {
-								sap.m.MessageToast.show("An unexpected error occurred.", { duration: 3000 });
-							}
 						}
+						this.onRefresh();	
+						
+											
 					}
 				}.bind(this)
 			});
@@ -2173,14 +2159,17 @@ sap.ui.define([
 
 							const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/user/delete");                            
                             console.log("Response Delete: ", response);	
-							if (response.message == "Access denied" ) { 
-								MessageToast.show("Token expired.", { duration: 3000 });                   
-								const oView = this.getView();
-                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                const oRouter = oComponent.getRouter();
-                                console.log("Router:", oRouter);
-                                oRouter.navTo("login");                     
+							if (response == "Token expired" ) { 
+								// MessageToast.show("Token expired.", { duration: 3000 });                   
+								// const oView = this.getView();
+                                // const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                                // const oRouter = oComponent.getRouter();
+                                // console.log("Router:", oRouter);
+                                // oRouter.navTo("login");                     
 								//return; // Hentikan eksekusi jika token expired
+									MessageToast.show("Token expired.", { duration: 3000 });			
+									var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+									this.appConfig.logout(oRouter);
 								}
 	
 							// Hapus data yang dihapus dari model
@@ -2189,7 +2178,7 @@ sap.ui.define([
 							// });
                             // console.log("aRemainingUsers: ", aRemainingUsers);
 							// this.getView().getModel("view").setProperty("/users", aRemainingUsers);							
-                            this.onRefresh();		
+                            this.onRefresh();
 							// Tampilkan notifikasi
 							if (response.data.error) {
 								sap.m.MessageToast.show(response.data.message, { duration: 3000 });
@@ -2249,15 +2238,18 @@ sap.ui.define([
 							console.log("Selected IDs: ", aIds);
 							const response = await this.appConfig.allAPI("delete", header, aIds, Config.paths.apiBaseUrl + "/api/client/delete");                            
                             console.log("Response Delete: ", response);	
-							if (response.message == "Access denied" ) { 
-								MessageToast.show("Token expired.", { duration: 3000 });                   
-								const oView = this.getView();
-                                const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-                                const oRouter = oComponent.getRouter();
-                                console.log("Router:", oRouter);
-                                oRouter.navTo("login");                     
+							if (response == "Token expired" ) { 
+								// MessageToast.show("Token expired.", { duration: 3000 });                   
+								// const oView = this.getView();
+                                // const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+                                // const oRouter = oComponent.getRouter();
+                                // console.log("Router:", oRouter);
+                                // oRouter.navTo("login");                     
 								//return; // Hentikan eksekusi jika token expired
-								}
+								MessageToast.show("Token expired.", { duration: 3000 });			
+								var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+								this.appConfig.logout(oRouter);
+							}
 						
                             this.onRefresh();		
 							// Tampilkan notifikasi
@@ -2433,7 +2425,7 @@ sap.ui.define([
 			} finally {
 				sap.ui.core.BusyIndicator.hide();
 			}
-		},
+		},		
 
 		onDownloadFile: async function (oEvent) {
   
@@ -2471,16 +2463,23 @@ sap.ui.define([
 
 			if (oResponse) {
 				console.log("oRespones : ",oResponse.message)
-				if(oResponse.message == "Access denied")
+				if(oResponse == "Token expired")
 				{
-					MessageToast.show("Token expired.", { duration: 3000 });                   
-					const oView = this.getView();
-					const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
-					const oRouter = oComponent.getRouter();
-					console.log("Router:", oRouter);
-					oRouter.navTo("login"); 
+					// MessageToast.show("Token expired.", { duration: 3000 });                   
+					// const oView = this.getView();
+					// const oComponent = sap.ui.core.Component.getOwnerComponentFor(oView);
+					// const oRouter = oComponent.getRouter();
+					// console.log("Router:", oRouter);
+					// oRouter.navTo("login"); 
+					MessageToast.show("Token expired.", { duration: 3000 });			
+					var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+					this.appConfig.logout(oRouter);
 				}
-						
+				if(oResponse == 400)
+				{
+					console.log("File template not found");
+					MessageToast.show("File not found");
+				}			
 			} else {
 				console.log("Error:", error.message);
 				return error.message;
@@ -2511,7 +2510,31 @@ sap.ui.define([
 				return hasWritePermission ? "read" : "read/write";
 			}
 			return "read";
-		}
+		},
+
+		onExport: async function  ()
+		{
+			this.saveLogsToFile();
+		},
+
+		saveLogsToFile: function() {
+			var logs = localStorage.getItem("consoleLogs");
+			if (!logs) {
+				console.warn("Log not found");
+				return;
+			}
+			
+			var date = new Date();
+			var fileName = "console_logs_" + date.toISOString().split('T')[0] + ".txt";
+			
+			var blob = new Blob([logs], { type: "text/plain" });
+			var link = document.createElement("a");
+			link.href = URL.createObjectURL(blob);
+			link.download = fileName;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		},
         
 
 		/**

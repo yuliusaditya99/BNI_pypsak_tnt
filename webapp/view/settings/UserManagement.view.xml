@@ -51,7 +51,7 @@
                         liveChange=".onSearch"
                         width="300px"
                         tooltip="{i18n>searchTooltip}"
-                        class="sapUiTinyMarginEnd" />
+                        class="sapUiTinyMarginEnd" />                   
                 </m:HBox>            
                 <m:Dialog
                     id="UserDialog"
