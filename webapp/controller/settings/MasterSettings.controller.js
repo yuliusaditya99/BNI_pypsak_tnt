@@ -131,7 +131,7 @@ sap.ui.define([
         },
 
 		_setupLogManagement: async function () {
-			this._selectedColumn = "Timestamp";
+			this._selectedColumn = "timestamp";
 			try {
 				//console.log("Masuk Cont Log Management");
 				//console.log("Set Header 1:", axios.defaults.headers.common["Authorization"]);
@@ -1934,6 +1934,7 @@ sap.ui.define([
 
 		onSearch: function (oEvent) {
 			var sQuery = oEvent.getSource().getValue();
+			console.log("sQuery : ",sQuery);
 			var sViewId = this.getView().getId();
 			let oTable;
 
